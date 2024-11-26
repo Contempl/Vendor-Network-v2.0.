@@ -1,7 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
+using Product.Application.Dto;
 using Product.Domain.Entity;
-using Product.Application.Pagination;
-using Product.Infrastructure.Dto;
 
 namespace Product.Application.Interfaces;
 

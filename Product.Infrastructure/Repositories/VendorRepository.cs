@@ -1,8 +1,8 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Domain.Entity;
-using Product.Infrastructure.Dto;
 
 namespace Product.Infrastructure.Repositories;
 

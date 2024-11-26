@@ -1,7 +1,7 @@
-﻿using Product.Application.Interfaces;
+﻿using Product.Application.Dto;
+using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
-using Product.Infrastructure.Dto;
 
 namespace Product.Infrastructure.Implementations;
 
@@ -41,11 +41,31 @@ public class VendFacilityService : IVendFacilityService
 		facility.Latitude = facilityData.Latitude ?? facility.Latitude;
 		facility.Longitude = facilityData.Longitude ?? facility.Longitude;
 		facility.RadiusOfWork = facilityData.RadiusOfWork ?? facility.RadiusOfWork;
-		if (facilityData.Services != null && facilityData.Services.Any())
+		
+		if (facilityData.Services?.Any() == true)
 		{
+			var existingServices = facility.Services.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
+			var updatedServices = new List<VendorFacilityService>();
+
+			foreach (var serviceName in facilityData.Services.Distinct(StringComparer.OrdinalIgnoreCase))
+			{
+				if (existingServices.TryGetValue(serviceName, out var existingService))
+				{
+					updatedServices.Add(existingService);
+					existingServices.Remove(serviceName);
+				}
+				else
+				{
+					updatedServices.Add(new VendorFacilityService 
+					{ 
+						Name = serviceName,
+						VendorFacilityId = facility.Id
+					});
+				}
+			}
+			
 			facility.Services.Clear();
-			facilityData.Services.ForEach(service =>
-			facility.Services.Add(new VendorFacilityService { Name = service }));
+			facility.Services.AddRange(updatedServices);
 		}
 
 		await UpdateAsync(facility);

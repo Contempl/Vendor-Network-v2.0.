@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Infrastructure;
-using Product.Infrastructure.Dto;
 using Product.Infrastructure.Extensions;
 using Product.Infrastructure.Implementations;
 using Product.Infrastructure.Implementations.Account;

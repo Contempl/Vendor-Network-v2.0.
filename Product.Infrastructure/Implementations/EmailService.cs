@@ -1,5 +1,5 @@
-﻿using Product.Application.ServiceInterfaces;
-using Product.Infrastructure.Dto;
+﻿using Product.Application.Dto;
+using Product.Application.ServiceInterfaces;
 
 namespace Product.Infrastructure.Implementations;
 

@@ -31,8 +31,9 @@ public class VendorFacilityRepository : IVendorFacilityRepository
 	public async Task<VendorFacility> GetFacilityWithServicesByIdAsync(int vendorId, int facilityId)
 	{
 		var vendorFacility = await _vendorFacilities
+			.Where(vf => vf.Id == facilityId)
 			.Include(vf => vf.Services)
-			.SingleAsync(vf => vf.Id == facilityId && vf.VendorId == vendorId);
+			.FirstAsync();
 
 		return vendorFacility;
 	}

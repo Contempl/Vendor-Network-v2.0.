@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
-using Product.Infrastructure.Dto;
-using Product.Infrastructure.FIlters;
+using Product.Infrastructure.Filters;
 
 namespace Product.WebApi.Controllers
 {
@@ -13,13 +13,15 @@ namespace Product.WebApi.Controllers
 	{
 		private readonly IVendorService _vendorService;
 		private readonly IVendorUserService _vendorUserService;
-		public VendorController(IVendorService vendorService, IVendorUserService vendorUserService)
+		private readonly IUserPrincipalService _userPrincipalService;
+		public VendorController(IVendorService vendorService, IVendorUserService vendorUserService, IUserPrincipalService userPrincipalService)
 		{
 			_vendorService = vendorService;
 			_vendorUserService = vendorUserService;
+			_userPrincipalService = userPrincipalService;
 		}
 
-		[HttpPost("register/{vendorUserId}")]
+		[HttpPost("register/{vendorUserId}")] //Remake
 		[EnsureVendorUserExists]
 		[Authorize(policy: "VendorUser")]
 		public async Task<IActionResult> RegisterVendor(int vendorUserId, [FromBody] VendorRegistrationDto registrationData)
@@ -34,8 +36,8 @@ namespace Product.WebApi.Controllers
 		}
 
 		[HttpGet("Search/Operators/{operatorName}")]
-		[Authorize(Roles = "Admin")]
-		public async Task<ActionResult<List<Operator>>> GetOperators(string operatorName)
+		[Authorize(policy: "VendorUser")]
+		public async Task<ActionResult<List<Operator>>> GetOperators([FromBody]string operatorName)
 		{
 			_vendorService.ValidateString(operatorName);
 
@@ -45,8 +47,8 @@ namespace Product.WebApi.Controllers
 		}
 
 		[HttpGet("{vendorId}")]
-		[EnsureVendorExists]
-		[Authorize]
+		[EnsureBusinessAccess(nameof(VendorUser))]
+		[Authorize(policy: "VendorUser")]
 		public async Task<ActionResult<Vendor>> GetVendor(int vendorId)
 		{
 			var vendor = await _vendorService.GetByIdAsync(vendorId);
@@ -54,12 +56,13 @@ namespace Product.WebApi.Controllers
 			return Ok(vendor);
 		}
 
-		[HttpPut("{vendorId}")]
-		[EnsureVendorExists]
-		[Authorize]
-		public async Task<IActionResult> UpdateVendor(int vendorId, [FromBody] UpdateVendorDto vendorData)
+		[HttpPut]
+		[EnsureBusinessAccess(nameof(VendorUser))]
+		[Authorize(policy: "VendorUser")]
+		public async Task<IActionResult> UpdateVendor([FromBody] UpdateVendorDto vendorData)
 		{
-			var existingVendor = await _vendorService.GetByIdAsync(vendorId);
+			var vendorId = _userPrincipalService.BusinessId;
+			var existingVendor = await _vendorService.GetByIdAsync(vendorId!.Value);
 
 			_vendorService.MapVendorToUpdate(existingVendor, vendorData);
 
@@ -70,7 +73,7 @@ namespace Product.WebApi.Controllers
 
 		[HttpDelete("{vendorId}")]
 		[EnsureVendorExists]
-		[Authorize]
+		[Authorize(policy: "Admin")]
 		public async Task<IActionResult> DeleteVendor(int vendorId)
 		{
 			var vendor = await _vendorService.GetByIdAsync(vendorId);

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace Product.Infrastructure.Dto;
+namespace Product.Application.Dto;
 
 public class AdminRegistrationDto
 {

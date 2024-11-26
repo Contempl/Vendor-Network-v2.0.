@@ -1,4 +1,4 @@
-﻿namespace Product.Infrastructure.Dto;
+﻿namespace Product.Application.Dto;
 
 public class JwtOptions
 {

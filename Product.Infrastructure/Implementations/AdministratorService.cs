@@ -1,7 +1,7 @@
-﻿using Product.Application.Interfaces;
+﻿using Product.Application.Dto;
+using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
-using Product.Infrastructure.Dto;
 
 namespace Product.Infrastructure.Implementations;
 

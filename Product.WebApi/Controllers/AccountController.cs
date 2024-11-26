@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
-using Product.Infrastructure;
-using Product.Infrastructure.Dto;
-using Product.Infrastructure.FIlters;
+using Product.Infrastructure.Filters;
 
 namespace Product.WebApi.Controllers;
 
@@ -17,17 +16,15 @@ public class AccountController : ControllerBase
 	private readonly IOperatorUserService _operatorUserService;
 	private readonly IVendorUserService _vendorUserService;
 	private readonly IAdministratorService _adminService;
-	private readonly IUserPrincipalService _userPrincipalService;
 
 	public AccountController(IInviteService inviteService, IVendorUserService vendorUserService,
-		IOperatorUserService operatorUserService, IUserService userService, IAdministratorService adminService, AppDbContext dbContext, IUserPrincipalService userPrincipalService)
+		IOperatorUserService operatorUserService, IUserService userService, IAdministratorService adminService)
 	{
 		_inviteService = inviteService;
 		_vendorUserService = vendorUserService;
 		_operatorUserService = operatorUserService;
 		_userService = userService;
 		_adminService = adminService;
-		_userPrincipalService = userPrincipalService;
 	}
 
 	[HttpGet("Register/User/{inviteId}")]
@@ -51,9 +48,8 @@ public class AccountController : ControllerBase
 		var invite = await _inviteService.GetInviteWithUserAsync(inviteId);
 
 		_inviteService.ValidateInvite(invite);
-
-		registrationData.InviteId = inviteId; 
-		await UpdateInviteAndUser(registrationData, invite);
+		
+		await UpdateInviteAndUser(registrationData, invite, inviteId);
 
 		return Ok();
 	}
@@ -78,7 +74,7 @@ public class AccountController : ControllerBase
 
 	[HttpGet("User/{userId}")]
 	[EnsureUserExists]
-	[Authorize(policy: "All")] //Add policies
+	[Authorize(policy: "All")]
 	public async Task<ActionResult> GetUser(int userId)
 	{
 		var existingUser = await _userService.GetByIdAsync(userId);
@@ -96,7 +92,7 @@ public class AccountController : ControllerBase
 		return Ok(admin);
 	}
 
-	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite)
+	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite, int inviteId)
 	{
 		var user = await _userService.GetByIdAsync((int)invite.UserId!);
 
@@ -114,6 +110,7 @@ public class AccountController : ControllerBase
 		{
 			throw new InvalidOperationException("Unknown user type");
 		}
+		invite.Id = inviteId;
 		await _inviteService.UpdateAsync(invite);
 	}
 

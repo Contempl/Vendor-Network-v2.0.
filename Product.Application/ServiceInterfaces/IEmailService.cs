@@ -1,4 +1,4 @@
-﻿using Product.Infrastructure.Dto;
+﻿using Product.Application.Dto;
 
 namespace Product.Application.ServiceInterfaces;
 

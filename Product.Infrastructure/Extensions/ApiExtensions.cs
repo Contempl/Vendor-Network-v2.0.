@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Product.Infrastructure.Dto;
+using Product.Application.Dto;
 
 namespace Product.Infrastructure.Extensions;
 

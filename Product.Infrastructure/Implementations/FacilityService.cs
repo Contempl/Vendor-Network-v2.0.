@@ -19,7 +19,7 @@ public class FacilityService : IFacilityService
 	public async Task DeleteAsync(VendorFacilityService facilityService) => await _facilityRepository.DeleteAsync(facilityService);
 	public Task<List<VendorFacilityService>> GetServicesByFacilityIdAsync(int facilityId, int vendorId) => _facilityRepository.GetServicesByFacilityIdAsync(facilityId, vendorId);
 	public async Task<VendorFacilityService> GetByIdAsync(int facilityServiceId, int facilityId, int vendorId) => await _facilityRepository.GetByIdAsync(facilityServiceId, facilityId, vendorId);
-	public async Task UpdateAsync(VendorFacilityService vendorFacilityService) => await UpdateAsync(vendorFacilityService);
+	public async Task UpdateAsync(VendorFacilityService vendorFacilityService) => await _facilityRepository.UpdateAsync(vendorFacilityService);
 	public VendorFacilityService MapFacilityServiceDtoToCreate(VendorFacility facility, string serviceName) =>
 	new VendorFacilityService
 	{

@@ -5,5 +5,4 @@ namespace Product.Application.ServiceInterfaces;
 public interface IJwtTokenService
 {
 	string GenerateToken(User user);
-	string ParseToken(string token);
 }

@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
-using Product.Infrastructure.Dto;
-using Product.Infrastructure.FIlters;
+using Product.Infrastructure.Filters;
 
 namespace Product.WebApi.Controllers;
 
@@ -13,38 +13,46 @@ public class OperatorIndustryController : ControllerBase
 {
 	private readonly IOperatorIndustryService _operatorIndustryService;
 	private readonly IOperatorService _operatorService;
+	private readonly IUserPrincipalService _userPrincipalService;
 
-	public OperatorIndustryController(IOperatorIndustryService operatorIndustryService, IOperatorService operatorService)
+	public OperatorIndustryController(IOperatorIndustryService operatorIndustryService, IOperatorService operatorService, IUserPrincipalService userPrincipalService)
 	{
 		_operatorIndustryService = operatorIndustryService;
 		_operatorService = operatorService;
+		_userPrincipalService = userPrincipalService;
 	}
 
-	[HttpGet("{operatorId}/industry/{industryId}")]
+	[HttpGet("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
+	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<OperatorIndustry>> GetOperatorFacility(int operatorId, int industryId)
+	public async Task<ActionResult<OperatorIndustry>> GetOperatorFacility(int industryId)
 	{
-		var industry = await _operatorIndustryService.GetByIdAsync(operatorId, industryId);
+		var operatorId = _userPrincipalService.BusinessId;
+		var industry = await _operatorIndustryService.GetByIdAsync(operatorId!.Value, industryId);
 
 		return Ok(industry);
 	}
 
-	[HttpGet("{operatorId}/industries")]
+	[HttpGet("industries")]
+	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<List<OperatorIndustry>>> GetOperatorIndustries(int operatorId)
+	public async Task<ActionResult<List<OperatorIndustry>>> GetOperatorIndustries()
 	{
-		var facilities = await _operatorIndustryService.GetOperatorsIndustries(operatorId);
+		var operatorId = _userPrincipalService.BusinessId;
+		var facilities = await _operatorIndustryService.GetOperatorsIndustries(operatorId!.Value);
 
 		return facilities.ToList();
 	}
 
-	[HttpPost("{operatorId}/industry")]
+	[HttpPost("industry")]
 	[EnsureOperatorExists]
+	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult> AddOperatorIndustry(int operatorId, [FromBody] OperatorIndustryCreationDto industryData)
+	public async Task<ActionResult> AddOperatorIndustry([FromBody] OperatorIndustryCreationDto industryData)
 	{
-		var existingOperator = await _operatorService.GetByIdAsync(operatorId);
+		var operatorId = _userPrincipalService.BusinessId;
+		var existingOperator = await _operatorService.GetByIdAsync(operatorId!.Value);
 
 		var newIndustry = _operatorIndustryService.MapIndustryToCreateOperator(existingOperator, industryData);
 
@@ -53,13 +61,15 @@ public class OperatorIndustryController : ControllerBase
 		return CreatedAtAction(nameof(GetOperatorFacility), new {operatorId = operatorId, industryId = newIndustry.Id }, newIndustry);
 	}
 
-	[HttpPut("{operatorId}/industry/{industryId}")]
+	[HttpPut("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
+	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult> UpdateOperatorIndustry(int operatorId, int industryId,
+	public async Task<ActionResult> UpdateOperatorIndustry(int industryId,
 		UpdateOperatorIndustryDto industryData)
 	{
-		var existingIndustry = await _operatorIndustryService.GetByIdAsync(operatorId, industryId);
+		var operatorId = _userPrincipalService.BusinessId;
+		var existingIndustry = await _operatorIndustryService.GetByIdAsync(operatorId!.Value, industryId);
 
 		_operatorIndustryService.MapIndustryToUpdate(existingIndustry, industryData);
 
@@ -70,10 +80,12 @@ public class OperatorIndustryController : ControllerBase
 
 	[HttpDelete("{operatorId}/industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
+	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult> RemoveOperatorIndustry(int operatorId, int industryId)
+	public async Task<ActionResult> RemoveOperatorIndustry(int industryId)
 	{
-		var operatorIndustry = await _operatorIndustryService.GetByIdAsync(operatorId, industryId);
+		var operatorId = _userPrincipalService.BusinessId;
+		var operatorIndustry = await _operatorIndustryService.GetByIdAsync(operatorId!.Value, industryId);
 
 		await _operatorIndustryService.DeleteAsync(operatorIndustry);
 		return NoContent();

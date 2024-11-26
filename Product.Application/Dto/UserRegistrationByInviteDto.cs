@@ -1,12 +1,10 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace Product.Infrastructure.Dto;
+namespace Product.Application.Dto;
 
 public class UserRegistrationByInviteDto
 {
-	public int InviteId { get; set; }
-
 	[Required]
 	public string UserName { get; set; }
 

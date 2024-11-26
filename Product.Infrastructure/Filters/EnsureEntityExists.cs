@@ -4,7 +4,7 @@ using Product.Application.Interfaces;
 using Product.Domain.Entity;
 using Product.Infrastructure.Exceptions;
 
-namespace Product.Infrastructure.FIlters;
+namespace Product.Infrastructure.Filters;
 
 public class EnsureEntityExists<T, TRepository> : ActionFilterAttribute 
 	where TRepository : IRepository<T> 

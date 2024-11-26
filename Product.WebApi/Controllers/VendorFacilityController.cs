@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
-using Product.Infrastructure.Dto;
-using Product.Infrastructure.FIlters;
+using Product.Infrastructure.Filters;
 
 namespace Product.WebApi.Controllers;
 
@@ -14,31 +14,36 @@ public class VendorFacilityController : ControllerBase
 	private readonly IVendorService _vendorService;
 	private readonly IVendFacilityService _vendorFacilityService;
 	private readonly IFacilityService _facilityService;
+	private readonly IUserPrincipalService _userPrincipalService;
 
 	public VendorFacilityController(IVendFacilityService vendorFacilityService,
-		IFacilityService facilityService, IVendorService vendorService)
+		IFacilityService facilityService, IVendorService vendorService, IUserPrincipalService userPrincipalService)
 	{
 		_vendorFacilityService = vendorFacilityService;
 		_facilityService = facilityService;
 		_vendorService = vendorService;
+		_userPrincipalService = userPrincipalService;
 	}
 
-	[HttpGet("{vendorId}/facility/{facilityId}")]
+	[HttpGet("/facility/{facilityId}")]
 	[EnsureVendorFacilityExists]
+	[EnsureBusinessAccess(nameof(VendorUser))]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult<VendorFacility>> GetVendorFacility(int vendorId, int facilityId)
+	public async Task<ActionResult<VendorFacility>> GetVendorFacility(int facilityId)
 	{
-		var vendorFaciltiy = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, vendorId);
+		var vendorId = _userPrincipalService.BusinessId;
+		var vendorFacility = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, vendorId!.Value);
 
-		return Ok(vendorFaciltiy);
+		return Ok(vendorFacility);
 	}
 
-	[HttpPost("{vendorId}/facility")]
-	[EnsureVendorExists]
+	[HttpPost("/facility")]
+	[EnsureBusinessAccess(nameof(VendorUser))]
 	[Authorize(policy: "VendorUser")]
-	public async Task<IActionResult> AddFacility(int vendorId, VendorFacilityDto facilityData)
+	public async Task<IActionResult> AddFacility(VendorFacilityDto facilityData)
 	{
-		var vendor = await _vendorService.GetByIdAsync(vendorId);
+		var vendorId = _userPrincipalService.BusinessId;
+		var vendor = await _vendorService.GetByIdAsync(vendorId!.Value);
 
 		var facility = _vendorFacilityService.MapVendorFacilityFromDtoToCreateAsync(vendor, facilityData);
 
@@ -48,21 +53,22 @@ public class VendorFacilityController : ControllerBase
 	}
 
 	[HttpPut("facility/{facilityId}")]
-	[EnsureVendorExists]
 	[EnsureVendorFacilityExists]
+	[EnsureBusinessAccess(nameof(VendorUser))]
 	[Authorize(policy: "VendorUser")]
-	public async Task<IActionResult> UpdateFacility(int vendorId, int facilityId,
+	public async Task<IActionResult> UpdateFacility(int facilityId,
 		[FromBody] UpdateVendorFacilityDto facilityData)
 	{
-		var facility = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, vendorId);
+		var vendorId = _userPrincipalService.BusinessId;
+		var facility = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, vendorId!.Value);
 
 		await _vendorFacilityService.MapAndUpdateVendorFacility(facility, facilityData);
 		return Ok(facility);
 	}
 
 	[HttpDelete("facilities/{facilityId}")]
-	[EnsureVendorFacilityExists]
-	[Authorize(policy: "AdminOnly")]
+	[EnsureVendorFacilityExists] // не завернёт ли при попытке админа удалить facility? А вендор сам не может удалять свои фасилитис ?
+	[Authorize(policy: "AdminOnly")] 
 	public async Task<ActionResult> DeleteFacility(int vendorId, int facilityId)
 	{
 		var vendorFacility = await _vendorFacilityService.GetByIdAsync(vendorId, facilityId);
@@ -73,16 +79,17 @@ public class VendorFacilityController : ControllerBase
 	}
 
 
-	[HttpGet("{vendorId}/facility/{facilityId}/service/{facilityServiceId}")]
+	[HttpGet("/facility/{facilityId}/service/{facilityServiceId}")]
+	[EnsureBusinessAccess(nameof(VendorUser))]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult> GetVendorFacilityService(int vendorId, int facilityId, int facilityServiceId)
+	public async Task<ActionResult> GetVendorFacilityService(int facilityId, int facilityServiceId)
 	{
-		var vendorFacility = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, vendorId);
-
+		var vendorId = _userPrincipalService.BusinessId;
+		var vendorFacility = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, vendorId!.Value);
+		
 		return vendorFacility switch
 		{
 			null => BadRequest("Invalid data"),
-			{ VendorId: var vendId } when vendId != vendorId => BadRequest("Data access prohibited"),
 			{ Services: var services } => services.FirstOrDefault(vfs => vfs.Id == facilityServiceId) switch
 			{
 				null => NotFound($"Service not found with id: {facilityServiceId}"),
@@ -91,21 +98,25 @@ public class VendorFacilityController : ControllerBase
 		};
 	}
 
-	[HttpGet("{vendorId}/facility/{facilityId}/services")]
+	[HttpGet("/facility/{facilityId}/services")]
+	[EnsureBusinessAccess(nameof(VendorUser))]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult<List<VendorFacilityService>>> GetVendorFacilityServices(int vendorId, int facilityId)
+	public async Task<ActionResult<List<VendorFacilityService>>> GetVendorFacilityServices(int facilityId)
 	{
-		var facilityServices = await _facilityService.GetServicesByFacilityIdAsync(vendorId, facilityId);
+		var vendorId = _userPrincipalService.BusinessId;
+		var facilityServices = await _facilityService.GetServicesByFacilityIdAsync(vendorId!.Value, facilityId);
 
 		return Ok(facilityServices);
 	}
 
-	[HttpPost("{vendorId}/facility/{facilityId}/service")]
+	[HttpPost("/facility/{facilityId}/service")]
 	[EnsureVendorFacilityExists]
+	[EnsureBusinessAccess(nameof(VendorUser))]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult> AddFacilityService(int vendorId, int facilityId, string facilityServiceName)
+	public async Task<ActionResult> AddFacilityService(int facilityId, [FromBody] string facilityServiceName)
 	{
-		var facility = await _vendorFacilityService.GetByIdAsync(facilityId, vendorId);
+		var vendorId = _userPrincipalService.BusinessId;
+		var facility = await _vendorFacilityService.GetByIdAsync(facilityId, vendorId!.Value);
 
 		var newFacilityService = _facilityService.MapFacilityServiceDtoToCreate(facility, facilityServiceName);
 
@@ -114,12 +125,14 @@ public class VendorFacilityController : ControllerBase
 		return Ok(newFacilityService);
 	}
 
-	[HttpPut("{vendorId}/facility/{facilityId}/service/{facilityServiceId}")]
+	[HttpPut("/facility/{facilityId}/service/{facilityServiceId}")]
 	[EnsureVendorFacilityServiceExists]
+	[EnsureBusinessAccess(nameof(VendorUser))]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult> UpdateFacilityService(int vendorId, int facilityId, int facilityServiceId, string facilityServiceName)
+	public async Task<ActionResult> UpdateFacilityService(int facilityId, int facilityServiceId, [FromBody] string facilityServiceName)
 	{
-		var vendorFacilityService = await _facilityService.GetByIdAsync(vendorId, facilityId, facilityServiceId);
+		var vendorId = _userPrincipalService.BusinessId;
+		var vendorFacilityService = await _facilityService.GetByIdAsync(vendorId!.Value, facilityId, facilityServiceId);
 
 		_facilityService.ValidateServiceName(facilityServiceName);
 
@@ -130,12 +143,14 @@ public class VendorFacilityController : ControllerBase
 		return Ok(vendorFacilityService);
 	}
 
-	[HttpDelete("{vendorId}/facility/{facilityId}/service/{facilityServiceId}")]
+	[HttpDelete("/facility/{facilityId}/service/{facilityServiceId}")]
 	[EnsureVendorFacilityServiceExists]
+	[EnsureBusinessAccess(nameof(VendorUser))]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult> DeleteFacilityService(int vendorId, int facilityId, int facilityServiceId)
+	public async Task<ActionResult> DeleteFacilityService(int facilityId, int facilityServiceId)
 	{
-		var facilityService = await _facilityService.GetByIdAsync(vendorId, facilityId, facilityServiceId);
+		var vendorId = _userPrincipalService.BusinessId;
+		var facilityService = await _facilityService.GetByIdAsync(vendorId!.Value, facilityId, facilityServiceId);
 
 		await _facilityService.DeleteAsync(facilityService);
 

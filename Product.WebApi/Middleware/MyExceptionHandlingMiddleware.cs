@@ -29,9 +29,14 @@ public class MyExceptionHandlingMiddleware
 			{
 				Type genericType = ex.GetType().GetGenericArguments().Single();
 
-				_logger.LogWarning(ex, $"Resource not found {nameof(genericType)}.");
-				context.Response.StatusCode = StatusCodes.Status404NotFound;
+				_logger.LogError(ex, $"Resource not found {nameof(genericType)}.");
 			}
+			else
+			{
+				_logger.LogError(ex, "Not found exception.");
+			}
+
+			context.Response.StatusCode = StatusCodes.Status404NotFound;
 		}
 		catch (Exception ex)
 		{

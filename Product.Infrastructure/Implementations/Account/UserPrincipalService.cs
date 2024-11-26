@@ -7,16 +7,15 @@ public class UserPrincipalService : IUserPrincipalService
 {
     public int? UserId { get; set; }
     public string? UserType { get; set; } //enum
-    public int BusinessId { get; set; }
+    public int? BusinessId { get; set; }
     
 
     public UserPrincipalService(ClaimsPrincipal claimsPrincipal)
     {
-        var claim = claimsPrincipal.Claims.SingleOrDefault(c => c.Type == "userId");
-        if (claim != null)
-        {
-            var userId = int.Parse(claim.Value);
-            UserId = userId;
-        }
+        UserId = GetIntClaim(claimsPrincipal.Claims, "userId");
+        BusinessId = GetIntClaim(claimsPrincipal.Claims, "businessId");
+        UserType = GetClaim(claimsPrincipal.Claims, "userType");
     }
+    private string? GetClaim(IEnumerable<Claim> claims, string claimName) => claims.SingleOrDefault(c => c.Type == claimName)?.Value;
+    private int? GetIntClaim(IEnumerable<Claim> claims, string claimName) => int.TryParse(GetClaim(claims, claimName), out var value) ? value : null;
 }

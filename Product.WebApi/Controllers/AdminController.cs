@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
-using Product.Infrastructure.FIlters;
+using Product.Infrastructure.Filters;
 
 namespace Product.WebApi.Controllers;
 
