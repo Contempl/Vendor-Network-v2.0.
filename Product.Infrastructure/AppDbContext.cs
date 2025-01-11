@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 using Product.Domain.Entity;
 using Product.Infrastructure.Configurations;
 
@@ -32,4 +34,21 @@ public class AppDbContext : DbContext
     public DbSet<VendorFacilityService> VendorFacilityServices { get; set; }
     public DbSet<Invite> Invites { get; set; }
     public DbSet<Business> Businesses { get; set; }
+}
+public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
+{
+	public AppDbContext CreateDbContext(string[] args)
+	{
+		var configuration = new ConfigurationBuilder()
+			.SetBasePath(Directory.GetCurrentDirectory())
+			.AddJsonFile("appsettings.json")
+			.Build();
+		
+		var connectionString = configuration.GetConnectionString("DefaultConnection");
+		
+		var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+		optionsBuilder.UseSqlServer(connectionString);
+
+		return new AppDbContext(optionsBuilder.Options);
+	}
 }

@@ -8,8 +8,8 @@ public class Invite : IEntity
     public DateTime? ExpiresAt { get; set; }
     public int UserId { get; set; }
     public required User User { get; set; }
-    public int AdminId { get; set; }
-    public Administrator Admin { get; set; }
+    public int SenderId { get; set; }
+    public User Sender { get; set; }
 }
 
 public enum InvitationStatus

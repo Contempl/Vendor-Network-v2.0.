@@ -17,10 +17,6 @@ public class AdministratorConfiguration : IEntityTypeConfiguration<Administrator
 		builder.Property(admin => admin.PasswordHash)
 			.HasColumnName("Password");
 
-		builder.HasMany(admin => admin.Invites)
-			.WithOne(invite => invite.Admin)
-			.HasForeignKey(invite => invite.AdminId);
-
 		builder.Property(admin => admin.FirstName)
 			.HasColumnName("FirstName")
 			.HasMaxLength(50);

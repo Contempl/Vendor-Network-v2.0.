@@ -51,14 +51,14 @@ public class InviteService : IInviteService
 		user.LastName = dto.LastName;
 		user.PasswordHash = _passwordHasher.HashThePassword(dto.Password);
 	}
-	public Invite CreateInvite(User user, Administrator admin) => new Invite
+	public Invite CreateInvite(User user, User sender) => new Invite
 	{
 		User = user,
 		UserId = user.Id,
 		Status = InvitationStatus.Sent,
 		CreatedAt = DateTime.UtcNow,
 		ExpiresAt = DateTime.UtcNow.AddDays(30),
-		AdminId = admin.Id,
-		Admin = admin
+		SenderId = sender.Id,
+		Sender = sender
 	};
 }

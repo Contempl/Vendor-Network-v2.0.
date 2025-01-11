@@ -50,7 +50,7 @@ public class OperatorService : IOperatorService
         OperatorUser user) => new Operator
     {
 		BusinessName = operatorRegistrationData.BusinessName,
-		Adress = operatorRegistrationData.Adress,
+		Address = operatorRegistrationData.Adress,
 		Email = operatorRegistrationData.Email,
 		LogoUrl = operatorRegistrationData.LogoUrl,
 		Occupation = operatorRegistrationData.Occupation,
@@ -59,7 +59,7 @@ public class OperatorService : IOperatorService
     public void MapOperatorFromDto(Operator @operator, UpdateOperatorDto operatorData)
     {
 		@operator.BusinessName = operatorData.BusinessName ?? @operator.BusinessName;
-		@operator.Adress = operatorData.Address ?? @operator.Adress;
+		@operator.Address = operatorData.Address ?? @operator.Address;
 		@operator.Email = operatorData.Email ?? @operator.Email;
 		@operator.LogoUrl = operatorData.LogoUrl ?? @operator.LogoUrl;
 		@operator.Occupation = operatorData.Occupation ?? @operator.Occupation;

@@ -13,7 +13,7 @@ internal class OperatorConfiguration : IEntityTypeConfiguration<Operator>
 			.HasMaxLength(50)
 			.IsRequired();
 
-		builder.Property(v => v.Adress)
+		builder.Property(v => v.Address)
 			.HasColumnName("Address")
 			.HasMaxLength(50)
 			.IsRequired();
