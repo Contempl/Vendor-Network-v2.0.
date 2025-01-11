@@ -12,6 +12,5 @@ public interface IInviteService
 	Task UpdateAsync(Invite invite);
 	Task DeleteAsync(Invite invite);
 	void UpdateInvitationStatusAsync(User user, Invite invite, UserRegistrationByInviteDto dto);
-	Invite CreateInvite(User user, Administrator admin);
-
+	Invite CreateInvite(User user, User sender);
 }

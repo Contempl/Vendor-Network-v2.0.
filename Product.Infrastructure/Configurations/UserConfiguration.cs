@@ -33,5 +33,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 		builder.Property(u => u.Email)
 			.HasColumnName("Email")
 			.IsRequired();
+		
+		builder.HasMany(user => user.Invites)
+			.WithOne(invite => invite.User)
+			.HasForeignKey(invite => invite.UserId);
 	}
 }

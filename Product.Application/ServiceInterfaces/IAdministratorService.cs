@@ -9,6 +9,5 @@ public interface IAdministratorService
     Task<Administrator> GetByIdAsync(int adminId);
     Task UpdateAsync(Administrator admin);
     Task DeleteAsync(Administrator admmin);
-    string GenerateEmailTemplate(string email, User user, string inviteUrl);
     Administrator MapAdminFromDto(AdminRegistrationDto registrationDto);
 }

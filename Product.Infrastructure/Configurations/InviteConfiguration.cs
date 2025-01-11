@@ -18,9 +18,9 @@ internal class InviteConfiguration : IEntityTypeConfiguration<Invite>
 		builder.Property(invite => invite.ExpiresAt)
 			.HasColumnName("ExpiresAt");
 
-		builder.HasOne(invite => invite.Admin)
-			.WithMany(admin => admin.Invites)
-			.HasForeignKey(invite => invite.AdminId)
+		builder.HasOne(invite => invite.User)
+			.WithMany(user => user.Invites)
+			.HasForeignKey(invite => invite.UserId)
 			.OnDelete(DeleteBehavior.Restrict);
 		
 	}

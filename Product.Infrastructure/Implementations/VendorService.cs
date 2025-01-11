@@ -35,7 +35,7 @@ public class VendorService : IVendorService
         VendorRegistrationDto registrationData) => new Vendor
     {
 		BusinessName = registrationData.BusinessName,
-		Adress = registrationData.Adress,
+		Address = registrationData.Adress,
 		Email = registrationData.Email,
 		VendorUsers = new List<VendorUser> { user }
 	};
@@ -49,7 +49,7 @@ public class VendorService : IVendorService
     public void MapVendorToUpdate(Vendor vendor, UpdateVendorDto vendorData)
     {
 		vendor.BusinessName = vendorData.BusinessName ?? vendor.BusinessName;
-		vendor.Adress = vendorData.Address ?? vendor.Adress;
+		vendor.Address = vendorData.Address ?? vendor.Address;
 		vendor.Email = vendorData.Email ??  vendor.Email;
 	}
     public async Task<List<Operator>> GetOperatorsByNameAsync(string operatorName)

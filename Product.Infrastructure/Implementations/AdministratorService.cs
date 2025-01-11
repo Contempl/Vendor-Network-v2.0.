@@ -18,31 +18,6 @@ public class AdministratorService : IAdministratorService
 	public async Task DeleteAsync(Administrator admin) => await _adminRepository.DeleteAsync(admin);
 	public async Task<Administrator> GetByIdAsync(int adminId) => await _adminRepository.GetByIdAsync(adminId);
 	public async Task UpdateAsync(Administrator admin) => await _adminRepository.UpdateAsync(admin);
-	public string GenerateEmailTemplate(string email, User user, string inviteUrl)
-	{
-		string emailTemplate = "";
-
-		if (user is VendorUser)
-			emailTemplate =
-				$"<h1>Invitation to Register as a Vendor</h1>" +
-				$"<p>Dear {email},</p>" +
-				$"<p>You have been invited to register as a Vendor business. Please click the following link to complete your registration:</p>" +
-				$"<a href=\"{inviteUrl}\">Register now</a>" +
-				$"<p>This invitation will expire in 30 days.</p>";
-
-		else if (user is OperatorUser)
-			emailTemplate =
-				$"<h1>Invitation to Register as an Operator business</h1>" +
-				$"<p>Dear {email},</p>" +
-				$"<p>You have been invited to register your business. Please click the following link to complete your registration:</p>" +
-				$"<a href=\"{inviteUrl}\">Register now</a>" +
-				$"<p>This invitation will expire in 30 days.</p>";
-
-		else
-			throw new ArgumentException($"Invalid User Type");
-
-		return emailTemplate;
-	}
 	public Administrator MapAdminFromDto(AdminRegistrationDto registrationDto) => new Administrator
 	{
 		UserName = registrationDto.UserName,

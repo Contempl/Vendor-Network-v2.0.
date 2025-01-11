@@ -16,12 +16,18 @@ public class OperatorController : Controller
 	private readonly IOperatorService _operatorService;
 	private readonly IOperatorUserService _operatorUserService;
 	private readonly IUserPrincipalService _userPrincipalService;
+	private readonly IUserService _userService;
+	private readonly IInviteService _inviteService;
+	private readonly IEmailService _emailService;
 
-	public OperatorController(IOperatorService operatorService, IOperatorUserService operatorUserService, IUserPrincipalService userPrincipalService)
+	public OperatorController(IOperatorService operatorService, IOperatorUserService operatorUserService, IUserPrincipalService userPrincipalService, IUserService userService, IInviteService inviteService, IEmailService emailService)
 	{
 		_operatorService = operatorService;
 		_operatorUserService = operatorUserService;
 		_userPrincipalService = userPrincipalService;
+		_userService = userService;
+		_inviteService = inviteService;
+		_emailService = emailService;
 	}
 
 	[HttpPost("search")]
@@ -102,5 +108,33 @@ public class OperatorController : Controller
 		await _operatorService.DeleteAsync(@operator);
 
 		return NoContent();
+	}
+
+	[HttpPost("invite")]
+	[EnsureBusinessAccess(nameof(OperatorUser))]
+	[Authorize(policy: "OperatorUser")]
+	public async Task<IActionResult> InviteOperatorUser([FromBody] string email)
+	{
+		var operatorUserId = _userPrincipalService.UserId!.Value;
+		var operatorUser = await _userService.GetByIdAsync(operatorUserId);
+		
+		var operatorId = _userPrincipalService.BusinessId;
+		
+		var newOperatorUser = new OperatorUser { Email = email, OperatorId = operatorId };
+		
+		await _operatorUserService.CreateAsync(newOperatorUser);
+		
+		var existingUser = await _userService.GetByEmailAsync(email);
+		
+		var invite =  _inviteService.CreateInvite(existingUser, operatorUser);
+		var inviteUrl = _emailService.CreateInviteUrl(invite.Id); 
+		await _inviteService.CreateAsync(invite);
+		
+		var emailBody = _emailService.GenerateEmailTemplate(email, existingUser, inviteUrl);
+
+		var mailMessage = _emailService.CreateMessage(emailBody, operatorUser.Email);
+
+		await _emailService.SendInvitationEmailAsync(mailMessage);
+		return Ok();
 	}
 }

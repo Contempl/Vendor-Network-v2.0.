@@ -17,7 +17,7 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
 			.HasMaxLength(50)
 			.IsRequired();
 
-		builder.Property(business => business.Adress)
+		builder.Property(business => business.Address)
 			.HasColumnName("Address")
 			.HasMaxLength(50)
 			.IsRequired();

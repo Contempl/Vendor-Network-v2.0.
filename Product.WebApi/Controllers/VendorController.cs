@@ -14,11 +14,17 @@ namespace Product.WebApi.Controllers
 		private readonly IVendorService _vendorService;
 		private readonly IVendorUserService _vendorUserService;
 		private readonly IUserPrincipalService _userPrincipalService;
-		public VendorController(IVendorService vendorService, IVendorUserService vendorUserService, IUserPrincipalService userPrincipalService)
+		private readonly IUserService _userService;
+		private readonly IInviteService _inviteService;
+		private readonly IEmailService _emailService;
+		public VendorController(IVendorService vendorService, IVendorUserService vendorUserService, IUserPrincipalService userPrincipalService, IUserService userService, IInviteService inviteService, IEmailService emailService)
 		{
 			_vendorService = vendorService;
 			_vendorUserService = vendorUserService;
 			_userPrincipalService = userPrincipalService;
+			_userService = userService;
+			_inviteService = inviteService;
+			_emailService = emailService;
 		}
 
 		[HttpPost("register/{vendorUserId}")] //Remake
@@ -81,6 +87,34 @@ namespace Product.WebApi.Controllers
 			await _vendorService.DeleteAsync(vendor);
 
 			return NoContent();
+		}
+		
+		[HttpPost("invite")]
+		[EnsureBusinessAccess(nameof(VendorUser))]
+		[Authorize(policy: "VendorUser")]
+		public async Task<IActionResult> InviteVendorUser([FromBody] string email)
+		{
+			var vendorUserId = _userPrincipalService.UserId!.Value;
+			var vendorUser = await _userService.GetByIdAsync(vendorUserId);
+		
+			var vendorId = _userPrincipalService.BusinessId;
+		
+			var newVendorUser = new VendorUser { Email = email, VendorId = vendorId };
+		
+			await _vendorUserService.CreateAsync(newVendorUser);
+		
+			var existingUser = await _userService.GetByEmailAsync(email);
+		
+			var invite =  _inviteService.CreateInvite(existingUser, vendorUser);
+			var inviteUrl = _emailService.CreateInviteUrl(invite.Id); 
+			await _inviteService.CreateAsync(invite);
+		
+			var emailBody = _emailService.GenerateEmailTemplate(email, existingUser, inviteUrl);
+
+			var mailMessage = _emailService.CreateMessage(emailBody, vendorUser.Email);
+
+			await _emailService.SendInvitationEmailAsync(mailMessage);
+			return Ok();
 		}
 	}
 }

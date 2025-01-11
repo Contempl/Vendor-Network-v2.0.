@@ -1,6 +1,9 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
@@ -70,11 +73,21 @@ builder.Services.AddScoped<IOperatorService, OperatorService>();
 builder.Services.AddScoped<IOperatorIndustryService, OperatorIndustryService>();
 builder.Services.AddScoped<IOperatorUserService, OperatorUserService>();
 builder.Services.AddScoped<IInviteService, InviteService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+builder.Services.AddHttpContextAccessor();
+// builder.Services.AddScoped<IUrlHelper, UrlHelper>();
+// builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IEmailService, EmailService>(provider =>
+{
+    var urlHelperFactory = provider.GetRequiredService<IUrlHelperFactory>();
+    var actionContextAccessor = provider.GetRequiredService<IActionContextAccessor>();
+    var urlHelper = urlHelperFactory.GetUrlHelper(actionContextAccessor.ActionContext);
+    return new EmailService(builder.Configuration ,urlHelper);
+});
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IUserPrincipalService, UserPrincipalService>();
-builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddScoped<ClaimsPrincipal>(services => services.GetRequiredService<IHttpContextAccessor>().HttpContext.User);
 
 var app = builder.Build();
