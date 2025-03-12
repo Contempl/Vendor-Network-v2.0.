@@ -1,21 +1,19 @@
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Product.Application.Dto;
-using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
-using Product.Infrastructure;
+using Product.Infrastructure.Dependency_Injection;
 using Product.Infrastructure.Extensions;
 using Product.Infrastructure.Implementations;
 using Product.Infrastructure.Implementations.Account;
-using Product.Infrastructure.Repositories;
 using Product.WebApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddApplicationServices();
+builder.Services.AddDataAccessLayer(builder.Configuration);
 builder.Services.AddApiAuthentication(builder.Configuration);
 builder.Services.AddControllers().AddJsonOptions(options => 
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
@@ -46,37 +44,12 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(nameof(J
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
 
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IAdministratorRepository, AdministratorRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IInviteRepository, InviteRepository>();
-builder.Services.AddScoped<IVendorRepository, VendorRepository>();
-builder.Services.AddScoped<IVendorFacilityRepository, VendorFacilityRepository>();
-builder.Services.AddScoped<IVendorFacilityServiceRepository, VendorFacilityServiceRepository>();
-builder.Services.AddScoped<IVendorUserRepository, VendorUserRepository>();
-builder.Services.AddScoped<IOperatorRepository, OperatorRepository>();
-builder.Services.AddScoped<IOperatorIndustryRepository, OperatorIndustryRepository>();
-builder.Services.AddScoped<IOperatorUserRepository, OperatorUserRepository>();
 
-builder.Services.AddScoped<IAdministratorService, AdministratorService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IVendorService, VendorService>();
-builder.Services.AddScoped<IFacilityService, FacilityService>();
-builder.Services.AddScoped<IVendFacilityService, VendFacilityService>();
-builder.Services.AddScoped<IVendorUserService, VendorUserService>();
-builder.Services.AddScoped<IOperatorService, OperatorService>();
-builder.Services.AddScoped<IOperatorIndustryService, OperatorIndustryService>();
-builder.Services.AddScoped<IOperatorUserService, OperatorUserService>();
-builder.Services.AddScoped<IInviteService, InviteService>();
 builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 builder.Services.AddHttpContextAccessor();
 // builder.Services.AddScoped<IUrlHelper, UrlHelper>();
-// builder.Services.AddScoped<IEmailService, EmailService>();
+
 builder.Services.AddScoped<IEmailService, EmailService>(provider =>
 {
     var urlHelperFactory = provider.GetRequiredService<IUrlHelperFactory>();
@@ -87,6 +60,11 @@ builder.Services.AddScoped<IEmailService, EmailService>(provider =>
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IUserPrincipalService, UserPrincipalService>();
+builder.Services.AddStackExchangeRedisCache(redisOptions =>
+{
+    redisOptions.Configuration = builder.Configuration.GetConnectionString("Redis");
+    redisOptions.InstanceName = "Entity_";
+});
 
 builder.Services.AddScoped<ClaimsPrincipal>(services => services.GetRequiredService<IHttpContextAccessor>().HttpContext.User);
 
