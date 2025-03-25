@@ -37,6 +37,6 @@ internal class OperatorConfiguration : IEntityTypeConfiguration<Operator>
 		builder.HasMany(op => op.OperatorUsers)
 			.WithOne(ou => ou.Operator)
 			.HasForeignKey(ou => ou.OperatorId)
-			.OnDelete(DeleteBehavior.Restrict);
+			.OnDelete(DeleteBehavior.Cascade);
 	}
 }

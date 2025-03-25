@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Infrastructure.Filters;
 using Product.WebApi.Pagination;
@@ -30,32 +30,30 @@ public class OperatorController : Controller
 		_emailService = emailService;
 	}
 
-	[HttpPost("search")]
+	[HttpPost("search/vendors")]
 	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<IActionResult> GetVendorsToServeFacilities(string serviceType, // can't have 2 [FromBody]
-	   [FromBody] List<int> operatorLocationsId)
+	public async Task<IActionResult> GetVendorsToServeFacilities([FromBody] SearchVendorsForIndustriesDto dto)
 	{
-		_operatorService.ValidateStringInput(serviceType);
+		_operatorService.ValidateStringInput(dto.ServiceType);
 
-		var operatorFacilities = _operatorService.GetAllOperatorIndustries(operatorLocationsId);
+		var operatorFacilities = _operatorService.GetAllOperatorIndustries(dto.IndustriesLocationIds);
 
-		var vendors = await _operatorService.SearchVendorsAsync(serviceType, operatorFacilities);
+		var vendors = await _operatorService.SearchVendorsAsync(dto.ServiceType, operatorFacilities);
 
 		return Ok(vendors);
 	}
 
-	[HttpGet("search/{vendorName}/{pageSize}/{pageNumber}")]
+	[HttpPost("search/vendor")]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<PagedList<Vendor>>> GetVendors([FromBody]string vendorName,
-		SortOrder sortOrder = SortOrder.Ascending, int pageSize = 10, int pageNumber = 1)
+	public async Task<ActionResult<PagedList<Vendor>>> GetVendors([FromBody] VendorSearchDto vendorSearchDto)
 	{
-		_operatorService.ValidateStringInput(vendorName);
+		_operatorService.ValidateStringInput(vendorSearchDto.VendorName);
 
-		var pagedVendors = await _operatorService.GetVendorsQuery(vendorName, sortOrder,
-			pageSize, pageNumber);
+		var pagedVendors = await _operatorService.GetVendorsQuery(vendorSearchDto.VendorName, vendorSearchDto.SortOrder,
+			vendorSearchDto.PageSize, vendorSearchDto.PageNumber);
 
-		return Ok(new PagedList<Vendor>(pagedVendors.Items, pageNumber, pageSize, pagedVendors.TotalCount));
+		return Ok(new PagedList<Vendor>(pagedVendors.Items, vendorSearchDto.PageNumber, vendorSearchDto.PageSize, pagedVendors.TotalCount));
 	}
 
 
@@ -113,24 +111,24 @@ public class OperatorController : Controller
 	[HttpPost("invite")]
 	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<IActionResult> InviteOperatorUser([FromBody] string email)
+	public async Task<IActionResult> InviteOperatorUser([FromBody] EmailForInviteDto dto)
 	{
 		var operatorUserId = _userPrincipalService.UserId!.Value;
 		var operatorUser = await _userService.GetByIdAsync(operatorUserId);
 		
 		var operatorId = _userPrincipalService.BusinessId;
 		
-		var newOperatorUser = new OperatorUser { Email = email, OperatorId = operatorId };
+		var newOperatorUser = new OperatorUser { Email = dto.Email, OperatorId = operatorId };
 		
 		await _operatorUserService.CreateAsync(newOperatorUser);
 		
-		var existingUser = await _userService.GetByEmailAsync(email);
+		var existingUser = await _userService.GetByEmailAsync(dto.Email);
 		
 		var invite =  _inviteService.CreateInvite(existingUser, operatorUser);
 		var inviteUrl = _emailService.CreateInviteUrl(invite.Id); 
 		await _inviteService.CreateAsync(invite);
 		
-		var emailBody = _emailService.GenerateEmailTemplate(email, existingUser, inviteUrl);
+		var emailBody = _emailService.GenerateEmailTemplate(dto.Email, existingUser, inviteUrl);
 
 		var mailMessage = _emailService.CreateMessage(emailBody, operatorUser.Email);
 

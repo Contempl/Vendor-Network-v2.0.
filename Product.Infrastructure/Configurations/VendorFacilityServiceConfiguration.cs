@@ -13,7 +13,7 @@ internal class VendorFacilityServiceConfiguration : IEntityTypeConfiguration<Ven
 		builder.HasKey(vfs => vfs.Id);
 
 		builder.Property(vfs => vfs.Name)
-			.HasMaxLength(40)
+			.HasMaxLength(250)
 			.IsRequired();
 
 		builder.HasOne(vfs => vfs.VendorFacility)

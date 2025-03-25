@@ -1,18 +1,12 @@
-using System.Security.Claims;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Product.Application.Dto;
-using Product.Application.ServiceInterfaces;
+using Product.Domain.Settings;
 using Product.Infrastructure.Dependency_Injection;
 using Product.Infrastructure.Extensions;
-using Product.Infrastructure.Implementations;
-using Product.Infrastructure.Implementations.Account;
 using Product.WebApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplicationServices();
+builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddDataAccessLayer(builder.Configuration);
 builder.Services.AddApiAuthentication(builder.Configuration);
 builder.Services.AddControllers().AddJsonOptions(options => 
@@ -44,29 +38,7 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(nameof(J
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
-
-builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
-builder.Services.AddHttpContextAccessor();
 // builder.Services.AddScoped<IUrlHelper, UrlHelper>();
-
-builder.Services.AddScoped<IEmailService, EmailService>(provider =>
-{
-    var urlHelperFactory = provider.GetRequiredService<IUrlHelperFactory>();
-    var actionContextAccessor = provider.GetRequiredService<IActionContextAccessor>();
-    var urlHelper = urlHelperFactory.GetUrlHelper(actionContextAccessor.ActionContext);
-    return new EmailService(builder.Configuration ,urlHelper);
-});
-builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddScoped<IUserPrincipalService, UserPrincipalService>();
-builder.Services.AddStackExchangeRedisCache(redisOptions =>
-{
-    redisOptions.Configuration = builder.Configuration.GetConnectionString("Redis");
-    redisOptions.InstanceName = "Entity_";
-});
-
-builder.Services.AddScoped<ClaimsPrincipal>(services => services.GetRequiredService<IHttpContextAccessor>().HttpContext.User);
 
 var app = builder.Build();
 

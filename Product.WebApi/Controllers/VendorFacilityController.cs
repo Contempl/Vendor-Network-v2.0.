@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Infrastructure.Filters;
 
@@ -66,8 +67,8 @@ public class VendorFacilityController : ControllerBase
 		return Ok(facility);
 	}
 
-	[HttpDelete("facilities/{facilityId}")]
-	[EnsureVendorFacilityExists] // не завернёт ли при попытке админа удалить facility? А вендор сам не может удалять свои фасилитис ?
+	[HttpDelete("{vendorId}/facilities/{facilityId}")]
+	[EnsureVendorFacilityExists] 
 	[Authorize(policy: "AdminOnly")] 
 	public async Task<ActionResult> DeleteFacility(int vendorId, int facilityId)
 	{
@@ -129,14 +130,14 @@ public class VendorFacilityController : ControllerBase
 	[EnsureVendorFacilityServiceExists]
 	[EnsureBusinessAccess(nameof(VendorUser))]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult> UpdateFacilityService(int facilityId, int facilityServiceId, [FromBody] string facilityServiceName)
+	public async Task<ActionResult> UpdateFacilityService(int facilityId, int facilityServiceId, [FromBody] VendorFacilityServiceDto facilityServiceDto)
 	{
 		var vendorId = _userPrincipalService.BusinessId;
 		var vendorFacilityService = await _facilityService.GetByIdAsync(vendorId!.Value, facilityId, facilityServiceId);
 
-		_facilityService.ValidateServiceName(facilityServiceName);
+		_facilityService.ValidateServiceName(facilityServiceDto.Name);
 
-		_facilityService.UpdateFacilityServiceName(vendorFacilityService, facilityServiceName);
+		_facilityService.UpdateFacilityServiceName(vendorFacilityService, facilityServiceDto.Name);
 
 		await _facilityService.UpdateAsync(vendorFacilityService);
 
