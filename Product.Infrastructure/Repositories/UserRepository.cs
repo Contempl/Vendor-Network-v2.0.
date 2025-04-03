@@ -7,7 +7,7 @@ namespace Product.Infrastructure.Repositories;
 public class UserRepository : IUserRepository
 {
 	private readonly AppDbContext _context;
-	private DbSet<User> _users;
+	private readonly DbSet<User> _users;
 
 	public UserRepository(AppDbContext context)
 	{
@@ -46,9 +46,10 @@ public class UserRepository : IUserRepository
 		await SaveAsync();
 	}
 	public async Task SaveAsync() => await _context.SaveChangesAsync();
-	public Task<User> GetByEmailAsync(string email)
+	public async Task<User> GetByEmailAsync(string email)
 	{
-		var user = _users.Where(u => u.Email == email).SingleAsync();
-		return user;
+		var user = await _users.Where(u => u.Email.Trim() == email.Trim())
+			.SingleAsync();
+		return user; 
 	}
 }

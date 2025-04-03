@@ -63,11 +63,9 @@ public class VendFacilityService : IVendFacilityService
 					});
 				}
 			}
-			
 			facility.Services.Clear();
 			facility.Services.AddRange(updatedServices);
 		}
-
 		await UpdateAsync(facility);
 	}
 }

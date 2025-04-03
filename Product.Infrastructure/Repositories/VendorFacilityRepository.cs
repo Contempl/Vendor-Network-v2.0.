@@ -28,7 +28,7 @@ public class VendorFacilityRepository : IVendorFacilityRepository
 	public IQueryable<VendorFacility> GetAll() => _vendorFacilities;
 	public async Task<VendorFacility?> GetByIdOrDefaultAsync(int facilityId) => await _vendorFacilities.SingleOrDefaultAsync(vf => vf.Id == facilityId);
 	public async Task<VendorFacility> GetByIdAsync(int vendorId, int facilityId) => await _vendorFacilities.SingleAsync(vf => vf.Id == facilityId && vf.VendorId == vendorId);
-	public async Task<VendorFacility> GetFacilityWithServicesByIdAsync(int vendorId, int facilityId)
+	public async Task<VendorFacility> GetFacilityWithServicesByIdAsync(int facilityId, int vendorId)
 	{
 		var vendorFacility = await _vendorFacilities
 			.Where(vf => vf.Id == facilityId)

@@ -26,7 +26,7 @@ internal class VendorConfiguration : IEntityTypeConfiguration<Vendor>
 		builder.HasMany(v => v.VendorUsers)
 			.WithOne(vu => vu.Vendor)
 			.HasForeignKey(vu => vu.VendorId)
-			.OnDelete(DeleteBehavior.SetNull);
+			.OnDelete(DeleteBehavior.Cascade);
 
 		builder.HasMany(v => v.VendorFacilities)
 			.WithOne(vf => vf.Vendor)

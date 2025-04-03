@@ -9,8 +9,8 @@ public class OperatorRegistrationDto
 	public string BusinessName { get; set; }
 
 	[Required]
-	[StringLength(100, ErrorMessage = "The adress is too long")]
-	public string Adress { get; set; }
+	[StringLength(100, ErrorMessage = "The address is too long")]
+	public string Address { get; set; }
 
 	[Required]
 	[StringLength(100, ErrorMessage = "Email is too long")]

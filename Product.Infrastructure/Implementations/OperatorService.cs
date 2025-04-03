@@ -50,7 +50,7 @@ public class OperatorService : IOperatorService
         OperatorUser user) => new Operator
     {
 		BusinessName = operatorRegistrationData.BusinessName,
-		Address = operatorRegistrationData.Adress,
+		Address = operatorRegistrationData.Address,
 		Email = operatorRegistrationData.Email,
 		LogoUrl = operatorRegistrationData.LogoUrl,
 		Occupation = operatorRegistrationData.Occupation,

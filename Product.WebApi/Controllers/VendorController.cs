@@ -79,7 +79,7 @@ namespace Product.WebApi.Controllers
 
 		[HttpDelete("{vendorId}")]
 		[EnsureVendorExists]
-		[Authorize(policy: "Admin")]
+		[Authorize(policy: "AdminOnly")]
 		public async Task<IActionResult> DeleteVendor(int vendorId)
 		{
 			var vendor = await _vendorService.GetByIdAsync(vendorId);
