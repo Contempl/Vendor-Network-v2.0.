@@ -15,14 +15,11 @@ public class VendorFacilityController : ControllerBase
 {
 	private readonly IVendFacilityService _vendorFacilityService;
 	private readonly IFacilityService _facilityService;
-	private readonly IUserPrincipalService _userPrincipalService;
 
-	public VendorFacilityController(IVendFacilityService vendorFacilityService,
-		IFacilityService facilityService, IVendorService vendorService, IUserPrincipalService userPrincipalService)
+	public VendorFacilityController(IVendFacilityService vendorFacilityService, IFacilityService facilityService)
 	{
 		_vendorFacilityService = vendorFacilityService;
 		_facilityService = facilityService;
-		_userPrincipalService = userPrincipalService;
 	}
 
 	[HttpGet("/facility/{facilityId}")]

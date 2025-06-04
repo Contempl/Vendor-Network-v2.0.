@@ -14,14 +14,11 @@ namespace Product.WebApi.Controllers;
 public class OperatorIndustryController : ControllerBase
 {
 	private readonly IOperatorIndustryService _operatorIndustryService;
-	private readonly IOperatorService _operatorService;
-	private readonly IUserPrincipalService _userPrincipalService;
 
-	public OperatorIndustryController(IOperatorIndustryService operatorIndustryService, IOperatorService operatorService, IUserPrincipalService userPrincipalService)
+
+	public OperatorIndustryController(IOperatorIndustryService operatorIndustryService)
 	{
 		_operatorIndustryService = operatorIndustryService;
-		_operatorService = operatorService;
-		_userPrincipalService = userPrincipalService;
 	}
 
 	[HttpGet("industry/{industryId}")]

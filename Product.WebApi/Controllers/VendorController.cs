@@ -14,22 +14,13 @@ namespace Product.WebApi.Controllers
 	public class VendorController : Controller
 	{
 		private readonly IVendorService _vendorService;
-		private readonly IVendorUserService _vendorUserService;
-		private readonly IUserPrincipalService _userPrincipalService;
-		private readonly IUserService _userService;
-		private readonly IInviteService _inviteService;
-		private readonly IEmailService _emailService;
-		public VendorController(IVendorService vendorService, IVendorUserService vendorUserService, IUserPrincipalService userPrincipalService, IUserService userService, IInviteService inviteService, IEmailService emailService)
+
+		public VendorController(IVendorService vendorService)
 		{
 			_vendorService = vendorService;
-			_vendorUserService = vendorUserService;
-			_userPrincipalService = userPrincipalService;
-			_userService = userService;
-			_inviteService = inviteService;
-			_emailService = emailService;
 		}
 
-		[HttpPost("register/{vendorUserId}")] //Remake
+		[HttpPost("register/{vendorUserId}")] //Remove
 		[EnsureVendorUserExists]
 		[Authorize(policy: "VendorUser")]
 		public async Task<ActionResult<Response<BusinessFrontEndDto>>> RegisterVendor(int vendorUserId, [FromBody] VendorRegistrationDto registrationData)
