@@ -1,21 +1,18 @@
-﻿using Microsoft.Data.SqlClient;
-using Product.Application.Dto;
+﻿using Product.Application.Dto;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Pagination;
+using Product.Domain.Result;
 
 namespace Product.Application.ServiceInterfaces;
 
 public interface IOperatorService
 {
-    Task CreateAsync(Operator @operator);
-    Task<Operator?> GetByIdOrDefaultAsync(int operatorId);
-    Task<Operator> GetByIdAsync(int operatorId);
-    Task UpdateAsync(Operator @operator);
-    Task DeleteAsync(Operator @operator);
-    List<OperatorIndustry> GetAllOperatorIndustries(List<int> facilityIds);
-	Task<PagedResult<Vendor>> GetVendorsQuery(string searchName, SortOrder sortOrder,
-		int pageSize, int pageNumber);
-    void ValidateStringInput(string vendorName);
-    Operator MapOperatorFromDto(OperatorRegistrationDto operatorRegistrationData, OperatorUser user);
-    void MapOperatorFromDto(Operator @operator, UpdateOperatorDto operatorData);
-	Task<List<Vendor>> SearchVendorsAsync(string serviceType, List<OperatorIndustry> operatorFacilities);
+	Task<Response<List<BusinessFrontEndDto>>> SearchForVendorsAsync(SearchVendorsForIndustriesDto industriesData);
+	Task<Response<PagedList<Vendor>>> GetVendorsByNameAsync(VendorSearchDto vendorSearchDto);
+	Task<Response<BusinessFrontEndDto>> GetOperatorAsync(int operatorId);
+	Task<Response<BusinessFrontEndDto>> RegisterOperatorAsync (int operatorUserId, OperatorRegistrationDto operatorRegistrationData);
+	Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync (int operatorId, UpdateOperatorDto operatorUpdateData);
+	Task<Response<MailMsg>> InviteOperatorUserAsync (int operatorUserId, EmailForInviteDto operatorUpdateData);
+	Task<Response<int>> DeleteOperatorAsync (int operatorId);
 }

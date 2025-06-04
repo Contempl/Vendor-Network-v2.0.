@@ -1,15 +1,16 @@
 ﻿using Product.Application.Dto;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Result;
 
 namespace Product.Application.ServiceInterfaces;
 
 public interface IOperatorIndustryService
 {
-    Task CreateAsync(OperatorIndustry operatorIndustry);
-    Task<OperatorIndustry> GetByIdAsync(int operatorId, int industryId);
-    Task UpdateAsync(OperatorIndustry operatorIndustry);
-    Task DeleteAsync(OperatorIndustry industry);
-    Task<List<OperatorIndustry>> GetOperatorsIndustries(int operatorId);
-    OperatorIndustry MapIndustryToCreateOperator(Operator @operator, OperatorIndustryCreationDto industryData);
-    void MapIndustryToUpdate(OperatorIndustry industry, UpdateOperatorIndustryDto industryData);
+
+    Task<Response<OpIndustryFrontEndDto>> UpdateOperatorIndustryAsync(int industryId, UpdateOperatorIndustryDto operatorIndustry);
+    Task<Response<int>> RemoveOperatorIndustryAsync(int industryId);
+    Task<Response<List<OpIndustryFrontEndDto>>> GetOperatorsIndustriesAsync();
+    Task<Response<OpIndustryFrontEndDto>> CreateOperatorIndustryAsync(OperatorIndustryCreationDto industryCreationData);
+    Task<Response<OpIndustryFrontEndDto>> GetOpIndustryByIdAsync(int industryId);
 }

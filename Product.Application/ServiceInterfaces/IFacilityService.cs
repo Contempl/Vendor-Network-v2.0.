@@ -1,15 +1,12 @@
-﻿using Product.Domain.Entity;
+﻿using Product.Domain.Dto;
+using Product.Domain.Entity;
+using Product.Domain.Result;
 
 namespace Product.Application.ServiceInterfaces;
 
 public interface IFacilityService
 {
-    Task CreateAsync(VendorFacilityService facilityService);
-    Task<VendorFacilityService> GetByIdAsync(int facilityServiceId, int facilityId, int vendorId);
-    Task UpdateAsync(VendorFacilityService facilityService);
-    Task DeleteAsync(VendorFacilityService facilityService);
-    Task<List<VendorFacilityService>> GetServicesByFacilityIdAsync(int facilityId, int vendorId);
-    VendorFacilityService MapFacilityServiceDtoToCreate(VendorFacility facility, string serviceName);
-    void ValidateServiceName(string serviceName);
-    void UpdateFacilityServiceName(VendorFacilityService facilityService, string serviceName);
+    Task<Response<VendorFacilityService>> AddFacilityServiceAsync(int facilityId, string serviceName);
+    Task<Response<VendorFacilityService>> UpdateFacilityServiceAsync(int facilityId, int facilityServiceId, VendorFacilityServiceDto facilityServiceDto);
+    Task<Response<int>> RemoveFacilityServiceAsync(int facilityId, int facilityServiceId);
 }

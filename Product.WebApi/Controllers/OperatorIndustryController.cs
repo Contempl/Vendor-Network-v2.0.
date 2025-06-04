@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Result;
 using Product.Infrastructure.Filters;
 
 namespace Product.WebApi.Controllers;
@@ -26,68 +28,69 @@ public class OperatorIndustryController : ControllerBase
 	[EnsureOperatorIndustryExists]
 	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<OperatorIndustry>> GetOperatorFacility(int industryId)
+	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> GetOperatorIndustry(int industryId)
 	{
-		var operatorId = _userPrincipalService.BusinessId;
-		var industry = await _operatorIndustryService.GetByIdAsync(operatorId!.Value, industryId);
-
-		return Ok(industry);
+		var response = await _operatorIndustryService.GetOpIndustryByIdAsync(industryId);
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
 	}
 
 	[HttpGet("industries")]
 	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<List<OperatorIndustry>>> GetOperatorIndustries()
+	public async Task<ActionResult<Response<List<OperatorIndustry>>>> GetOperatorIndustries()
 	{
-		var operatorId = _userPrincipalService.BusinessId;
-		var facilities = await _operatorIndustryService.GetOperatorsIndustries(operatorId!.Value);
-
-		return facilities.ToList();
+		var response = await _operatorIndustryService.GetOperatorsIndustriesAsync();
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
 	}
 
 	[HttpPost("industry")]
 	[EnsureOperatorExists]
 	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult> AddOperatorIndustry([FromBody] OperatorIndustryCreationDto industryData)
+	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> AddOperatorIndustry([FromBody] OperatorIndustryCreationDto industryData)
 	{
-		var operatorId = _userPrincipalService.BusinessId;
-		var existingOperator = await _operatorService.GetByIdAsync(operatorId!.Value);
-
-		var newIndustry = _operatorIndustryService.MapIndustryToCreateOperator(existingOperator, industryData);
-
-		await _operatorIndustryService.CreateAsync(newIndustry);
-
-		return CreatedAtAction(nameof(GetOperatorFacility), new {operatorId = operatorId, industryId = newIndustry.Id }, newIndustry);
+		var response = await _operatorIndustryService.CreateOperatorIndustryAsync(industryData);
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
 	}
 
 	[HttpPut("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
 	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult> UpdateOperatorIndustry(int industryId,
+	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> UpdateOperatorIndustry(int industryId,
 		UpdateOperatorIndustryDto industryData)
 	{
-		var operatorId = _userPrincipalService.BusinessId;
-		var existingIndustry = await _operatorIndustryService.GetByIdAsync(operatorId!.Value, industryId);
-
-		_operatorIndustryService.MapIndustryToUpdate(existingIndustry, industryData);
-
-		await _operatorIndustryService.UpdateAsync(existingIndustry);
-		return Ok(existingIndustry);
-		
+		var response = await _operatorIndustryService.UpdateOperatorIndustryAsync(industryId, industryData);
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
 	}
 
 	[HttpDelete("{operatorId}/industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
 	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult> RemoveOperatorIndustry(int industryId)
+	public async Task<ActionResult<Response<int>>> RemoveOperatorIndustry(int industryId)
 	{
-		var operatorId = _userPrincipalService.BusinessId;
-		var operatorIndustry = await _operatorIndustryService.GetByIdAsync(operatorId!.Value, industryId);
-
-		await _operatorIndustryService.DeleteAsync(operatorIndustry);
-		return NoContent();
+		var response = await _operatorIndustryService.RemoveOperatorIndustryAsync(industryId);
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
 	}
 }

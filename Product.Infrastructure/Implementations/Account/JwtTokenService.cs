@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Settings;
 
@@ -15,16 +16,14 @@ public class JwtTokenService : IJwtTokenService
 {
     private readonly JwtOptions _options;
     private readonly IUserRepository _userRepository;
-    private readonly IHttpContextAccessor _context;
 
     public JwtTokenService( IOptions<JwtOptions> options, IUserRepository userRepository, IHttpContextAccessor context)
     {
         _userRepository = userRepository;
-        _context = context;
         _options = options.Value;
     }
 
-    public string GenerateToken(User user) 
+    public TokenDto GenerateToken(User user) 
     {
         var key = Encoding.UTF8.GetBytes(_options.Secret);
         var claims = new List<Claim>
@@ -58,12 +57,9 @@ public class JwtTokenService : IJwtTokenService
             signingCredentials: credentials);
         
         var token =  new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
-        return token;
-    }
-
-    private async Task<User> GetUser(int userId)
-    {
-        var existingUser = await _userRepository.GetByIdAsync(userId);
-        return existingUser;
+        return new TokenDto
+        {
+            AccessToken = token,
+        };
     }
 }

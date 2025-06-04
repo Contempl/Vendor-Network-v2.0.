@@ -7,7 +7,7 @@ public class Invite : IEntity
     public DateTime CreatedAt { get; set; }
     public DateTime? ExpiresAt { get; set; }
     public int UserId { get; set; }
-    public required User User { get; set; }
+    public User User { get; set; }
     public int SenderId { get; set; }
     public User Sender { get; set; }
 }

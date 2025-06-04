@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
+using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
 
 namespace Product.Infrastructure.Repositories;
@@ -10,10 +11,13 @@ public class VendorRepository : IVendorRepository
 {
 	private readonly AppDbContext _context;
 	private readonly DbSet<Vendor> _vendors;
+	private readonly IRedisCacheService _reddisCacheService;
+	private const string CachePrefix = "Business_";
 
-	public VendorRepository(AppDbContext context)
+	public VendorRepository(AppDbContext context, IRedisCacheService reddisCacheService)
 	{
 		_context = context;
+		_reddisCacheService = reddisCacheService;
 		_vendors = _context.Vendors;
 	}
 
@@ -21,6 +25,7 @@ public class VendorRepository : IVendorRepository
 	{
 		await _vendors.AddAsync(entity);
 		await SaveAsync();
+		await _reddisCacheService.SetAsync(CachePrefix + entity.Id, entity);
 	}
 	public async Task DeleteAsync(Vendor vendor)
 	{
@@ -28,20 +33,45 @@ public class VendorRepository : IVendorRepository
 		await SaveAsync();
 	}
 	public IQueryable<Vendor> GetAll() => _vendors;
-	public async Task<Vendor?> GetByIdOrDefaultAsync(int id) => await _vendors.SingleOrDefaultAsync(v => v.Id == id);
-	public async Task<Vendor> GetByIdAsync(int id)
+
+	public async Task<Vendor?> GetByIdOrDefaultAsync(int businessId)
+	{
+		var cachedBusiness = await _reddisCacheService.GetAsync<Vendor>(CachePrefix + businessId);
+		if (cachedBusiness != null)
+		{
+			return cachedBusiness;
+		}
+		var business = await _vendors.SingleOrDefaultAsync(v => v.Id == businessId);
+		
+		await _reddisCacheService.SetAsync(CachePrefix + businessId, cachedBusiness);
+		return business;
+	}
+
+	public async Task<Vendor> GetByIdAsync(int businessId)
 	{
 		// Try to get from cache (Redis). IDistributedCache injects in repository. Make gets check cache first. If exists => get from cache. Otherwise get from DB put into cache and give user
-		return await _vendors.SingleAsync(v => v.Id == id);
+		var cacheKey = CachePrefix + businessId;
+		
+		var cachedBusiness = await _reddisCacheService.GetAsync<Vendor>(cacheKey);
+		if (cachedBusiness != null)
+		{
+			return cachedBusiness;
+		}
+		var business = await _context.Vendors.SingleAsync(v => v.Id == businessId);
+		
+		await _reddisCacheService.SetAsync(cacheKey, business);
+		return business;
 	}
 
 	public async Task UpdateAsync(Vendor vendor)
 	{
 		// Make update, delete, create update cache. So that entity would be updated not only in db, but also in cache.
+		await _reddisCacheService.RemoveAsync(CachePrefix + vendor.Id);
 		_vendors.Update(vendor);
 		await SaveAsync();
+		await _reddisCacheService.SetAsync(CachePrefix + vendor.Id, vendor);
 	}
-	public async Task SaveAsync() => await _context.SaveChangesAsync();
+
 	public async Task<List<Vendor>> GetVendorsWithService(string serviceType)
 	{
 		return await GetAll()
@@ -70,4 +100,5 @@ public class VendorRepository : IVendorRepository
 			TotalCount = totalCount
 		};
 	}
+	private async Task SaveAsync() => await _context.SaveChangesAsync();
 }

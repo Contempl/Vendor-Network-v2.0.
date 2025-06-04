@@ -1,15 +1,14 @@
 ﻿using Product.Application.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Result;
 
 namespace Product.Application.ServiceInterfaces;
 
 public interface IVendFacilityService
 {
-    Task CreateAsync(VendorFacility vendorFacility);
-    Task<VendorFacility> GetByIdAsync(int vendorFacilityId, int vendorId);
-    Task<VendorFacility> GetFacilityWithServicesByIdAsync(int vendorFacilityId, int vendorId);
-	Task UpdateAsync(VendorFacility vendorFacility);
-    Task DeleteAsync(VendorFacility vendorFacility);
-    VendorFacility MapVendorFacilityFromDtoToCreateAsync(Vendor vendor, VendorFacilityDto facilityData);
-    Task MapAndUpdateVendorFacility(VendorFacility facility, UpdateVendorFacilityDto facilityData);
+    Task<Response<VendorFacility>> GetFacilityWithServicesByIdAsync(int vendorFacilityId);
+    Task<Response<VendorFacility>> AddFacilityAsync(VendorFacilityDto facilityData);
+    Task<Response<VendorFacility>> UpdateFacilityAsync(int facilityId, UpdateVendorFacilityDto facilityData);
+    Task<Response<int>> DeleteFacilityAsync(int vendorId, int facilityId);
+    Task<Response<VendorFacilityService>> GetVendorFacilityServiceAsync(int facilityId, int facilityServiceId);
 }

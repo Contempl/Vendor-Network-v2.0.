@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Result;
 using Product.Infrastructure.Filters;
 
 namespace Product.WebApi.Controllers
@@ -30,26 +32,26 @@ namespace Product.WebApi.Controllers
 		[HttpPost("register/{vendorUserId}")] //Remake
 		[EnsureVendorUserExists]
 		[Authorize(policy: "VendorUser")]
-		public async Task<IActionResult> RegisterVendor(int vendorUserId, [FromBody] VendorRegistrationDto registrationData)
+		public async Task<ActionResult<Response<BusinessFrontEndDto>>> RegisterVendor(int vendorUserId, [FromBody] VendorRegistrationDto registrationData)
 		{
-			var vendorUser = await _vendorUserService.GetByIdAsync(vendorUserId);
-
-			var vendor = _vendorService.CreateVendorFromDto(vendorUser, registrationData);
-
-			await _vendorService.CreateAsync(vendor);
-
-			return CreatedAtAction(nameof(GetVendor), new { vendorId = vendor.Id }, vendor);
+			var response = await _vendorService.RegisterVendorAsync(vendorUserId, registrationData);
+			if (response.IsSuccess)
+			{
+				return Ok(response);
+			}
+			return BadRequest(response);
 		}
 
 		[HttpGet("Search/Operators/{operatorName}")]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<List<Operator>>> GetOperators([FromBody]string operatorName)
+		public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> GetOperators([FromBody]OperatorSearchDto operatorData)
 		{
-			_vendorService.ValidateString(operatorName);
-
-			var operators = await _vendorService.GetOperatorsByNameAsync(operatorName);
-
-			return Ok(operators);
+			var response = await _vendorService.SearchOperatorsAsync(operatorData);
+			if (response.IsSuccess)
+			{
+				return Ok(response);
+			}
+			return BadRequest(response);
 		}
 
 		[HttpGet("{vendorId}")]
@@ -57,64 +59,51 @@ namespace Product.WebApi.Controllers
 		[Authorize(policy: "VendorUser")]
 		public async Task<ActionResult<Vendor>> GetVendor(int vendorId)
 		{
-			var vendor = await _vendorService.GetByIdAsync(vendorId);
-
-			return Ok(vendor);
+			var response = await _vendorService.GetVendorByIdAsync(vendorId);
+			if (response.IsSuccess)
+			{
+				return Ok(response);
+			}
+			return BadRequest(response);
 		}
 
 		[HttpPut]
 		[EnsureBusinessAccess(nameof(VendorUser))]
 		[Authorize(policy: "VendorUser")]
-		public async Task<IActionResult> UpdateVendor([FromBody] UpdateVendorDto vendorData)
+		public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateVendor([FromBody] UpdateVendorDto vendorData)
 		{
-			var vendorId = _userPrincipalService.BusinessId;
-			var existingVendor = await _vendorService.GetByIdAsync(vendorId!.Value);
-
-			_vendorService.MapVendorToUpdate(existingVendor, vendorData);
-
-			await _vendorService.UpdateAsync(existingVendor);
-
-			return Ok(existingVendor);
+			var response = await _vendorService.UpdateVendorAsync(vendorData);
+			if (response.IsSuccess)
+			{
+				return Ok(response);
+			}
+			return BadRequest(response);
 		}
 
 		[HttpDelete("{vendorId}")]
 		[EnsureVendorExists]
 		[Authorize(policy: "AdminOnly")]
-		public async Task<IActionResult> DeleteVendor(int vendorId)
+		public async Task<ActionResult<Response<int>>> DeleteVendor(int vendorId)
 		{
-			var vendor = await _vendorService.GetByIdAsync(vendorId);
-
-			await _vendorService.DeleteAsync(vendor);
-
-			return NoContent();
+			var response = await _vendorService.DeleteVendorAsync(vendorId);
+			if (response.IsSuccess)
+			{
+				return Ok(response);
+			}
+			return BadRequest(response);
 		}
 		
 		[HttpPost("invite")]
 		[EnsureBusinessAccess(nameof(VendorUser))]
 		[Authorize(policy: "VendorUser")]
-		public async Task<IActionResult> InviteVendorUser([FromBody] string email)
+		public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteVendorUser([FromBody] EmailForInviteDto email)
 		{
-			var vendorUserId = _userPrincipalService.UserId!.Value;
-			var vendorUser = await _userService.GetByIdAsync(vendorUserId);
-		
-			var vendorId = _userPrincipalService.BusinessId;
-		
-			var newVendorUser = new VendorUser { Email = email, VendorId = vendorId };
-		
-			await _vendorUserService.CreateAsync(newVendorUser);
-		
-			var existingUser = await _userService.GetByEmailAsync(email);
-		
-			var invite =  _inviteService.CreateInvite(existingUser, vendorUser);
-			var inviteUrl = _emailService.CreateInviteUrl(invite.Id); 
-			await _inviteService.CreateAsync(invite);
-		
-			var emailBody = _emailService.GenerateEmailTemplate(email, existingUser, inviteUrl);
-
-			var mailMessage = _emailService.CreateMessage(emailBody, vendorUser.Email);
-
-			await _emailService.SendInvitationEmailAsync(mailMessage);
-			return Ok();
+			var response = await _vendorService.InviteVendorUserAsync(email);
+			if (response.IsSuccess)
+			{
+				return Ok(response);
+			}
+			return BadRequest(response);
 		}
 	}
 }

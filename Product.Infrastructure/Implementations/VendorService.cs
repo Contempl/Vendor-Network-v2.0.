@@ -1,7 +1,11 @@
 ﻿using Product.Application.Dto;
 using Product.Application.Interfaces;
+using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Enum;
+using Product.Domain.Result;
 
 namespace Product.Infrastructure.Implementations;
 
@@ -9,29 +13,28 @@ public class VendorService : IVendorService
 {
     private readonly IVendorRepository _vendorRepository;
     private readonly IOperatorRepository _operatorRepository;
+    private readonly IVendorUserRepository _vendorUserRepository;
+    private readonly IUserPrincipalService _userPrincipalService;
+    private readonly IEmailService _emailService;
+    private readonly IInviteService _inviteService;
+    private readonly IUserRepository _userRepository;
+    private readonly IInviteRepository _inviteRepository;
 
-    public VendorService(IVendorRepository vendorRepository, IOperatorRepository operatorRepository)
+    public VendorService(IVendorRepository vendorRepository, IOperatorRepository operatorRepository, 
+	    IVendorUserRepository vendorUserRepository, IUserPrincipalService userPrincipalService, 
+	    IEmailService emailService, IInviteService inviteService, IInviteRepository inviteRepository, 
+	    IUserRepository userRepository)
     {
         _vendorRepository = vendorRepository;
         _operatorRepository = operatorRepository;
+        _vendorUserRepository = vendorUserRepository;
+        _userPrincipalService = userPrincipalService;
+        _emailService = emailService;
+        _inviteService = inviteService;
+        _inviteRepository = inviteRepository;
+        _userRepository = userRepository;
     }
-
-    public Task CreateAsync(Vendor vendor) => _vendorRepository.CreateAsync(vendor);
-    public Task DeleteAsync(Vendor vendor) => _vendorRepository.DeleteAsync(vendor);
-    public Task<Vendor> GetByIdAsync(int id) => _vendorRepository.GetByIdAsync(id);
-    public async Task UpdateAsync(Vendor vendor)
-    {
-        try
-        {
-            await _vendorRepository.UpdateAsync(vendor);
-        }
-        catch (Exception e)    
-        {
-            throw new Exception($"Failed to update a vendor: {e.Message}");
-        }
-        await Task.CompletedTask;
-    }
-	public Vendor CreateVendorFromDto(VendorUser user, 
+    private Vendor CreateVendorFromDto(VendorUser user, 
         VendorRegistrationDto registrationData) => new Vendor
     {
 		BusinessName = registrationData.BusinessName,
@@ -39,26 +42,130 @@ public class VendorService : IVendorService
 		Email = registrationData.Email,
 		VendorUsers = new List<VendorUser> { user }
 	};
-    public void ValidateString(string input)
+    private bool ValidateString(string input)
     {
 		if (string.IsNullOrWhiteSpace(input))
 		{
-            throw new ArgumentException($"stirng '{nameof(input)}' shouldn't be empty");
+            return false;
 		}
+		return true;
 	}
-    public void MapVendorToUpdate(Vendor vendor, UpdateVendorDto vendorData)
+    private void MapVendorToUpdate(Vendor vendor, UpdateVendorDto vendorData)
     {
 		vendor.BusinessName = vendorData.BusinessName ?? vendor.BusinessName;
 		vendor.Address = vendorData.Address ?? vendor.Address;
 		vendor.Email = vendorData.Email ??  vendor.Email;
 	}
-    public async Task<List<Operator>> GetOperatorsByNameAsync(string operatorName)
-    {
-        if (string.IsNullOrWhiteSpace(operatorName))
-        {
-            return new List<Operator>();
-        }
 
-		return await _operatorRepository.GetOperatorsByNameAsync(operatorName);
-	}
+    public async Task<Response<BusinessFrontEndDto>> RegisterVendorAsync(int vendorUserId, VendorRegistrationDto registrationData)
+    {
+	    if (registrationData.BusinessName.Length == 0 || registrationData.Email.Length == 0)
+	    {
+		    return new Response<BusinessFrontEndDto>
+		    {
+			    ErrorMessage = "Invalid Vendor Registration Data",
+			    ErrorCode = (int)ErrorCodes.InvalidBusinessRegistrationData
+		    };
+	    }
+	    var vendorUser = await _vendorUserRepository.GetByIdAsync(vendorUserId);
+	    var vendor = CreateVendorFromDto(vendorUser, registrationData);
+
+	    await _vendorRepository.CreateAsync(vendor);
+
+	    var result = vendor.ToFrontEndDto();
+
+	    return new Response<BusinessFrontEndDto>
+	    {
+		    Data = result,
+	    };
+    }
+
+    public async Task<Response<List<BusinessFrontEndDto>>> SearchOperatorsAsync(OperatorSearchDto operatorSearchDto)
+    {
+	    var operatorIsValid = ValidateString(operatorSearchDto.Name);
+	    if (!operatorIsValid)
+	    {
+		    return new Response<List<BusinessFrontEndDto>>
+		    {
+			    ErrorMessage = "Invalid Operator Name",
+			    ErrorCode = (int)ErrorCodes.InvalidBusinessName
+		    };
+	    }
+	    
+	    var operators = await _operatorRepository.GetOperatorsByNameAsync(operatorSearchDto.Name);
+	    var result = operators.Select(o => o.ToFrontEndDto()).ToList();
+
+	    return new Response<List<BusinessFrontEndDto>>
+	    {
+		    Data = result,
+	    };
+    }
+
+    public async Task<Response<BusinessFrontEndDto>> GetVendorByIdAsync(int vendorId)
+    {
+	    var vendor = await _vendorRepository.GetByIdAsync(vendorId);
+	    var result = vendor.ToFrontEndDto();
+
+	    return new Response<BusinessFrontEndDto>
+	    {
+		    Data = result,
+	    };
+    }
+
+    public async Task<Response<BusinessFrontEndDto>> UpdateVendorAsync(UpdateVendorDto vendorData)
+    {
+	    var vendorId = _userPrincipalService.BusinessId!.Value;
+	    var existingVendor = await _vendorRepository.GetByIdAsync(vendorId);
+
+	    MapVendorToUpdate(existingVendor, vendorData);
+
+	    await _vendorRepository.UpdateAsync(existingVendor);
+	    
+	    var result = existingVendor.ToFrontEndDto();
+	    return new Response<BusinessFrontEndDto>
+	    {
+		    Data = result,
+	    };
+    }
+
+    public async Task<Response<MailMsg>> InviteVendorUserAsync(EmailForInviteDto emailDto)
+    {
+	    var vendorUserId = _userPrincipalService.UserId!.Value;
+	    var email = emailDto.Email;
+	    var vendorUser = await _vendorUserRepository.GetByIdAsync(vendorUserId);
+		
+	    var vendorId = _userPrincipalService.BusinessId;
+		
+	    var newVendorUser = new VendorUser { Email = email, VendorId = vendorId };
+		
+	    await _vendorUserRepository.CreateAsync(newVendorUser);
+		
+	    var existingUser = await _userRepository.GetByEmailAsync(email);
+		
+	    var invite =  _inviteService.CreateInvite(existingUser, vendorUser);
+	    var inviteUrl = _emailService.CreateInviteUrl(invite.Id); 
+	    await _inviteRepository.CreateAsync(invite);
+		
+	    var emailBody = _emailService.GenerateEmailTemplate(email, existingUser, inviteUrl);
+
+	    var mailMessage = _emailService.CreateMessage(emailBody, vendorUser.Email);
+
+	    await _emailService.SendInvitationEmailAsync(mailMessage);
+
+	    return new Response<MailMsg>
+	    {
+		    Data = mailMessage,
+	    };
+    }
+
+    public async Task<Response<int>> DeleteVendorAsync(int vendorId)
+    {
+	    var vendor = await _vendorRepository.GetByIdAsync(vendorId);
+	    await _vendorRepository.DeleteAsync(vendor);
+
+	    return new Response<int>
+	    {
+		    Data = vendor.Id,
+	    };
+    }
 }

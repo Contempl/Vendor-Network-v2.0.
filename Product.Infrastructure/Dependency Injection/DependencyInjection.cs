@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Product.Application.Interfaces;
@@ -32,13 +34,12 @@ public static class DependencyInjection
     public static void AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
         var options = configuration.GetSection(nameof(RedisSettings));
-        var redisUrl = options["Url"];
-        var instanceName = options["InstanceName"];
+        var redisSettings = new RedisSettings(options["Url"], options["InstanceName"]);
         
         services.AddStackExchangeRedisCache(redisOptions =>
         {
-            redisOptions.Configuration = configuration.GetConnectionString("Redis");
-            redisOptions.InstanceName = "Entity_";
+            redisOptions.Configuration = redisSettings.Url;
+            redisOptions.InstanceName = redisSettings.InstanceName;
         });
         services.InitServices(configuration);
     }
