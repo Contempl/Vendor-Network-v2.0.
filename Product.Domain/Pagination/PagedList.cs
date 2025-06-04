@@ -1,4 +1,4 @@
-﻿namespace Product.WebApi.Pagination;
+﻿namespace Product.Domain.Pagination;
 
 public class PagedList<T>
 {
@@ -14,7 +14,4 @@ public class PagedList<T>
     public int PageNumber { get; set; }
     public int PageSize { get; set; }
     public int TotalCount { get; set; }
-    public bool HasNextPage => PageNumber * PageSize < TotalCount;
-    public bool HasPreviousPage => PageNumber > 1;
-
 }

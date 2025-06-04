@@ -1,3 +1,3 @@
 namespace Product.Application.Dto;
 
-public record MailMsg(string body, string sender);
+public record MailMsg(string Body, string Sender);

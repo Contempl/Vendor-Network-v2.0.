@@ -33,5 +33,15 @@ public class InviteRepository : IInviteRepository
 		_invites.Update(invite);
 		await SaveAsync();
 	}
-	public async Task SaveAsync() => await _context.SaveChangesAsync();
+	public async Task<Invite> GetInviteWithUserAsync(int inviteId)
+	{
+		var invite = await GetAll()
+			.Where(i => i.Id == inviteId)
+			.Include(i => i.User)
+			.FirstAsync();
+
+		return invite;
+	}
+
+	private async Task SaveAsync() => await _context.SaveChangesAsync();
 }

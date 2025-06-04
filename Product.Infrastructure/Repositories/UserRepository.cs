@@ -1,6 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Product.Application.Interfaces;
+using Product.Application.Mapping;
+using Product.Application.ServiceInterfaces;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Result;
 
 namespace Product.Infrastructure.Repositories;
 
@@ -8,10 +13,12 @@ public class UserRepository : IUserRepository
 {
 	private readonly AppDbContext _context;
 	private readonly DbSet<User> _users;
-
-	public UserRepository(AppDbContext context)
+	private readonly IRedisCacheService _redisCacheService;
+	private const string CachePrefix = "User_";
+	public UserRepository(AppDbContext context, IRedisCacheService redisCacheService)
 	{
 		_context = context;
+		_redisCacheService = redisCacheService;
 		_users = _context.Set<User>();
 	}
 
@@ -19,6 +26,7 @@ public class UserRepository : IUserRepository
 	{
 		await _users.AddAsync(entity);
 		await SaveAsync();
+		await _redisCacheService.SetAsync(CachePrefix + entity.Id, entity);
 	}
 	public async Task DeleteAsync(User user)
 	{
@@ -34,22 +42,52 @@ public class UserRepository : IUserRepository
 	}
 	public IQueryable<User> GetAll() => _users;
 	public async Task<User?> GetByIdOrDefaultAsync(int id) => await _users.SingleOrDefaultAsync(u => u.Id == id);
-	public async Task<User> GetByIdAsync(int id) => await _users.SingleAsync(u => u.Id == id);
+
+	public async Task<User> GetByIdAsync(int userId)
+	{
+		var cacheKey = $"{CachePrefix}{userId}";
+		
+		var cached = await _redisCacheService.GetAsync<User>(cacheKey);
+		if (cached != null)
+		{
+			return cached;
+		}
+		
+		var user = await _users.FindAsync(userId); //nullable
+		
+		await _redisCacheService.SetAsync(cacheKey, user);
+		return user;
+	}
+
 	public async Task UpdateAsync(User entity)
 	{
-		if (entity == null)
-		{
-			throw new ArgumentNullException(nameof(entity));
-		}
-
+		var cacheKey = $"{CachePrefix}{entity.Id}";
+		
+		await _redisCacheService.RemoveAsync(cacheKey);
+		
 		_users.Update(entity);
 		await SaveAsync();
+		
+		await _redisCacheService.SetAsync(cacheKey, entity.MapToFrontEndDto());
 	}
-	public async Task SaveAsync() => await _context.SaveChangesAsync();
-	public async Task<User> GetByEmailAsync(string email)
+
+	private async Task SaveAsync() => await _context.SaveChangesAsync();
+	public async Task<User?> GetByEmailAsync(string email)
 	{
 		var user = await _users.Where(u => u.Email.Trim() == email.Trim())
-			.SingleAsync();
+			.SingleOrDefaultAsync();
+		if (user == null)
+			return null;
+		
+		var cacheKey = $"{CachePrefix}{user.Id}";
+
+		await _redisCacheService.SetAsync(cacheKey, user);
 		return user; 
+	}
+	
+			
+	public async Task<User> GetByIdWithInvitesAsync(int userId)
+	{
+		return await _users.Include(u => u.Invites).FirstAsync(u => u.Id == userId);
 	}
 }

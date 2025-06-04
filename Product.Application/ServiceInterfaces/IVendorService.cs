@@ -1,16 +1,16 @@
 ﻿using Product.Application.Dto;
-using Product.Domain.Entity;
+using Product.Domain.Dto;
+using Product.Domain.Result;
 
 namespace Product.Application.ServiceInterfaces;
 
 public interface IVendorService
 {
-    Task CreateAsync(Vendor vendor);
-    Task<Vendor> GetByIdAsync(int id);
-    Task UpdateAsync(Vendor vendor);
-    Task DeleteAsync(Vendor vendor);
-    Vendor CreateVendorFromDto(VendorUser user, VendorRegistrationDto registrationData);
-    void ValidateString(string input);
-    void MapVendorToUpdate(Vendor vendor, UpdateVendorDto vendorData);
-	Task<List<Operator>> GetOperatorsByNameAsync(string operatorName);
+	Task<Response<BusinessFrontEndDto>> RegisterVendorAsync(int vendorUserId, VendorRegistrationDto registrationData);
+	Task<Response<List<BusinessFrontEndDto>>> SearchOperatorsAsync(OperatorSearchDto operatorSearchDto);
+	Task<Response<BusinessFrontEndDto>> GetVendorByIdAsync(int vendorId);
+	Task<Response<BusinessFrontEndDto>> UpdateVendorAsync(UpdateVendorDto vendorData);
+	Task<Response<MailMsg>> InviteVendorUserAsync(EmailForInviteDto email);
+	Task<Response<int>> DeleteVendorAsync(int vendorId);
+	
 }

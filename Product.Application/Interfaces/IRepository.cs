@@ -7,5 +7,4 @@ public interface IRepository<T>
     IQueryable<T> GetAll();
     Task<T?> GetByIdOrDefaultAsync(int id);
     Task DeleteAsync(T entity);
-    Task SaveAsync();
 }

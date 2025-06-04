@@ -35,7 +35,9 @@ public class OperatorRepository : IOperatorRepository
 	}
 	public async Task<List<Operator>> GetOperatorsByNameAsync(string operatorName)
 	{
-		var operators = await _operators.Where(op => op.BusinessName.Contains(operatorName))
+		var operators = await _operators
+			.Where(op => op.BusinessName.Contains(operatorName))
+			.Include(op => op.Industries)
 			.ToListAsync();
 
 		return operators;

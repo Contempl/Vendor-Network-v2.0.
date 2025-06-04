@@ -38,8 +38,6 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(nameof(J
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// builder.Services.AddScoped<IUrlHelper, UrlHelper>();
-
 var app = builder.Build();
 
 app.UseMiddleware<MyExceptionHandlingMiddleware>(); 

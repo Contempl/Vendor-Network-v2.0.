@@ -1,8 +1,9 @@
-﻿using Product.Domain.Entity;
+﻿using Product.Domain.Dto;
+using Product.Domain.Entity;
 
 namespace Product.Application.ServiceInterfaces;
 
 public interface IJwtTokenService
 {
-	string GenerateToken(User user);
+	TokenDto GenerateToken(User user);
 }

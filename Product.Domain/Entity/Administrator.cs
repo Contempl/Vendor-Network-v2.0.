@@ -1,4 +1,4 @@
 ﻿namespace Product.Domain.Entity;
 
-public class Administrator : User, IEntity
+public class Administrator : User
 {  }
