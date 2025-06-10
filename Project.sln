@@ -9,6 +9,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Product.WebApi", "Product.WebApi\Product.WebApi.csproj", "{846F2ED3-DBD6-40D4-9BE9-8037EAD5D96C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DD854981-5CBE-4E90-8F0B-8020511E315F}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Product.Seeder", "Product.Seeder\Product.Seeder.csproj", "{7A1F24C4-A6DF-4D26-BE78-B006E6154941}"
 EndProject
