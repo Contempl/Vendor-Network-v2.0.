@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Product.Application.Interfaces;
@@ -66,10 +64,8 @@ public static class DependencyInjection
         services.AddScoped<IVendorService, VendorService>();
         services.AddScoped<IFacilityService, FacilityService>();
         services.AddScoped<IVendFacilityService, VendFacilityService>();
-        services.AddScoped<IVendorUserService, VendorUserService>();
         services.AddScoped<IOperatorService, OperatorService>();
         services.AddScoped<IOperatorIndustryService, OperatorIndustryService>();
-        services.AddScoped<IOperatorUserService, OperatorUserService>();
         services.AddScoped<IInviteService, InviteService>();
         services.AddScoped<IRedisCacheService, RedisCacheService>();
         services.AddScoped<IEmailService, EmailService>(provider =>
