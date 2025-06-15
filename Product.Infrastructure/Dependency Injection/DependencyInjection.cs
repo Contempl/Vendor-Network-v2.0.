@@ -66,10 +66,8 @@ public static class DependencyInjection
         services.AddScoped<IVendorService, VendorService>();
         services.AddScoped<IFacilityService, FacilityService>();
         services.AddScoped<IVendFacilityService, VendFacilityService>();
-        services.AddScoped<IVendorUserService, VendorUserService>();
         services.AddScoped<IOperatorService, OperatorService>();
         services.AddScoped<IOperatorIndustryService, OperatorIndustryService>();
-        services.AddScoped<IOperatorUserService, OperatorUserService>();
         services.AddScoped<IInviteService, InviteService>();
         services.AddScoped<IRedisCacheService, RedisCacheService>();
         services.AddScoped<IEmailService, EmailService>(provider =>
