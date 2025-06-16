@@ -7,9 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Reference Include="Microsoft.Data.SqlClient">
-        <HintPath>..\Product.WebApi\bin\Debug\net7.0\Microsoft.Data.SqlClient.dll</HintPath>
-      </Reference>
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" /> 
     </ItemGroup>
 
 </Project>
