@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Product.Domain.Enum;
 using Product.Domain.Settings;
 using Product.Infrastructure.Dependency_Injection;
 using Product.Infrastructure.Extensions;
@@ -14,24 +15,25 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy =>
+    options.AddPolicy("Admin", policy =>
     {
-        policy.RequireClaim("userType", "Administrator");
+        policy.RequireClaim("userType", UserType.Admin.ToString("D"));
     });
     
     options.AddPolicy("VendorUser", policy =>
     {
-        policy.RequireClaim("userType", "VendorUser", "Administrator");
+        policy.RequireClaim("userType", UserType.VendorUser.ToString("D"), UserType.Admin.ToString("D"));
     });
     
     options.AddPolicy("OperatorUser", policy =>
     {
-        policy.RequireClaim("userType",  "OperatorUser", "Administrator");
+        policy.RequireClaim("userType",  UserType.OperatorUser.ToString("D"), UserType.Admin.ToString("D"));
     });
     
     options.AddPolicy("All", policy =>
     {
-        policy.RequireClaim("userType",  "VendorUser", "OperatorUser", "Administrator");
+        policy.RequireClaim("userType",  UserType.VendorUser.ToString("D"), 
+            UserType.OperatorUser.ToString("D"), UserType.Admin.ToString("D"));
     });
 });
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(nameof(JwtOptions)));

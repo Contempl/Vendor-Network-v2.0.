@@ -8,6 +8,7 @@ using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Enum;
 using Product.Domain.Settings;
 
 namespace Product.Infrastructure.Implementations.Account;
@@ -34,15 +35,15 @@ public class JwtTokenService : IJwtTokenService
          switch (user) 
         {
             case VendorUser vendorUser:
-                claims.Add(new Claim("userType", nameof(VendorUser)));
+                claims.Add(new Claim("userType", UserType.VendorUser.ToString("D")));
                 claims.Add(new Claim("businessId", vendorUser.VendorId.ToString()));
                 break;
             case OperatorUser operatorUser:
-                claims.Add(new Claim("userType", nameof(OperatorUser)));
+                claims.Add(new Claim("userType", UserType.OperatorUser.ToString("D")));
                 claims.Add(new Claim("businessId", operatorUser.OperatorId.ToString()));
                 break;
             case Administrator administrator:
-                claims.Add(new Claim("userType", nameof(Administrator)));
+                claims.Add(new Claim("userType", UserType.Admin.ToString("D")));
                 break;
         };
 
