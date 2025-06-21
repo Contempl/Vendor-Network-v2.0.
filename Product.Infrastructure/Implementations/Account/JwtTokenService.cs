@@ -16,11 +16,9 @@ namespace Product.Infrastructure.Implementations.Account;
 public class JwtTokenService : IJwtTokenService  
 {
     private readonly JwtOptions _options;
-    private readonly IUserRepository _userRepository;
 
-    public JwtTokenService( IOptions<JwtOptions> options, IUserRepository userRepository, IHttpContextAccessor context)
+    public JwtTokenService( IOptions<JwtOptions> options)
     {
-        _userRepository = userRepository;
         _options = options.Value;
     }
 
@@ -31,20 +29,8 @@ public class JwtTokenService : IJwtTokenService
         {
             new Claim("userId", user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email!),
-        };
-         switch (user) 
-        {
-            case VendorUser vendorUser:
-                claims.Add(new Claim("userType", UserType.VendorUser.ToString("D")));
-                claims.Add(new Claim("businessId", vendorUser.VendorId.ToString()));
-                break;
-            case OperatorUser operatorUser:
-                claims.Add(new Claim("userType", UserType.OperatorUser.ToString("D")));
-                claims.Add(new Claim("businessId", operatorUser.OperatorId.ToString()));
-                break;
-            case Administrator administrator:
-                claims.Add(new Claim("userType", UserType.Admin.ToString("D")));
-                break;
+            new Claim("userType", user.UserType.ToString("D")),
+            new Claim("businessId", user.UserType.ToString()),
         };
 
         var credentials = new SigningCredentials(new SymmetricSecurityKey(key),

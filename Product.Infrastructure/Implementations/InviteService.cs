@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Product.Application.Dto;
+﻿using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
@@ -13,16 +12,14 @@ namespace Product.Infrastructure.Implementations;
 public class InviteService : IInviteService
 {
 	private readonly IInviteRepository _inviteRepository;
-	private readonly IPasswordHasher _passwordHasher;
 	private readonly IUserRepository _userRepository;
 	private readonly IOperatorUserRepository _operatorUserRepository;
 	private readonly IVendorUserRepository _vendorUserRepository;
 	private readonly IUserService _userService;
 
-	public InviteService(IInviteRepository inviteRepository, IPasswordHasher passwordHasher, IUserRepository userRepository, IOperatorUserRepository operatorUserRepository, IVendorUserRepository vendorUserRepository, IUserService userService)
+	public InviteService(IInviteRepository inviteRepository, IUserRepository userRepository, IOperatorUserRepository operatorUserRepository, IVendorUserRepository vendorUserRepository, IUserService userService)
 	{
 		_inviteRepository = inviteRepository;
-		_passwordHasher = passwordHasher;
 		_userRepository = userRepository;
 		_operatorUserRepository = operatorUserRepository;
 		_vendorUserRepository = vendorUserRepository;
@@ -35,21 +32,10 @@ public class InviteService : IInviteService
 			return false;
 		return true;
 	}
-
-	
-	public void UpdateInvitationStatusAsync(User user, Invite invite, UserRegistrationByInviteDto dto)
-	{
-		invite.Status = InvitationStatus.Accepted;
-		
-		user.UserName = dto.UserName;
-		user.FirstName = dto.FirstName;
-		user.LastName = dto.LastName;
-		user.PasswordHash = _passwordHasher.HashThePassword(dto.Password);
-	}
 	public Invite CreateInvite(User user, User sender) => new Invite
 	{
-		User = user,
-		UserId = user.Id,
+		InvitedUser = user,
+		InvitedUserId = user.Id,
 		Status = InvitationStatus.Sent,
 		CreatedAt = DateTime.UtcNow,
 		ExpiresAt = DateTime.UtcNow.AddDays(30),
@@ -96,7 +82,7 @@ public class InviteService : IInviteService
 		
 		await UpdateInviteAndUser(registrationData, invite, inviteId);
 		
-		var updatedUser = await _userRepository.GetByIdAsync(invite.UserId!);
+		var updatedUser = await _userRepository.GetByIdOrDefaultAsync(invite.InvitedUserId.Value);
 
 		return new Response<UserDtoToFrontEnd>
 		{
@@ -106,7 +92,7 @@ public class InviteService : IInviteService
 	
 	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite, int inviteId)
 	{
-		var user = await _userRepository.GetByIdAsync(invite.UserId!);
+		var user = await _userRepository.GetByIdAsync(invite.InvitedUserId.Value);
 
 		_userService.MapUserToUpdateByInvite(dto, user);
 

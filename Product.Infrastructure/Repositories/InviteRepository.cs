@@ -7,7 +7,7 @@ namespace Product.Infrastructure.Repositories;
 public class InviteRepository : IInviteRepository
 {
 	private readonly AppDbContext _context;
-	private DbSet<Invite> _invites;
+	private readonly DbSet<Invite> _invites;
 
 	public InviteRepository(AppDbContext context)
 	{
@@ -37,7 +37,7 @@ public class InviteRepository : IInviteRepository
 	{
 		var invite = await GetAll()
 			.Where(i => i.Id == inviteId)
-			.Include(i => i.User)
+			.Include(i => i.InvitedUser)
 			.FirstAsync();
 
 		return invite;

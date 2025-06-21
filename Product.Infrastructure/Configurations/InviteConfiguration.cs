@@ -18,10 +18,14 @@ internal class InviteConfiguration : IEntityTypeConfiguration<Invite>
 		builder.Property(invite => invite.ExpiresAt)
 			.HasColumnName("ExpiresAt");
 
-		builder.HasOne(invite => invite.User)
-			.WithMany(user => user.Invites)
-			.HasForeignKey(invite => invite.UserId)
-			.OnDelete(DeleteBehavior.Restrict);
+		builder.HasOne(invite => invite.InvitedUser)
+			.WithOne(user => user.ReceivedInvite)
+			.HasForeignKey<Invite>(invite => invite.InvitedUserId)
+			.OnDelete(DeleteBehavior.SetNull);
 		
+		builder.HasOne(invite => invite.Sender)
+			.WithMany(user => user.SentInvites)
+			.HasForeignKey(invite => invite.SenderId)
+			.OnDelete(DeleteBehavior.Restrict);
 	}
 }

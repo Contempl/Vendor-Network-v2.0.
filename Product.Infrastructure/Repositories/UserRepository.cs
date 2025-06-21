@@ -1,11 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
 using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
-using Product.Domain.Dto;
 using Product.Domain.Entity;
-using Product.Domain.Result;
 
 namespace Product.Infrastructure.Repositories;
 
@@ -53,7 +50,7 @@ public class UserRepository : IUserRepository
 			return cached;
 		}
 		
-		var user = await _users.FindAsync(userId); //nullable
+		var user = await _users.FindAsync(userId);
 		
 		await _redisCacheService.SetAsync(cacheKey, user);
 		return user;
@@ -84,10 +81,9 @@ public class UserRepository : IUserRepository
 		await _redisCacheService.SetAsync(cacheKey, user);
 		return user; 
 	}
-	
 			
 	public async Task<User> GetByIdWithInvitesAsync(int userId)
 	{
-		return await _users.Include(u => u.Invites).FirstAsync(u => u.Id == userId);
+		return await _users.Include(u => u.SentInvites).FirstAsync(u => u.Id == userId);
 	}
 }

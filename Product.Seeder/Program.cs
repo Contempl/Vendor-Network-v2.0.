@@ -40,7 +40,7 @@ class Program
             Email = "admin@gmail.com",
             FirstName = "Ashas",
             LastName = "Chivopats",
-            Invites = new List<Invite>(),
+            SentInvites = new List<Invite>(),
             PasswordHash = HashThePassword("jopaPopa")
         });
 

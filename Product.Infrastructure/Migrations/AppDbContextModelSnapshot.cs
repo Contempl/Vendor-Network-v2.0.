@@ -83,14 +83,16 @@ namespace Product.DAL.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("SenderId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[UserId] IS NOT NULL");
 
                     b.ToTable("Invites", (string)null);
                 });
@@ -167,6 +169,9 @@ namespace Product.DAL.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("Username");
+
+                    b.Property<int>("UserType")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -295,20 +300,19 @@ namespace Product.DAL.Migrations
             modelBuilder.Entity("Product.Domain.Entity.Invite", b =>
                 {
                     b.HasOne("Product.Domain.Entity.User", "Sender")
-                        .WithMany()
+                        .WithMany("SentInvites")
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Product.Domain.Entity.User", "User")
-                        .WithMany("Invites")
-                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Sender");
+                    b.HasOne("Product.Domain.Entity.User", "InvitedUser")
+                        .WithOne("ReceivedInvite")
+                        .HasForeignKey("Product.Domain.Entity.Invite", "UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("User");
+                    b.Navigation("InvitedUser");
+
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("Product.Domain.Entity.OperatorIndustry", b =>
@@ -387,7 +391,9 @@ namespace Product.DAL.Migrations
 
             modelBuilder.Entity("Product.Domain.Entity.User", b =>
                 {
-                    b.Navigation("Invites");
+                    b.Navigation("ReceivedInvite");
+
+                    b.Navigation("SentInvites");
                 });
 
             modelBuilder.Entity("Product.Domain.Entity.VendorFacility", b =>
