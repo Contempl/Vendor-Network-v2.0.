@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Data.SqlClient;
-using Product.Application.Dto;
+﻿using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
@@ -230,7 +225,7 @@ public class OperatorService : IOperatorService
         };
     }
 
-    public async Task<Response<int>> DeleteOperatorAsync(int operatorId)
+    public async Task<Response<int>> RemoveOperatorAsync(int operatorId)
     {
         var @operator = await _operatorRepository.GetByIdAsync(operatorId);
         await _operatorRepository.DeleteAsync(@operator);

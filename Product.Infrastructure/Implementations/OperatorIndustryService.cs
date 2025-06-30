@@ -22,9 +22,6 @@ public class OperatorIndustryService : IOperatorIndustryService
 	    _operatorRepository = operatorRepository;
     }
 
-    public Task CreateAsync(OperatorIndustry operatorIndustry) => _operatorIndustryRepository
-        .CreateAsync(operatorIndustry);
-
     public async Task<Response<int>> RemoveOperatorIndustryAsync(int industryId)
     {
 	    var operatorId = _userPrincipalService.BusinessId!.Value;

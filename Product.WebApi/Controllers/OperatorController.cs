@@ -95,7 +95,7 @@ public class OperatorController : Controller
 	[Authorize(policy: "AdminOnly")]
 	public async Task<ActionResult<Response<int>>> DeleteOperator(int operatorId)
 	{
-		var response = await _operatorService.DeleteOperatorAsync(operatorId);
+		var response = await _operatorService.RemoveOperatorAsync(operatorId);
 		if (response.IsSuccess)
 		{
 			return Ok(response);

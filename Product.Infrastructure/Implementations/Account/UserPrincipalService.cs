@@ -6,7 +6,7 @@ namespace Product.Infrastructure.Implementations.Account;
 public class UserPrincipalService : IUserPrincipalService
 {
     public int? UserId { get; set; }
-    public string? UserType { get; set; } //enum
+    public string? UserType { get; set; }
     public int? BusinessId { get; set; }
     
 

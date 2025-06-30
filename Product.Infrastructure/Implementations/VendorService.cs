@@ -131,10 +131,10 @@ public class VendorService : IVendorService
     public async Task<Response<MailMsg>> InviteVendorUserAsync(EmailForInviteDto emailDto)
     {
 	    var vendorUserId = _userPrincipalService.UserId!.Value;
-	    var email = emailDto.Email;
-	    var vendorUser = await _vendorUserRepository.GetByIdAsync(vendorUserId);
-		
 	    var vendorId = _userPrincipalService.BusinessId;
+	    var vendorUser = await _vendorUserRepository.GetByIdAsync(vendorUserId);
+	    
+	    var email = emailDto.Email;
 		
 	    var newVendorUser = new VendorUser { Email = email, VendorId = vendorId };
 		
@@ -158,7 +158,7 @@ public class VendorService : IVendorService
 	    };
     }
 
-    public async Task<Response<int>> DeleteVendorAsync(int vendorId)
+    public async Task<Response<int>> RemoveVendorAsync(int vendorId)
     {
 	    var vendor = await _vendorRepository.GetByIdAsync(vendorId);
 	    await _vendorRepository.DeleteAsync(vendor);

@@ -76,7 +76,7 @@ namespace Product.WebApi.Controllers
 		[Authorize(policy: "AdminOnly")]
 		public async Task<ActionResult<Response<int>>> DeleteVendor(int vendorId)
 		{
-			var response = await _vendorService.DeleteVendorAsync(vendorId);
+			var response = await _vendorService.RemoveVendorAsync(vendorId);
 			if (response.IsSuccess)
 			{
 				return Ok(response);

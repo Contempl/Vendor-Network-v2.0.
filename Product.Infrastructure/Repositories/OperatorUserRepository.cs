@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Product.Application.Interfaces;
 using Product.Domain.Entity;
 
@@ -35,5 +33,6 @@ public class OperatorUserRepository : IOperatorUserRepository
 		_operatorUsers.Update(operatorUser);
 		await SaveAsync();
 	}
-	public async Task SaveAsync() => await _context.SaveChangesAsync();
+
+	private async Task SaveAsync() => await _context.SaveChangesAsync();
 }

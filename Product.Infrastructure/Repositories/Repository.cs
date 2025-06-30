@@ -6,7 +6,7 @@ namespace Product.Infrastructure.Repositories;
 public class Repository<T> : IRepository<T> where T : class
 {
     private readonly AppDbContext _context;
-    private DbSet<T> _table;
+    private readonly DbSet<T> _table;
 
     public Repository(AppDbContext context)
     {
@@ -24,9 +24,8 @@ public class Repository<T> : IRepository<T> where T : class
         _context.Remove(entity);
         await _context.SaveChangesAsync();
     }
-    public async Task<List<T>> GetAllAsync() => await _table.ToListAsync();
     public async Task<T?> GetByIdOrDefaultAsync(int id) => await _table.FindAsync(id);
-    public async Task SaveAsync() => await _context.SaveChangesAsync();
+    private async Task SaveAsync() => await _context.SaveChangesAsync();
     public async Task UpdateAsync(T entity)
     {
 		_table.Update(entity);

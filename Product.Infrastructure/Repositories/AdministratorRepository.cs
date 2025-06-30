@@ -27,7 +27,7 @@ public class AdministratorRepository : IAdministratorRepository
 	public IQueryable<Administrator> GetAll() => _administrators;
 	public async Task<Administrator?> GetByIdOrDefaultAsync(int AdminId) => await _administrators.SingleOrDefaultAsync(admin => admin.Id == AdminId);
 	public async Task<Administrator> GetByIdAsync(int AdminId) => await _administrators.SingleAsync(admin => admin.Id == AdminId);
-	public Task SaveAsync() => _context.SaveChangesAsync();
+	private Task SaveAsync() => _context.SaveChangesAsync();
 	public async Task UpdateAsync(Administrator admin)
 	{
 		_administrators.Update(admin);

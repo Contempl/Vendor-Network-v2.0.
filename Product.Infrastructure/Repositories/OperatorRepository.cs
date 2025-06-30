@@ -25,7 +25,6 @@ public class OperatorRepository : IOperatorRepository
 		_operators.Remove(@operator);
 		await SaveAsync();
 	}
-	public async Task<List<Operator>> GetAllAsync() => await _operators.ToListAsync();
 	public async Task<Operator?> GetByIdOrDefaultAsync(int operatorId) => await _operators.SingleOrDefaultAsync(oper => oper.Id == operatorId);
 	public async Task<Operator> GetByIdAsync(int operatorId) => await _operators.SingleAsync(oper => oper.Id == operatorId);
 	public async Task UpdateAsync(Operator @operator)
@@ -42,5 +41,6 @@ public class OperatorRepository : IOperatorRepository
 
 		return operators;
 	}
-	public async Task SaveAsync() => await _context.SaveChangesAsync();
+
+	private async Task SaveAsync() => await _context.SaveChangesAsync();
 }

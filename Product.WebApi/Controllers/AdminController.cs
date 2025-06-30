@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
-using Product.Domain.Entity;
 using Product.Domain.Result;
 using Product.Infrastructure.Filters;
 

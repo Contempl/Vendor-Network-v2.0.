@@ -33,5 +33,6 @@ public class VendorUserRepository : IVendorUserRepository
 		_vendorUsers.Update(vendorUser);
 		await SaveAsync();
 	}
-	public async Task SaveAsync() => await _context.SaveChangesAsync();
+
+	private async Task SaveAsync() => await _context.SaveChangesAsync();
 }

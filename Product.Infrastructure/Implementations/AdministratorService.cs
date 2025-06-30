@@ -33,14 +33,14 @@ public class AdministratorService : IAdministratorService
 
 	public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData)
 	{
-		var admin = await _adminRepository.GetByIdAsync(adminId);
+		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
 		if (admin == null)
 		{
 			return new Response<UserDtoToFrontEnd>
 			{
 				ErrorMessage = "Administrator not found.",
-				ErrorCode = (int)ErrorCodes.UserNotFound,
+				ErrorCode = (int)ErrorCodes.UserNotFound
 			};
 		}
 
@@ -79,7 +79,16 @@ public class AdministratorService : IAdministratorService
 
 	public async Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(int adminId, DataForInviteDto inviteData)
 	{
-		var admin = await _adminRepository.GetByIdAsync(adminId);
+		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
+
+		if (admin == null)
+		{
+			return new Response<UserDtoToFrontEnd>
+			{
+				ErrorMessage = "Administrator not found.",
+				ErrorCode = (int)ErrorCodes.UserNotFound
+			};
+		}
 
 		if (string.IsNullOrWhiteSpace(inviteData.Email) || inviteData.BusinessId == 0)
 		{
@@ -116,7 +125,16 @@ public class AdministratorService : IAdministratorService
 
 	public async Task<Response<UserDtoToFrontEnd>> InviteBusiness(int adminId, BusinessInvitationData invitationData)
 	{
-		var admin = await _adminRepository.GetByIdAsync(adminId);
+		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
+
+		if (admin == null)
+		{
+			return new Response<UserDtoToFrontEnd>
+			{
+				ErrorMessage = "Administrator not found.",
+				ErrorCode = (int)ErrorCodes.UserNotFound
+			};
+		};
 		
 		if (invitationData.BusinessIsVendor)
 		{

@@ -23,6 +23,7 @@ public class UserRepository : IUserRepository
 	{
 		await _users.AddAsync(entity);
 		await SaveAsync();
+		
 		await _redisCacheService.SetAsync(CachePrefix + entity.Id, entity);
 	}
 	public async Task DeleteAsync(User user)
@@ -51,6 +52,8 @@ public class UserRepository : IUserRepository
 		}
 		
 		var user = await _users.FindAsync(userId);
+		if (user == null)
+			throw new KeyNotFoundException($"User with id: {userId} could not be found.");
 		
 		await _redisCacheService.SetAsync(cacheKey, user);
 		return user;
@@ -59,7 +62,6 @@ public class UserRepository : IUserRepository
 	public async Task UpdateAsync(User entity)
 	{
 		var cacheKey = $"{CachePrefix}{entity.Id}";
-		
 		await _redisCacheService.RemoveAsync(cacheKey);
 		
 		_users.Update(entity);
@@ -77,8 +79,8 @@ public class UserRepository : IUserRepository
 			return null;
 		
 		var cacheKey = $"{CachePrefix}{user.Id}";
-
 		await _redisCacheService.SetAsync(cacheKey, user);
+		
 		return user; 
 	}
 			

@@ -14,5 +14,5 @@ public interface IOperatorService
 	Task<Response<BusinessFrontEndDto>> RegisterOperatorAsync (int operatorUserId, OperatorRegistrationDto operatorRegistrationData);
 	Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync (int operatorId, UpdateOperatorDto operatorUpdateData);
 	Task<Response<MailMsg>> InviteOperatorUserAsync (int operatorUserId, EmailForInviteDto operatorUpdateData);
-	Task<Response<int>> DeleteOperatorAsync (int operatorId);
+	Task<Response<int>> RemoveOperatorAsync (int operatorId);
 }

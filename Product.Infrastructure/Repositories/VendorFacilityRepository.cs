@@ -37,7 +37,9 @@ public class VendorFacilityRepository : IVendorFacilityRepository
 
 		return vendorFacility;
 	}
-	public async Task SaveAsync() => await _context.SaveChangesAsync();
+
+	private async Task SaveAsync() => await _context.SaveChangesAsync();
+	
 	public async Task UpdateAsync(VendorFacility vendorFacility)
 	{
 		_vendorFacilities.Update(vendorFacility);
