@@ -32,7 +32,7 @@ public class OperatorIndustryRepository : IOperatorIndustryRepository
 	public async Task<List<OperatorIndustry>> GetOperatorsIndustriesAsync(int operatorId) => await GetAll()
 		.Where(i => i.OperatorId == operatorId).ToListAsync();
 
-	public async Task SaveAsync() => await _context.SaveChangesAsync();
+	private async Task SaveAsync() => await _context.SaveChangesAsync();
 	public async Task UpdateAsync(OperatorIndustry entity)
 	{
 		_operatorIndustries.Update(entity);

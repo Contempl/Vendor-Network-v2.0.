@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Data.SqlClient;
-using Product.Application.Dto;
+﻿using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
@@ -102,7 +97,7 @@ public class OperatorService : IOperatorService
         {
             return new Response<List<BusinessFrontEndDto>>()
             {
-                ErrorMessage = $"The field '{nameof(industriesData.ServiceType)}' should't be empty ",
+                ErrorMessage = $"The field '{nameof(industriesData.ServiceType)}' shouldn't be empty ",
                 ErrorCode = (int)ErrorCodes.InvalidServiceType,
             };
         }
@@ -119,15 +114,15 @@ public class OperatorService : IOperatorService
         };
     }
 
-    private double CalculateDistance(double operLat, double operLon, double vendLat, double vendLon)
+    private double CalculateDistance(double operLatitude, double operLongitude, double vendLatitude, double vendLongitude)
     {
         const double R = 6371;
 
-        var dLat = ToRadians(vendLat - operLat);
-        var dLon = ToRadians(vendLon - operLon);
+        var dLat = ToRadians(vendLatitude - operLatitude);
+        var dLon = ToRadians(vendLongitude - operLongitude);
 
         var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                Math.Cos(ToRadians(operLat)) * Math.Cos(ToRadians(vendLat)) *
+                Math.Cos(ToRadians(operLatitude)) * Math.Cos(ToRadians(vendLatitude)) *
                 Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
 
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
@@ -230,7 +225,7 @@ public class OperatorService : IOperatorService
         };
     }
 
-    public async Task<Response<int>> DeleteOperatorAsync(int operatorId)
+    public async Task<Response<int>> RemoveOperatorAsync(int operatorId)
     {
         var @operator = await _operatorRepository.GetByIdAsync(operatorId);
         await _operatorRepository.DeleteAsync(@operator);

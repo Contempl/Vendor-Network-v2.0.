@@ -1,11 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
 using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
-using Product.Domain.Dto;
 using Product.Domain.Entity;
-using Product.Domain.Result;
 
 namespace Product.Infrastructure.Repositories;
 
@@ -26,6 +23,7 @@ public class UserRepository : IUserRepository
 	{
 		await _users.AddAsync(entity);
 		await SaveAsync();
+		
 		await _redisCacheService.SetAsync(CachePrefix + entity.Id, entity);
 	}
 	public async Task DeleteAsync(User user)
@@ -53,7 +51,9 @@ public class UserRepository : IUserRepository
 			return cached;
 		}
 		
-		var user = await _users.FindAsync(userId); //nullable
+		var user = await _users.FindAsync(userId);
+		if (user == null)
+			throw new KeyNotFoundException($"User with id: {userId} could not be found.");
 		
 		await _redisCacheService.SetAsync(cacheKey, user);
 		return user;
@@ -62,7 +62,6 @@ public class UserRepository : IUserRepository
 	public async Task UpdateAsync(User entity)
 	{
 		var cacheKey = $"{CachePrefix}{entity.Id}";
-		
 		await _redisCacheService.RemoveAsync(cacheKey);
 		
 		_users.Update(entity);
@@ -80,14 +79,13 @@ public class UserRepository : IUserRepository
 			return null;
 		
 		var cacheKey = $"{CachePrefix}{user.Id}";
-
 		await _redisCacheService.SetAsync(cacheKey, user);
+		
 		return user; 
 	}
-	
 			
 	public async Task<User> GetByIdWithInvitesAsync(int userId)
 	{
-		return await _users.Include(u => u.Invites).FirstAsync(u => u.Id == userId);
+		return await _users.Include(u => u.SentInvites).FirstAsync(u => u.Id == userId);
 	}
 }

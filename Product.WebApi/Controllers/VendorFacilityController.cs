@@ -69,7 +69,7 @@ public class VendorFacilityController : ControllerBase
 	[Authorize(policy: "AdminOnly")] 
 	public async Task<ActionResult<Response<int>>> DeleteFacility(int vendorId, int facilityId)
 	{
-		var response = await _vendorFacilityService.DeleteFacilityAsync(vendorId, facilityId);
+		var response = await _vendorFacilityService.RemoveFacilityAsync(vendorId, facilityId);
 		if (response.IsSuccess)
 		{
 			return Ok(response);

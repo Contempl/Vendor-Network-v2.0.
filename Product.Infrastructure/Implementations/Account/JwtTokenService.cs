@@ -8,6 +8,7 @@ using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Enum;
 using Product.Domain.Settings;
 
 namespace Product.Infrastructure.Implementations.Account;
@@ -15,11 +16,9 @@ namespace Product.Infrastructure.Implementations.Account;
 public class JwtTokenService : IJwtTokenService  
 {
     private readonly JwtOptions _options;
-    private readonly IUserRepository _userRepository;
 
-    public JwtTokenService( IOptions<JwtOptions> options, IUserRepository userRepository, IHttpContextAccessor context)
+    public JwtTokenService( IOptions<JwtOptions> options)
     {
-        _userRepository = userRepository;
         _options = options.Value;
     }
 
@@ -30,20 +29,8 @@ public class JwtTokenService : IJwtTokenService
         {
             new Claim("userId", user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email!),
-        };
-         switch (user) 
-        {
-            case VendorUser vendorUser:
-                claims.Add(new Claim("userType", nameof(VendorUser)));
-                claims.Add(new Claim("businessId", vendorUser.VendorId.ToString()));
-                break;
-            case OperatorUser operatorUser:
-                claims.Add(new Claim("userType", nameof(OperatorUser)));
-                claims.Add(new Claim("businessId", operatorUser.OperatorId.ToString()));
-                break;
-            case Administrator administrator:
-                claims.Add(new Claim("userType", nameof(Administrator)));
-                break;
+            new Claim("userType", user.UserType.ToString("D")),
+            new Claim("businessId", user.UserType.ToString()),
         };
 
         var credentials = new SigningCredentials(new SymmetricSecurityKey(key),

@@ -11,6 +11,6 @@ public interface IVendorService
 	Task<Response<BusinessFrontEndDto>> GetVendorByIdAsync(int vendorId);
 	Task<Response<BusinessFrontEndDto>> UpdateVendorAsync(UpdateVendorDto vendorData);
 	Task<Response<MailMsg>> InviteVendorUserAsync(EmailForInviteDto email);
-	Task<Response<int>> DeleteVendorAsync(int vendorId);
+	Task<Response<int>> RemoveVendorAsync(int vendorId);
 	
 }

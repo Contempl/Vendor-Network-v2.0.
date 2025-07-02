@@ -1,4 +1,6 @@
-﻿namespace Product.Domain.Entity;
+﻿using Product.Domain.Enum;
+
+namespace Product.Domain.Entity;
 
 public abstract class User : IEntity
 {
@@ -8,5 +10,10 @@ public abstract class User : IEntity
 	public string? FirstName { get; set; }
 	public string? LastName { get; set; }
 	public string Email { get; set; }
-	public List<Invite> Invites { get; set; } = new();
+
+	public UserType UserType { get; set; }
+	
+	public List<Invite> SentInvites { get; set; } = new();
+	
+	public Invite? ReceivedInvite { get; set; }
 }

@@ -114,7 +114,7 @@ public class VendFacilityService : IVendFacilityService
 		};
 	}
 
-	public async Task<Response<int>> DeleteFacilityAsync(int vendorId, int facilityId)
+	public async Task<Response<int>> RemoveFacilityAsync(int vendorId, int facilityId)
 	{
 		var vendorFacility = await _vendorFacilityRepository.GetByIdAsync(vendorId, facilityId);
 

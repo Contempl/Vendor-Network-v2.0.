@@ -43,8 +43,8 @@ public class UserService : IUserService
 
 	public async Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData)
 	{
-		var userWithThisEmail = await _userRepository.GetByEmailAsync(registrationData.Email);
-		if (userWithThisEmail != null)
+		var userByEmail = await _userRepository.GetByEmailAsync(registrationData.Email);
+		if (userByEmail != null)
 		{
 			return new Response<UserDtoToFrontEnd>
 			{
@@ -89,14 +89,7 @@ public class UserService : IUserService
 		}
 		
 		var existingUser = await _userRepository.GetByIdAsync(userId);
-		if (existingUser == null)
-		{
-			return new Response<UserDtoToFrontEnd>
-			{
-				ErrorMessage = "User was not found in the database.",
-				ErrorCode = (int)ErrorCodes.UserNotFound,
-			};
-		}
+
 		var userDto = existingUser.MapToFrontEndDto();
 
 		return new Response<UserDtoToFrontEnd>
@@ -191,13 +184,6 @@ public class UserService : IUserService
 		}
         
 		var options = new DistributedCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(1));
-
-		#region MemoryCache
-
-		//var options = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(2));
-		// _memoryCache.Set($"User_{user.Id}", user, options);
-
-		#endregion
         
 		await _redisCacheService.SetAsync($"User_{user.Id}", user, options);
 		Debug.Write($"В кеш добавился ключ User_{user.Id}");
@@ -207,40 +193,6 @@ public class UserService : IUserService
 			Data = user.MapToDto()
 		};
 	}
-	
-	public async Task<Response<UserDto>> TryGetUserFromCache(long userId)
-	{
-		var cacheKey = $"User_{userId}";
-		var cachedUser = await _redisCacheService.GetAsync<User>(cacheKey);
-
-		if (cachedUser != null)
-		{
-			Debug.WriteLine($"User found in cache: {cacheKey}");
-			return new Response<UserDto>
-			{
-				Data = cachedUser.MapToDto()
-			};
-		}
-		Debug.WriteLine($"Cache miss for: {cacheKey}");
-
-
-		var user = await _userRepository.GetAll().FirstOrDefaultAsync(x => x.Id == userId);
-		if (user == null)
-		{
-			return new Response<UserDto>
-			{
-				ErrorMessage = "Пользователь не найден"
-			};
-		}
-
-		await _redisCacheService.SetAsync(cacheKey, user);
-
-		return new Response<UserDto>
-		{
-			Data = user.MapToDto()
-		};
-	}
-	
 
 	private VendorUser MapVendorUserFromDto(UserRegistrationDto registrationData) => new VendorUser
 	{

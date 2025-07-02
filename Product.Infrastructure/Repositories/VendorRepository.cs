@@ -49,7 +49,6 @@ public class VendorRepository : IVendorRepository
 
 	public async Task<Vendor> GetByIdAsync(int businessId)
 	{
-		// Try to get from cache (Redis). IDistributedCache injects in repository. Make gets check cache first. If exists => get from cache. Otherwise get from DB put into cache and give user
 		var cacheKey = CachePrefix + businessId;
 		
 		var cachedBusiness = await _reddisCacheService.GetAsync<Vendor>(cacheKey);
@@ -65,7 +64,6 @@ public class VendorRepository : IVendorRepository
 
 	public async Task UpdateAsync(Vendor vendor)
 	{
-		// Make update, delete, create update cache. So that entity would be updated not only in db, but also in cache.
 		await _reddisCacheService.RemoveAsync(CachePrefix + vendor.Id);
 		_vendors.Update(vendor);
 		await SaveAsync();

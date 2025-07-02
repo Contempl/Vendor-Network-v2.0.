@@ -9,6 +9,6 @@ public interface IVendFacilityService
     Task<Response<VendorFacility>> GetFacilityWithServicesByIdAsync(int vendorFacilityId);
     Task<Response<VendorFacility>> AddFacilityAsync(VendorFacilityDto facilityData);
     Task<Response<VendorFacility>> UpdateFacilityAsync(int facilityId, UpdateVendorFacilityDto facilityData);
-    Task<Response<int>> DeleteFacilityAsync(int vendorId, int facilityId);
+    Task<Response<int>> RemoveFacilityAsync(int vendorId, int facilityId);
     Task<Response<VendorFacilityService>> GetVendorFacilityServiceAsync(int facilityId, int facilityServiceId);
 }

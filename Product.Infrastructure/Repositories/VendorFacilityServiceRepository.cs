@@ -16,9 +16,9 @@ public class VendorFacilityServiceRepository : IVendorFacilityServiceRepository
 
 	}
 
-	public async Task CreateAsync(VendorFacilityService service)
+	public async Task CreateAsync(VendorFacilityService facilityService)
 	{
-		await _facilityServices.AddAsync(service);
+		await _facilityServices.AddAsync(facilityService);
 		await SaveAsync();
 	}
 	public async Task DeleteAsync(VendorFacilityService facilityService)
@@ -35,10 +35,11 @@ public class VendorFacilityServiceRepository : IVendorFacilityServiceRepository
 		return facilityServices;
 	}
 	public async Task<VendorFacilityService?> GetByIdOrDefaultAsync(int facilityServiceId) => await _facilityServices
-		.SingleOrDefaultAsync(oper => oper.Id == facilityServiceId);
-	public async Task<VendorFacilityService> GetByIdAsync(int vendorId, int facilityId, int facilityServiceId) => await _facilityServices.SingleAsync(vfs => vfs.Id == facilityServiceId
+		.SingleOrDefaultAsync(facilityService => facilityService.Id == facilityServiceId);
+	public async Task<VendorFacilityService> GetByIdAsync(int vendorId, int facilityId, int vendorFacilityServiceId) => await _facilityServices.SingleAsync(vfs => vfs.Id == vendorFacilityServiceId
 		&& vfs.VendorFacilityId == facilityId && vfs.VendorFacility.VendorId == vendorId);
-	public async Task SaveAsync() => await _context.SaveChangesAsync();
+
+	private async Task SaveAsync() => await _context.SaveChangesAsync();
 	public async Task UpdateAsync(VendorFacilityService facilityService)
 	{
 		_facilityServices.Update(facilityService);
