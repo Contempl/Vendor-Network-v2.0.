@@ -21,20 +21,15 @@ public class FacilityService : IFacilityService
 		_facilityRepository = facilityRepository;
 	}
 
-	public Task CreateAsync(VendorFacilityService vendorFacilityService)
-		=> _facilityRepository.CreateAsync(vendorFacilityService);
-
-	public async Task DeleteAsync(VendorFacilityService facilityService) => await _facilityRepository.DeleteAsync(facilityService);
-	public Task<List<VendorFacilityService>> GetServicesByFacilityIdAsync(int facilityId, int vendorId) => _facilityRepository.GetServicesByFacilityIdAsync(facilityId, vendorId);
-	public async Task<VendorFacilityService> GetByIdAsync(int facilityServiceId, int facilityId, int vendorId) => await _facilityRepository.GetByIdAsync(facilityServiceId, facilityId, vendorId);
-	public async Task UpdateAsync(VendorFacilityService vendorFacilityService) => await _facilityRepository.UpdateAsync(vendorFacilityService);
-	public VendorFacilityService MapFacilityServiceDtoToCreate(VendorFacility facility, string serviceName) =>
+	private VendorFacilityService MapFacilityServiceDtoToCreate(VendorFacility facility, string serviceName) =>
 	new VendorFacilityService
 	{
 		Name = serviceName,
+		VendorFacilityId = facility.Id,
 		VendorFacility = facility,
 	};
-	public void UpdateFacilityServiceName(VendorFacilityService facilityService, string serviceName)
+
+	private void UpdateFacilityServiceName(VendorFacilityService facilityService, string serviceName)
 	{
 		ValidateServiceName(serviceName);
 		facilityService.Name = serviceName;
@@ -43,9 +38,18 @@ public class FacilityService : IFacilityService
 	public async Task<Response<VendorFacilityService>> AddFacilityServiceAsync(int facilityId, string facilityServiceName)
 	{
 		var vendorId = _userPrincipalService.BusinessId!.Value;
-		var facility = await _vendorFacilityRepository.GetByIdAsync(facilityId, vendorId);
+		var vendorFacility = await _vendorFacilityRepository.GetByIdAsync(facilityId, vendorId);
 
-		var newFacilityService = MapFacilityServiceDtoToCreate(facility, facilityServiceName);
+		if (vendorFacility == null)
+		{
+			return new Response<VendorFacilityService>
+			{
+				ErrorMessage = "Vendor Facility not found while trying to add service",
+				ErrorCode = (int)ErrorCodes.InvalidVendorFacilityServiceData
+			};
+		}
+		
+		var newFacilityService = MapFacilityServiceDtoToCreate(vendorFacility, facilityServiceName);
 
 		await _facilityRepository.CreateAsync(newFacilityService);
 
@@ -71,6 +75,15 @@ public class FacilityService : IFacilityService
 			};
 		}
 
+		if (vendorFacilityService == null)
+		{
+			return new Response<VendorFacilityService>
+			{
+				ErrorMessage = "Vendor Facility Service not found to update",
+				ErrorCode = (int)ErrorCodes.InvalidVendorFacilityServiceData,
+			};
+		}
+		
 		UpdateFacilityServiceName(vendorFacilityService, facilityServiceDto.Name);
 
 		await _facilityRepository.UpdateAsync(vendorFacilityService);
@@ -84,9 +97,18 @@ public class FacilityService : IFacilityService
 	public async Task<Response<int>> RemoveFacilityServiceAsync(int facilityId, int facilityServiceId)
 	{
 		var vendorId = _userPrincipalService.BusinessId!.Value;
-		var facilityService = await _facilityRepository.GetByIdAsync(vendorId, facilityId, facilityServiceId);
+		var vendorFacilityService = await _facilityRepository.GetByIdAsync(vendorId, facilityId, facilityServiceId);
 
-		await _facilityRepository.DeleteAsync(facilityService);
+		if (vendorFacilityService == null)
+		{
+			return new Response<int>
+			{
+				ErrorMessage = "Vendor Facility Service not found to delete",
+				ErrorCode = (int)ErrorCodes.InvalidVendorFacilityServiceData,
+			};
+		}
+		
+		await _facilityRepository.DeleteAsync(vendorFacilityService);
 
 		var result = new Response<int>
 		{
