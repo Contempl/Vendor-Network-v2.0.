@@ -107,7 +107,7 @@ public class InviteServiceTests
 	}
 
 	[Fact]
-	public async Task RegisterUserByInvite_InvitationExpired_ReturnsDataSuccessfully()
+	public async Task RegisterUserByInvite_InvitationExpired_ReturnsErrorResponse()
 	{
 		// Arrange
 		var user = new VendorUser { Id = 10, Email = "user@test.com" };
@@ -133,7 +133,6 @@ public class InviteServiceTests
 		_userRepositoryMock.Setup(r => r.GetByIdAsync(invite.InvitedUserId.Value)).ReturnsAsync(user);
 		_inviteRepositoryMock.Setup(r => r.GetInviteWithUserAsync(invite.Id))
 			.ReturnsAsync(invite);
-		_inviteRepositoryMock.Setup(r => r.UpdateAsync(invite)).Returns(Task.CompletedTask);
 		_vendorUserRepositoryMock.Setup(r => r.UpdateAsync(user));
 		
 		
@@ -142,7 +141,7 @@ public class InviteServiceTests
 		
 		// Assert
 		Assert.NotNull(result);
-		Assert.Equal(result.Data.Email, user.Email);
-		Assert.Equal(result.Data.FirstName, user.FirstName);
+		Assert.Equal((int)ErrorCodes.InvalidInvitation, result.ErrorCode);
+		Assert.Equal($"Invalid invitation. Invite id: {invite.Id}", result.ErrorMessage);
 	}
 }
