@@ -30,8 +30,13 @@ public class VendorUserRepository : IVendorUserRepository
 	public async Task<VendorUser> GetByIdAsync(int id) => await _vendorUsers.SingleAsync(vu => vu.Id == id);
 	public async Task UpdateAsync(VendorUser vendorUser)
 	{
-		_vendorUsers.Update(vendorUser);
-		await SaveAsync();
+		var userToUpdate = await _vendorUsers.FindAsync(vendorUser.Id);
+
+		if (userToUpdate != null)
+		{
+			_context.Entry(userToUpdate).CurrentValues.SetValues(vendorUser);
+			await SaveAsync();
+		}
 	}
 
 	private async Task SaveAsync() => await _context.SaveChangesAsync();

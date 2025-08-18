@@ -30,8 +30,13 @@ public class OperatorUserRepository : IOperatorUserRepository
 	public async Task<OperatorUser> GetByIdAsync(int operatorId) => await _operatorUsers.SingleAsync(w => w.Id == operatorId);
 	public async Task UpdateAsync(OperatorUser operatorUser)
 	{
-		_operatorUsers.Update(operatorUser);
-		await SaveAsync();
+		var userToUpdate = await _operatorUsers.FindAsync(operatorUser.Id);
+
+		if (userToUpdate != null)
+		{
+			_context.Entry(userToUpdate).CurrentValues.SetValues(operatorUser);
+			await SaveAsync();
+		}
 	}
 
 	private async Task SaveAsync() => await _context.SaveChangesAsync();
