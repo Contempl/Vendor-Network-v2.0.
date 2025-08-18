@@ -4,6 +4,7 @@ using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Enum;
 using Product.Domain.Pagination;
 using Product.Domain.Result;
 using Product.Infrastructure.Filters;
@@ -24,7 +25,7 @@ public class OperatorController : Controller
 	}
 
 	[HttpPost("search/vendors")]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
+	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> SearchVendorsToServeFacilities([FromBody] SearchVendorsForIndustriesDto industriesData)
 	{
@@ -50,7 +51,7 @@ public class OperatorController : Controller
 
 
 	[HttpGet]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
+	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<BusinessFrontEndDto>>> GetOperator()
 	{
@@ -77,7 +78,7 @@ public class OperatorController : Controller
 	}
 
 	[HttpPut]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
+	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateOperator([FromBody] UpdateOperatorDto operatorData)
 	{
@@ -92,7 +93,7 @@ public class OperatorController : Controller
 
 	[HttpDelete("{operatorId}")]
 	[EnsureOperatorExists]
-	[Authorize(policy: "AdminOnly")]
+	[Authorize(policy: "Admin")]
 	public async Task<ActionResult<Response<int>>> DeleteOperator(int operatorId)
 	{
 		var response = await _operatorService.RemoveOperatorAsync(operatorId);
@@ -104,7 +105,7 @@ public class OperatorController : Controller
 	}
 
 	[HttpPost("invite")]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
+	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<MailMsg>>> InviteOperatorUser([FromBody] EmailForInviteDto dto)
 	{

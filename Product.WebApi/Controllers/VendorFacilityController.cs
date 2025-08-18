@@ -4,6 +4,7 @@ using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Enum;
 using Product.Domain.Result;
 using Product.Infrastructure.Filters;
 
@@ -24,7 +25,7 @@ public class VendorFacilityController : ControllerBase
 
 	[HttpGet("/facility/{facilityId}")]
 	[EnsureVendorFacilityExists]
-	[EnsureBusinessAccess(nameof(VendorUser))]
+	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
 	public async Task<ActionResult<Response<VendorFacility>>> GetVendorFacility(int facilityId)
 	{
@@ -37,7 +38,7 @@ public class VendorFacilityController : ControllerBase
 	}
 
 	[HttpPost("/facility")]
-	[EnsureBusinessAccess(nameof(VendorUser))]
+	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
 	public async Task<ActionResult<Response<VendorFacility>>> AddFacility(VendorFacilityDto facilityData)
 	{
@@ -51,7 +52,7 @@ public class VendorFacilityController : ControllerBase
 
 	[HttpPut("facility/{facilityId}")]
 	[EnsureVendorFacilityExists]
-	[EnsureBusinessAccess(nameof(VendorUser))]
+	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
 	public async Task<ActionResult<Response<VendorFacility>>> UpdateFacility(int facilityId,
 		[FromBody] UpdateVendorFacilityDto facilityData)
@@ -66,7 +67,7 @@ public class VendorFacilityController : ControllerBase
 
 	[HttpDelete("{vendorId}/facilities/{facilityId}")]
 	[EnsureVendorFacilityExists] 
-	[Authorize(policy: "AdminOnly")] 
+	[Authorize(policy: "VendorUser")] 
 	public async Task<ActionResult<Response<int>>> DeleteFacility(int vendorId, int facilityId)
 	{
 		var response = await _vendorFacilityService.RemoveFacilityAsync(vendorId, facilityId);
@@ -79,7 +80,7 @@ public class VendorFacilityController : ControllerBase
 
 
 	[HttpGet("/facility/{facilityId}/service/{facilityServiceId}")]
-	[EnsureBusinessAccess(nameof(VendorUser))]
+	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
 	public async Task<ActionResult<Response<VendorFacilityService>>> GetVendorFacilityService(int facilityId, int facilityServiceId)
 	{
@@ -93,7 +94,7 @@ public class VendorFacilityController : ControllerBase
 	}
 
 	[HttpGet("/facility/{facilityId}/services")]
-	[EnsureBusinessAccess(nameof(VendorUser))]
+	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
 	public async Task<ActionResult<List<VendorFacilityService>>> GetVendorFacilityServices(int facilityId)
 	{
@@ -107,7 +108,7 @@ public class VendorFacilityController : ControllerBase
 
 	[HttpPost("/facility/{facilityId}/service")]
 	[EnsureVendorFacilityExists]
-	[EnsureBusinessAccess(nameof(VendorUser))]
+	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
 	public async Task<ActionResult<Response<VendorFacilityService>>> AddFacilityService(int facilityId, [FromBody] string facilityServiceName)
 	{
@@ -121,7 +122,7 @@ public class VendorFacilityController : ControllerBase
 
 	[HttpPut("/facility/{facilityId}/service/{facilityServiceId}")]
 	[EnsureVendorFacilityServiceExists]
-	[EnsureBusinessAccess(nameof(VendorUser))]
+	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
 	public async Task<ActionResult<Response<VendorFacilityService>>> UpdateFacilityService(int facilityId, int facilityServiceId, [FromBody] VendorFacilityServiceDto facilityServiceDto)
 	{
@@ -135,7 +136,7 @@ public class VendorFacilityController : ControllerBase
 
 	[HttpDelete("/facility/{facilityId}/service/{facilityServiceId}")]
 	[EnsureVendorFacilityServiceExists]
-	[EnsureBusinessAccess(nameof(VendorUser))]
+	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
 	public async Task<ActionResult<Response<VendorFacilityService>>> DeleteFacilityService(int facilityId, int facilityServiceId)
 	{

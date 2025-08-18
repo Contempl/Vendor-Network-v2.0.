@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
-using Product.Domain.Entity;
 using Product.Domain.Result;
 using Product.Infrastructure.Filters;
 
@@ -86,7 +85,7 @@ public class AccountController : ControllerBase
 
 	[HttpDelete("/{userId}")]
 	[EnsureUserExists]
-	[Authorize(policy: "AdminOnly")]
+	[Authorize(policy: "Admin")]
 	public async Task<ActionResult<Response<int>>> RemoveUser(int userId)
 	{
 		var response = await _userService.RemoveUserAsync(userId);
