@@ -25,6 +25,7 @@ public class FacilityService : IFacilityService
 	new VendorFacilityService
 	{
 		Name = serviceName,
+		VendorFacilityId = facility.Id,
 		VendorFacility = facility,
 	};
 
