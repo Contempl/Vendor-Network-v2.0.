@@ -77,20 +77,9 @@ public class UserService : IUserService
 	}
 	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId)
 	{
-		var cacheKey = $"User_{userId}";
-		var cachedUser = await _redisCacheService.GetAsync<UserDtoToFrontEnd>(cacheKey);
+		var user = await _userRepository.GetByIdAsync(userId);
 
-		if (cachedUser is not null)
-		{
-			return new Response<UserDtoToFrontEnd>
-			{
-				Data = cachedUser
-			};
-		}
-		
-		var existingUser = await _userRepository.GetByIdAsync(userId);
-
-		var userDto = existingUser.MapToFrontEndDto();
+		var userDto = user.MapToFrontEndDto();
 
 		return new Response<UserDtoToFrontEnd>
 		{
@@ -122,7 +111,8 @@ public class UserService : IUserService
 			};
 		}
 
-		var token = _jwtTokenService.GenerateToken(user);
+		var userClaims = MapUserToClaimDto(user);
+		var token = _jwtTokenService.GenerateToken(userClaims);
 
 		return new Response<TokenDto>
 		{
@@ -201,6 +191,7 @@ public class UserService : IUserService
 		LastName = registrationData.LastName,
 		Email = registrationData.Email,
 		PasswordHash = _passwordHasher.HashThePassword(registrationData.Password),
+		UserType = UserType.VendorUser,
 	};
 
 	private OperatorUser MapOperatorUserFromDto(UserRegistrationDto registrationData) => new OperatorUser
@@ -209,6 +200,34 @@ public class UserService : IUserService
 		FirstName = registrationData.FirstName,
 		LastName = registrationData.LastName,
 		Email = registrationData.Email,
-		PasswordHash = _passwordHasher.HashThePassword(registrationData.Password)
+		PasswordHash = _passwordHasher.HashThePassword(registrationData.Password),
+		UserType = UserType.OperatorUser,
 	};
+
+	private UserClaimDto MapUserToClaimDto(User user)
+	{
+		var dto = new UserClaimDto();
+		switch (user)
+		{
+			case OperatorUser operatorUser:
+				dto.Id = operatorUser.Id;
+				dto.Email = operatorUser.Email;
+				dto.UserType = operatorUser.UserType;
+				dto.BusinessId = operatorUser.OperatorId!.Value;
+				break;
+			case VendorUser vendorUser:
+				dto.Id = vendorUser.Id;
+				dto.Email = vendorUser.Email;
+				dto.UserType = vendorUser.UserType;
+				dto.BusinessId = vendorUser.VendorId!.Value;
+				break;
+			default :
+				dto.Id = user.Id;
+				dto.Email = user.Email;
+				dto.UserType = user.UserType;
+				break;
+		}
+		
+		return dto;
+	}
 }

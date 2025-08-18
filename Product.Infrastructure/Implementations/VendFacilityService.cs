@@ -33,7 +33,6 @@ public class VendFacilityService : IVendFacilityService
 	{
 		Name = facilityData.Name,
 		VendorId = vendor.Id,
-		Vendor = vendor,
 		Location = facilityData.Location,
 		Longitude = facilityData.Longitude,
 		Latitude = facilityData.Latitude,

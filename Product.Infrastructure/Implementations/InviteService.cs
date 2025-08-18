@@ -35,12 +35,10 @@ public class InviteService : IInviteService
 	public Invite CreateInvite(User user, User sender) => new Invite
 	{
 		InvitedUser = user,
-		InvitedUserId = user.Id,
 		Status = InvitationStatus.Sent,
 		CreatedAt = DateTime.UtcNow,
 		ExpiresAt = DateTime.UtcNow.AddDays(30),
-		SenderId = sender.Id,
-		Sender = sender
+		SenderId = sender.Id
 	};
 
 	public async Task<Response<InviteIdToFrontEnd>> Register(int inviteId)
@@ -82,7 +80,7 @@ public class InviteService : IInviteService
 		
 		await UpdateInviteAndUser(registrationData, invite, inviteId);
 		
-		var updatedUser = await _userRepository.GetByIdOrDefaultAsync(invite.InvitedUserId.Value);
+		var updatedUser = await _userRepository.GetByIdOrDefaultAsync(invite.InvitedUserId!.Value);
 
 		return new Response<UserDtoToFrontEnd>
 		{
@@ -92,7 +90,7 @@ public class InviteService : IInviteService
 	
 	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite, int inviteId)
 	{
-		var user = await _userRepository.GetByIdAsync(invite.InvitedUserId.Value);
+		var user = await _userRepository.GetByIdAsync(invite.InvitedUserId!.Value);
 
 		_userService.MapUserToUpdateByInvite(dto, user);
 
