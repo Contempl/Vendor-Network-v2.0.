@@ -28,7 +28,7 @@ internal class OperatorUserConfiguration : IEntityTypeConfiguration<OperatorUser
 		builder.Property(ou => ou.Email)
 			.HasMaxLength(50)
 			.IsRequired();
-
+		
 		builder.HasOne(ou => ou.Operator)
 			.WithMany(o => o.OperatorUsers)
 			.HasForeignKey(ou => ou.OperatorId);
