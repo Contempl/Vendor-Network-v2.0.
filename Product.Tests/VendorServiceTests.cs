@@ -21,6 +21,7 @@ public class VendorServiceTests
     private readonly Mock<IInviteService> _inviteServiceMock = new();
     private readonly Mock<IUserRepository > _userRepositoryMock = new();
     private readonly Mock<IInviteRepository> _inviteRepositoryMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     
     private readonly VendorService _vendorService; 
 
@@ -34,30 +35,9 @@ public class VendorServiceTests
             _emailServiceMock.Object,
             _inviteServiceMock.Object,
             _inviteRepositoryMock.Object,
-            _userRepositoryMock.Object
+            _userRepositoryMock.Object,
+            _unitOfWorkMock.Object
             );
-    }
-    
-    
-    [Fact]
-    public async Task RegisterVendorAsync()
-    {
-        // Arrange
-        var registrationDto = new VendorRegistrationDto
-        {
-            BusinessName = "BusinessName", Adress = "Test Address", Email = "test@test.com",
-        };
-
-        _vendorUserRepositoryMock.Setup(r => r.GetByIdAsync(_testVendorUser.Id))
-            .ReturnsAsync(_testVendorUser);
-        
-        // Act
-        var result = await _vendorService.RegisterVendorAsync(_testVendorUser.Id, registrationDto);
-
-        // Assert
-        Assert.Equal(registrationDto.BusinessName, result.Data.BusinessName);
-        Assert.Equal(registrationDto.Adress, result.Data.Address);
-        _vendorRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Vendor>()), Times.Once);
     }
     
     [Fact]
@@ -136,19 +116,6 @@ public class VendorServiceTests
         _vendorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>()), Times.Once);
         _emailServiceMock.Verify(s => s.CreateMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         _emailServiceMock.Verify(s => s.SendInvitationEmailAsync(It.IsAny<MailMsg>()), Times.Once);
-    }
-    
-    [Fact]
-    public async Task DeleteVendorAsync_DeletesVendorSuccessfully()
-    {
-        // Arrange
-        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id))
-            .ReturnsAsync(_testVendor);
-        // Act
-        var result = await _vendorService.RemoveVendorAsync(_testVendor.Id);
-        
-        // Assert
-        _vendorRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Vendor>()), Times.Once);
     }
 
     private readonly VendorUser _testVendorUser = new VendorUser

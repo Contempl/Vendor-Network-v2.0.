@@ -62,7 +62,7 @@ public class VendorFacilityServiceTests
         var creationDto = new VendorFacilityDto
         {
             Name = "Test Name", Location = "Test Location", Longitude = 10, Latitude = 20, RadiusOfWork = 40000,
-            Services = ["Service Name #1", "Service Name #2", "Service Name #3", "Service Name #4"],
+            Services = {"Service Name #1", "Service Name #2", "Service Name #3", "Service Name #4"},
         };
         _vendorRepositoryMock.Setup(r => r.GetByIdAsync(vendorId))
             .ReturnsAsync(_testVendor);
@@ -131,7 +131,7 @@ public class VendorFacilityServiceTests
         vendFacility.Services = _testVendorFacilityServices;
         var updateDto = new UpdateVendorFacilityDto
         {
-            Services = ["New Service Name #1, New Service Name #2, New Service Name #3"],
+            Services = { "New Service Name #1, New Service Name #2, New Service Name #3" },
         };
         
         _userPrincipalServiceMock.SetupProperty(s => s.BusinessId, _testVendor.Id);
