@@ -26,6 +26,7 @@ public class OperatorServiceTests
     private readonly Mock<IUserRepository> _userRepositoryMock = new ();
     private readonly Mock<IUserPrincipalService> _userPrincipalServiceMock = new();
     private readonly Mock<IInviteService> _inviteServiceMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     
     private readonly OperatorService _operatorService;
 
@@ -40,7 +41,8 @@ public class OperatorServiceTests
             _emailServiceMock.Object,
             _inviteRepositoryMock.Object,
             _userPrincipalServiceMock.Object,
-            _inviteServiceMock.Object
+            _inviteServiceMock.Object,
+            _unitOfWorkMock.Object
         );
     }
     
@@ -283,10 +285,10 @@ public class OperatorServiceTests
         var pagedResult = new PagedResult<Vendor>
         {
             Items =
-            [
+            {
                 new Vendor { Id = 1, BusinessName = "CleanCo" },
                 new Vendor { Id = 2, BusinessName = "CleanPro" }
-            ],
+            },
             TotalCount = 2
         };
 
