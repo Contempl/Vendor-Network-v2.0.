@@ -44,7 +44,6 @@ public class UserRepository : IUserRepository
 	public async Task<User> GetByIdAsync(int userId)
 	{
 		var cacheKey = $"{CachePrefix}{userId}";
-		
 		var cached = await _redisCacheService.GetAsync<User>(cacheKey);
 		if (cached != null)
 		{

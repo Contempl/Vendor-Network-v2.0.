@@ -38,7 +38,7 @@ public class FacilityService : IFacilityService
 	public async Task<Response<VendorFacilityService>> AddFacilityServiceAsync(int facilityId, string facilityServiceName)
 	{
 		var vendorId = _userPrincipalService.BusinessId!.Value;
-		var vendorFacility = await _vendorFacilityRepository.GetByIdAsync(facilityId, vendorId);
+		var vendorFacility = await _vendorFacilityRepository.GetByIdAsync(vendorId, facilityId);
 
 		if (vendorFacility == null)
 		{

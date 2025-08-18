@@ -10,7 +10,7 @@ namespace Product.WebApi.Controllers;
 
 [Route("[controller]")]
 [ApiController]
-[Authorize(policy: "AdminOnly")]
+[Authorize(policy: "Admin")]
 public class AdminController : ControllerBase
 {
 	private readonly IAdministratorService _adminService;
@@ -48,7 +48,7 @@ public class AdminController : ControllerBase
 		return BadRequest(response);
 	}
 
-	[HttpPost("{adminId}/inviteOperatorUser")]
+	[HttpPost("/inviteOperatorUser")]
 	[EnsureAdministratorExists]
 	public async Task<IActionResult> InviteOperatorUser([FromBody] DataForInviteDto inviteData)
 	{
@@ -60,4 +60,18 @@ public class AdminController : ControllerBase
 		}
 		return BadRequest(response);
 	}
+	
+	
+	// [HttpDelete("{vendorId}")]
+	// [EnsureVendorExists]
+	// [Authorize(policy: "Admin")]
+	// public async Task<ActionResult<Response<int>>> DeleteVendor(int vendorId)
+	// {
+	// 	var response = await _vendorService.RemoveVendorAsync(vendorId);
+	// 	if (response.IsSuccess)
+	// 	{
+	// 		return Ok(response);
+	// 	}
+	// 	return BadRequest(response);
+	// } TODO ??
 }

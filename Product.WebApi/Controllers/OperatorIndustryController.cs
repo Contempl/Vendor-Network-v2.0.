@@ -4,6 +4,7 @@ using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Enum;
 using Product.Domain.Result;
 using Product.Infrastructure.Filters;
 
@@ -11,6 +12,7 @@ namespace Product.WebApi.Controllers;
 
 [Route("operator")]
 [ApiController]
+[EnsureBusinessAccess(UserType.OperatorUser)]
 public class OperatorIndustryController : ControllerBase
 {
 	private readonly IOperatorIndustryService _operatorIndustryService;
@@ -23,7 +25,6 @@ public class OperatorIndustryController : ControllerBase
 
 	[HttpGet("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> GetOperatorIndustry(int industryId)
 	{
@@ -36,7 +37,6 @@ public class OperatorIndustryController : ControllerBase
 	}
 
 	[HttpGet("industries")]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<List<OperatorIndustry>>>> GetOperatorIndustries()
 	{
@@ -48,9 +48,8 @@ public class OperatorIndustryController : ControllerBase
 		return BadRequest(response);
 	}
 
-	[HttpPost("industry")]
-	[EnsureOperatorExists]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
+	[HttpPost("{operatorId}/industry")]
+
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> AddOperatorIndustry([FromBody] OperatorIndustryCreationDto industryData)
 	{
@@ -64,7 +63,6 @@ public class OperatorIndustryController : ControllerBase
 
 	[HttpPut("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> UpdateOperatorIndustry(int industryId,
 		UpdateOperatorIndustryDto industryData)
@@ -77,9 +75,8 @@ public class OperatorIndustryController : ControllerBase
 		return BadRequest(response);
 	}
 
-	[HttpDelete("{operatorId}/industry/{industryId}")]
+	[HttpDelete("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<int>>> RemoveOperatorIndustry(int industryId)
 	{

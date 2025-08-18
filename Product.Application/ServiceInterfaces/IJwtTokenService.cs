@@ -5,5 +5,5 @@ namespace Product.Application.ServiceInterfaces;
 
 public interface IJwtTokenService
 {
-	TokenDto GenerateToken(User user);
+	TokenDto GenerateToken(UserClaimDto userClaim);
 }

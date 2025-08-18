@@ -21,9 +21,10 @@ public class OperatorService : IOperatorService
     private readonly IUserRepository _userRepository;
     private readonly IUserPrincipalService _userPrincipalService;
     private readonly IInviteService _inviteService;
+    private readonly IUnitOfWork _unitOfWork;
 
 	public OperatorService(IOperatorRepository operatorRepository, 
-        IVendorRepository vendorRepository, IOperatorIndustryRepository operatorFacilityRepository, IUserRepository userRepository, IOperatorUserRepository operatorUserRepository, IEmailService emailService, IInviteRepository inviteRepository, IUserPrincipalService userPrincipalService, IInviteService inviteService)
+        IVendorRepository vendorRepository, IOperatorIndustryRepository operatorFacilityRepository, IUserRepository userRepository, IOperatorUserRepository operatorUserRepository, IEmailService emailService, IInviteRepository inviteRepository, IUserPrincipalService userPrincipalService, IInviteService inviteService, IUnitOfWork unitOfWork)
 	{
 		_operatorRepository = operatorRepository;
         _vendorRepository = vendorRepository;
@@ -34,6 +35,7 @@ public class OperatorService : IOperatorService
         _inviteRepository = inviteRepository;
         _userPrincipalService = userPrincipalService;
         _inviteService = inviteService;
+        _unitOfWork = unitOfWork;
     }
 
 
@@ -192,37 +194,44 @@ public class OperatorService : IOperatorService
 
     public async Task<Response<MailMsg>> InviteOperatorUserAsync(int operatorUserId, EmailForInviteDto dto)
     {
-        var operatorUser = await _userRepository.GetByIdAsync(operatorUserId);
-		
-        var operatorId = _userPrincipalService.BusinessId;
-		
-        var newOperatorUser = new OperatorUser { Email = dto.Email, OperatorId = operatorId };
-		
-        await _operatorUserRepository.CreateAsync(newOperatorUser);
-		
-        var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
+        await using var transaction = await _unitOfWork.BeginTransactionAsync();
 
-        if (existingUser == null)
+        try
+        {
+            var operatorUser = await _userRepository.GetByIdAsync(operatorUserId);
+
+            var operatorId = _userPrincipalService.BusinessId;
+            var newOperatorUser = new OperatorUser
+                { Email = dto.Email, OperatorId = operatorId, UserType = UserType.OperatorUser };
+
+            await _operatorUserRepository.CreateAsync(newOperatorUser);
+
+            var invite = _inviteService.CreateInvite(newOperatorUser, operatorUser);
+            var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
+            await _inviteRepository.CreateAsync(invite);
+            var emailBody = _emailService.GenerateEmailTemplate(dto.Email, newOperatorUser, inviteUrl);
+
+            var mailMessage = _emailService.CreateMessage(emailBody, operatorUser.Email);
+            await _emailService.SendInvitationEmailAsync(mailMessage);
+
+            await transaction.CommitAsync();
+
             return new Response<MailMsg>
             {
-                ErrorMessage = $"User with email {dto.Email} was not found",
-                ErrorCode = (int)ErrorCodes.UserNotFound
+                Data = mailMessage
             };
-		
-        var invite =  _inviteService.CreateInvite(existingUser, operatorUser);
-        var inviteUrl = _emailService.CreateInviteUrl(invite.Id); 
-        await _inviteRepository.CreateAsync(invite);
-		
-        var emailBody = _emailService.GenerateEmailTemplate(dto.Email, existingUser, inviteUrl);
+        }
 
-        var mailMessage = _emailService.CreateMessage(emailBody, operatorUser.Email);
-
-        await _emailService.SendInvitationEmailAsync(mailMessage);
-
-        return new Response<MailMsg>
+        catch (Exception ex)
         {
-            Data = mailMessage
-        };
+            await transaction.RollbackAsync();
+
+            return new Response<MailMsg>
+            {
+                ErrorCode = (int)ErrorCodes.InvalidInvitationData,
+                ErrorMessage = "Failed to craete an invite in transaction"
+            };
+        }
     }
 
     public async Task<Response<int>> RemoveOperatorAsync(int operatorId)

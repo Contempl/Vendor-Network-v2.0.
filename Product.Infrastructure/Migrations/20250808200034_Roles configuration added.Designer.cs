@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Product.Infrastructure;
 
 #nullable disable
 
-namespace Product.DAL.Migrations
+namespace Product.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250808200034_Roles configuration added")]
+    partial class Rolesconfigurationadded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -178,9 +181,6 @@ namespace Product.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("BusinessId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -220,14 +220,12 @@ namespace Product.DAL.Migrations
 
                     b.Property<string>("UserType")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BusinessId");
-
-                    b.ToTable("User", (string)null);
+                    b.ToTable("User");
 
                     b.UseTptMappingStrategy();
                 });
@@ -402,13 +400,6 @@ namespace Product.DAL.Migrations
                     b.Navigation("Operator");
                 });
 
-            modelBuilder.Entity("Product.Domain.Entity.User", b =>
-                {
-                    b.HasOne("Product.Domain.Entity.Business", null)
-                        .WithMany("Users")
-                        .HasForeignKey("BusinessId");
-                });
-
             modelBuilder.Entity("Product.Domain.Entity.VendorFacility", b =>
                 {
                     b.HasOne("Product.Domain.Entity.Vendor", "Vendor")
@@ -470,11 +461,6 @@ namespace Product.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Vendor");
-                });
-
-            modelBuilder.Entity("Product.Domain.Entity.Business", b =>
-                {
-                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Product.Domain.Entity.User", b =>

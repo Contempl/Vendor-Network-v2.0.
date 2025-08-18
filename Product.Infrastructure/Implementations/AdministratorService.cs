@@ -52,24 +52,22 @@ public class AdministratorService : IAdministratorService
 				ErrorCode = (int)ErrorCodes.InvalidInvitationData
 			};
 		}
-		var vendorUser = new VendorUser { Email = inviteData.Email, VendorId = inviteData.BusinessId };
+		var vendorUser = new VendorUser { Email = inviteData.Email, VendorId = inviteData.BusinessId, UserType = UserType.VendorUser };
 
 		await _userRepository.CreateAsync(vendorUser);
 
-		var existingUser = await _userRepository.GetByEmailAsync(inviteData.Email);
-
-		var invite = _inviteService.CreateInvite(existingUser, admin);
+		var invite = _inviteService.CreateInvite(vendorUser, admin);
 		await _inviteRepository.CreateAsync(invite);
 
 		var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
 			
-		var emailBody = _emailService.GenerateEmailTemplate(inviteData.Email, existingUser, inviteUrl); 
+		var emailBody = _emailService.GenerateEmailTemplate(inviteData.Email, vendorUser, inviteUrl); 
 
 		var mailMessage = _emailService.CreateMessage(emailBody, admin.Email);
 
 		await _emailService.SendInvitationEmailAsync(mailMessage);
 
-		var responseDto = existingUser.MapToFrontEndDto();
+		var responseDto = vendorUser.MapToFrontEndDto();
 		
 		return new Response<UserDtoToFrontEnd>
 		{
@@ -98,24 +96,22 @@ public class AdministratorService : IAdministratorService
 				ErrorCode = (int)ErrorCodes.InvalidInvitationData
 			};
 		}
-		var vendorUser = new OperatorUser { Email = inviteData.Email, OperatorId = inviteData.BusinessId };
+		var operatorUser = new OperatorUser { Email = inviteData.Email, OperatorId = inviteData.BusinessId };
 
-		await _userRepository.CreateAsync(vendorUser);
+		await _userRepository.CreateAsync(operatorUser);
 
-		var existingUser = await _userRepository.GetByEmailAsync(inviteData.Email);
-
-		var invite = _inviteService.CreateInvite(existingUser, admin);
+		var invite = _inviteService.CreateInvite(operatorUser, admin);
 		await _inviteRepository.CreateAsync(invite);
 
 		var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
 			
-		var emailBody = _emailService.GenerateEmailTemplate(inviteData.Email, existingUser, inviteUrl); 
+		var emailBody = _emailService.GenerateEmailTemplate(inviteData.Email, operatorUser, inviteUrl); 
 
 		var mailMessage = _emailService.CreateMessage(emailBody, admin.Email);
 
 		await _emailService.SendInvitationEmailAsync(mailMessage);
 
-		var responseDto = existingUser.MapToFrontEndDto();
+		var responseDto = operatorUser.MapToFrontEndDto();
 		
 		return new Response<UserDtoToFrontEnd>
 		{

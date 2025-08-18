@@ -33,5 +33,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 		builder.Property(u => u.Email)
 			.HasColumnName("Email")
 			.IsRequired();
+		
+		builder.Property(u => u.UserType)
+			.HasConversion<string>()
+			.HasMaxLength(30);
 	}
 }

@@ -3,12 +3,17 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Product.Domain.Entity;
 using Product.Infrastructure.Configurations;
+using Product.Infrastructure.Interceptors;
 
 namespace Product.Infrastructure;
 
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.AddInterceptors(new DateInterceptor());
+
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		modelBuilder.ApplyConfiguration(new AdministratorConfiguration());
@@ -33,8 +38,12 @@ public class AppDbContext : DbContext
     public DbSet<VendorFacility> VendorFacilities { get; set; }
     public DbSet<VendorFacilityService> VendorFacilityServices { get; set; }
     public DbSet<Invite> Invites { get; set; }
+    
     public DbSet<Business> Businesses { get; set; }
 }
+
+
+
 public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
 	public AppDbContext CreateDbContext(string[] args)

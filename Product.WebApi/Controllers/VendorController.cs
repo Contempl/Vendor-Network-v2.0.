@@ -4,6 +4,7 @@ using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Enum;
 using Product.Domain.Result;
 using Product.Infrastructure.Filters;
 
@@ -20,20 +21,7 @@ namespace Product.WebApi.Controllers
 			_vendorService = vendorService;
 		}
 
-		[HttpPost("register/{vendorUserId}")] //Remove
-		[EnsureVendorUserExists]
-		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Response<BusinessFrontEndDto>>> RegisterVendor(int vendorUserId, [FromBody] VendorRegistrationDto registrationData)
-		{
-			var response = await _vendorService.RegisterVendorAsync(vendorUserId, registrationData);
-			if (response.IsSuccess)
-			{
-				return Ok(response);
-			}
-			return BadRequest(response);
-		}
-
-		[HttpGet("Search/Operators/{operatorName}")]
+		[HttpPost("Search/Operators/")]
 		[Authorize(policy: "VendorUser")]
 		public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> GetOperators([FromBody]OperatorSearchDto operatorData)
 		{
@@ -46,7 +34,7 @@ namespace Product.WebApi.Controllers
 		}
 
 		[HttpGet("{vendorId}")]
-		[EnsureBusinessAccess(nameof(VendorUser))]
+		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
 		public async Task<ActionResult<Vendor>> GetVendor(int vendorId)
 		{
@@ -59,7 +47,7 @@ namespace Product.WebApi.Controllers
 		}
 
 		[HttpPut]
-		[EnsureBusinessAccess(nameof(VendorUser))]
+		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
 		public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateVendor([FromBody] UpdateVendorDto vendorData)
 		{
@@ -70,22 +58,9 @@ namespace Product.WebApi.Controllers
 			}
 			return BadRequest(response);
 		}
-
-		[HttpDelete("{vendorId}")]
-		[EnsureVendorExists]
-		[Authorize(policy: "AdminOnly")]
-		public async Task<ActionResult<Response<int>>> DeleteVendor(int vendorId)
-		{
-			var response = await _vendorService.RemoveVendorAsync(vendorId);
-			if (response.IsSuccess)
-			{
-				return Ok(response);
-			}
-			return BadRequest(response);
-		}
 		
 		[HttpPost("invite")]
-		[EnsureBusinessAccess(nameof(VendorUser))]
+		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
 		public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteVendorUser([FromBody] EmailForInviteDto email)
 		{

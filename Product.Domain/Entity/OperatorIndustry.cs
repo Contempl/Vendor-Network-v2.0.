@@ -1,6 +1,8 @@
-﻿namespace Product.Domain.Entity;
+﻿using Product.Domain.Common;
 
-public class OperatorIndustry : IEntity
+namespace Product.Domain.Entity;
+
+public class OperatorIndustry : IEntityId<int>, IAuditable
 {
     public int Id { get; set; }
     public required string Name { get; set; }
@@ -9,4 +11,12 @@ public class OperatorIndustry : IEntity
     public double Longitude { get; set; }
     public required Operator Operator { get; set; }
     public int OperatorId { get; set; }
+    
+    public DateTime CreatedAt { get; set; }
+    
+    public int CreatedBy { get; set; }
+    
+    public DateTime? UpdatedAt { get; set; }
+    
+    public int? UpdatedBy { get; set; }
 }
