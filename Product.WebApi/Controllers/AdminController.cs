@@ -21,6 +21,18 @@ public class AdminController : ControllerBase
 		_adminService = adminService;
 		_userPrincipalService = userPrincipalService;
 	}
+	
+	[AllowAnonymous]
+	[HttpPost("Login")]
+	public async Task<ActionResult<Response<TokenDto>>> Login (UserLoginDto userData)
+	{
+		var response = await _adminService.Login(userData);
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
+	}
 
 	[HttpPost("inviteBusiness")]
 	[EnsureAdministratorExists]
@@ -62,16 +74,29 @@ public class AdminController : ControllerBase
 	}
 	
 	
-	// [HttpDelete("{vendorId}")]
-	// [EnsureVendorExists]
-	// [Authorize(policy: "Admin")]
-	// public async Task<ActionResult<Response<int>>> DeleteVendor(int vendorId)
-	// {
-	// 	var response = await _vendorService.RemoveVendorAsync(vendorId);
-	// 	if (response.IsSuccess)
-	// 	{
-	// 		return Ok(response);
-	// 	}
-	// 	return BadRequest(response);
-	// } TODO ??
+	[HttpDelete("Vendor/{vendorId}")]
+	[EnsureVendorExists]
+	[Authorize(policy: "Admin")]
+	public async Task<ActionResult<Response<int>>> RemoveVendor(int vendorId)
+	{
+		var response = await _adminService.RemoveVendorAsync(vendorId);
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
+	} 
+	
+	[HttpDelete("Operator/{operatorId}")]
+	[EnsureOperatorExists]
+	[Authorize(policy: "Admin")]
+	public async Task<ActionResult<Response<int>>> RemoveOperator(int operatorId)
+	{
+		var response = await _adminService.RemoveOperatorAsync(operatorId);
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
+	}
 }

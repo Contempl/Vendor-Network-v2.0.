@@ -54,18 +54,7 @@ public class OperatorService : IOperatorService
     {
         return !string.IsNullOrWhiteSpace(input);
     }
-
-    private Operator MapOperatorFromDto(OperatorRegistrationDto operatorRegistrationData, 
-        OperatorUser user) => new Operator
-    {
-		BusinessName = operatorRegistrationData.BusinessName,
-		Address = operatorRegistrationData.Address,
-		Email = operatorRegistrationData.Email,
-		LogoUrl = operatorRegistrationData.LogoUrl,
-		Occupation = operatorRegistrationData.Occupation,
-		OperatorUsers = new List<OperatorUser> { user }
-	};
-
+    
     private void MapOperatorFromDtoToUpdate(Operator @operator, UpdateOperatorDto operatorData)
     {
 		@operator.BusinessName = operatorData.BusinessName ?? @operator.BusinessName;
@@ -178,20 +167,6 @@ public class OperatorService : IOperatorService
         };
     }
 
-    public async Task<Response<BusinessFrontEndDto>> RegisterOperatorAsync(int operatorUserId, OperatorRegistrationDto operatorRegistrationData)
-    {
-        var user = await _operatorUserRepository.GetByIdAsync(operatorUserId);
-
-        var newOperator = MapOperatorFromDto(operatorRegistrationData, user);
-
-        await _operatorRepository.CreateAsync(newOperator);
-        var businessDto = newOperator.ToFrontEndDto();
-        return new Response<BusinessFrontEndDto>
-        {
-            Data = businessDto
-        };
-    }
-
     public async Task<Response<MailMsg>> InviteOperatorUserAsync(int operatorUserId, EmailForInviteDto dto)
     {
         await using var transaction = await _unitOfWork.BeginTransactionAsync();
@@ -232,16 +207,6 @@ public class OperatorService : IOperatorService
                 ErrorMessage = "Failed to craete an invite in transaction"
             };
         }
-    }
-
-    public async Task<Response<int>> RemoveOperatorAsync(int operatorId)
-    {
-        var @operator = await _operatorRepository.GetByIdAsync(operatorId);
-        await _operatorRepository.DeleteAsync(@operator);
-        return new Response<int>
-        {
-            Data = @operator.Id
-        };
     }
     public async Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(int operatorId, UpdateOperatorDto operatorUpdateData)
     {
