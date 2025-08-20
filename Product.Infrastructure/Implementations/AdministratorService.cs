@@ -18,9 +18,13 @@ public class AdministratorService : IAdministratorService
     private readonly IInviteRepository _inviteRepository;
     private readonly IVendorRepository _vendorRepository;
     private readonly IOperatorRepository _operatorRepository;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly IJwtTokenService _jwtTokenService;
     
 
-    public AdministratorService(IAdministratorRepository administratorRepository, IUserRepository userRepository, IEmailService emailService, IInviteService inviteService, IInviteRepository inviteRepository, IVendorRepository vendorRepository, IOperatorRepository operatorRepository)
+    public AdministratorService(IAdministratorRepository administratorRepository, IUserRepository userRepository, 
+	    IEmailService emailService, IInviteService inviteService, IInviteRepository inviteRepository, IVendorRepository vendorRepository, 
+	    IOperatorRepository operatorRepository, IPasswordHasher passwordHasher, IJwtTokenService jwtTokenService)
     {
 	    _adminRepository = administratorRepository;
 	    _userRepository = userRepository;
@@ -29,9 +33,45 @@ public class AdministratorService : IAdministratorService
 	    _inviteRepository = inviteRepository;
 	    _vendorRepository = vendorRepository;
 	    _operatorRepository = operatorRepository;
+	    _passwordHasher = passwordHasher;
+	    _jwtTokenService = jwtTokenService;
     }
 
-	public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData)
+
+    public async Task<Response<TokenDto>> Login(UserLoginDto userData)
+    {
+	    var admin = await _adminRepository.GetByEmailAsync(userData.Email);
+
+	    if (admin == null)
+	    {
+		    return new Response<TokenDto>
+		    {
+			    ErrorMessage = "Admin not found",
+			    ErrorCode = (int)ErrorCodes.UserNotFound
+		    };
+	    }
+
+	    var passwordsAreEqual = _passwordHasher.ValidatePassword(userData.Password, admin.PasswordHash!);
+
+	    if (!passwordsAreEqual)
+	    {
+		    return new Response<TokenDto>
+		    {
+			    ErrorMessage = "Invalid password",
+			    ErrorCode = (int)ErrorCodes.InvalidPassword
+		    };
+	    }
+
+	    var userClaims = admin.MapAdminToClaimDto();
+	    var token = _jwtTokenService.GenerateToken(userClaims);
+
+	    return new Response<TokenDto>
+	    {
+		    Data = token,
+	    };
+    }
+
+    public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -39,7 +79,7 @@ public class AdministratorService : IAdministratorService
 		{
 			return new Response<UserDtoToFrontEnd>
 			{
-				ErrorMessage = "Administrator not found.",
+				ErrorMessage = "Admin not found.",
 				ErrorCode = (int)ErrorCodes.UserNotFound
 			};
 		}
@@ -83,7 +123,7 @@ public class AdministratorService : IAdministratorService
 		{
 			return new Response<UserDtoToFrontEnd>
 			{
-				ErrorMessage = "Administrator not found.",
+				ErrorMessage = "Admin not found.",
 				ErrorCode = (int)ErrorCodes.UserNotFound
 			};
 		}
@@ -127,7 +167,7 @@ public class AdministratorService : IAdministratorService
 		{
 			return new Response<UserDtoToFrontEnd>
 			{
-				ErrorMessage = "Administrator not found.",
+				ErrorMessage = "Admin not found.",
 				ErrorCode = (int)ErrorCodes.UserNotFound
 			};
 		};
@@ -183,6 +223,26 @@ public class AdministratorService : IAdministratorService
 		return new Response<UserDtoToFrontEnd>
 		{
 			Data = responseDto,
+		};
+	}
+	
+	public async Task<Response<int>> RemoveOperatorAsync(int operatorId)
+	{
+		var @operator = await _operatorRepository.GetByIdAsync(operatorId);
+		await _operatorRepository.DeleteAsync(@operator);
+		return new Response<int>
+		{
+			Data = @operator.Id
+		};
+	}
+
+	public async Task<Response<int>> RemoveVendorAsync(int vendorId)
+	{
+		var vendor = await _vendorRepository.GetByIdAsync(vendorId);
+		await _vendorRepository.DeleteAsync(vendor);
+		return new Response<int>
+		{
+			Data = vendor.Id
 		};
 	}
 }

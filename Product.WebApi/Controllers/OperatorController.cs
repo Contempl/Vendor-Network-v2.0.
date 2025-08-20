@@ -64,19 +64,6 @@ public class OperatorController : Controller
 		return BadRequest(response);
 	}
 
-	[HttpPost("register/{operatorUserId}")]
-	[EnsureOperatorUserExists]
-	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Operator>> RegisterOperator(int operatorUserId, [FromBody] OperatorRegistrationDto operatorRegistrationData)
-	{
-		var response = await _operatorService.RegisterOperatorAsync(operatorUserId, operatorRegistrationData);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
-	}
-
 	[HttpPut]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
@@ -84,19 +71,6 @@ public class OperatorController : Controller
 	{
 		var operatorId = _userPrincipalService.BusinessId!.Value;
 		var response = await _operatorService.UpdateOperatorAsync(operatorId, operatorData);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
-	}
-
-	[HttpDelete("{operatorId}")]
-	[EnsureOperatorExists]
-	[Authorize(policy: "Admin")]
-	public async Task<ActionResult<Response<int>>> DeleteOperator(int operatorId)
-	{
-		var response = await _operatorService.RemoveOperatorAsync(operatorId);
 		if (response.IsSuccess)
 		{
 			return Ok(response);

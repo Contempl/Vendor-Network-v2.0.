@@ -23,7 +23,10 @@ public class UserService : IUserService
 	private readonly IOperatorUserRepository _operatorUserRepository;
 	private readonly IRedisCacheService _redisCacheService;
 
-	public UserService(IUserRepository userRepository, IPasswordHasher userPrincipalService, IJwtTokenService jwtTokenService, IVendorUserRepository vendorUserRepository, IOperatorUserRepository operatorUserRepository, IRedisCacheService redisCacheService, IUserPrincipalService userPrincipalService1)
+	public UserService(IUserRepository userRepository, IPasswordHasher userPrincipalService, 
+		IJwtTokenService jwtTokenService, IVendorUserRepository vendorUserRepository, 
+		IOperatorUserRepository operatorUserRepository, IRedisCacheService redisCacheService, 
+		IUserPrincipalService userPrincipalService1)
 	{
 		_userRepository = userRepository;
 		_passwordHasher = userPrincipalService;
@@ -111,7 +114,7 @@ public class UserService : IUserService
 			};
 		}
 
-		var userClaims = MapUserToClaimDto(user);
+		var userClaims = user.MapUserToClaimDto();
 		var token = _jwtTokenService.GenerateToken(userClaims);
 
 		return new Response<TokenDto>
@@ -144,7 +147,7 @@ public class UserService : IUserService
 		}
 		
 		var user = await _userRepository.GetByIdWithInvitesAsync(userId);
-		MapUserToUpdate(user, userUpdateData);
+		user.MapUserToUpdate(userUpdateData);
 		
 		await _userRepository.UpdateAsync(user);
 		return new Response<UserDtoToFrontEnd>
@@ -153,13 +156,7 @@ public class UserService : IUserService
 		};
 	}
 
-	private void MapUserToUpdate(User user, UserToUpdateDto userUpdateData)
-	{
-		user.UserName = userUpdateData.UserName ?? user.UserName;
-		user.FirstName = userUpdateData.FirstName ?? user.FirstName;
-		user.LastName = userUpdateData.LastName ?? user.LastName;
-		user.Email = userUpdateData.Email ?? user.Email;
-	}
+
 
 	public async Task<Response<UserDto>> AddUserToCache(long userId)
 	{
@@ -203,31 +200,4 @@ public class UserService : IUserService
 		PasswordHash = _passwordHasher.HashThePassword(registrationData.Password),
 		UserType = UserType.OperatorUser,
 	};
-
-	private UserClaimDto MapUserToClaimDto(User user)
-	{
-		var dto = new UserClaimDto();
-		switch (user)
-		{
-			case OperatorUser operatorUser:
-				dto.Id = operatorUser.Id;
-				dto.Email = operatorUser.Email;
-				dto.UserType = operatorUser.UserType;
-				dto.BusinessId = operatorUser.OperatorId!.Value;
-				break;
-			case VendorUser vendorUser:
-				dto.Id = vendorUser.Id;
-				dto.Email = vendorUser.Email;
-				dto.UserType = vendorUser.UserType;
-				dto.BusinessId = vendorUser.VendorId!.Value;
-				break;
-			default :
-				dto.Id = user.Id;
-				dto.Email = user.Email;
-				dto.UserType = user.UserType;
-				break;
-		}
-		
-		return dto;
-	}
 }

@@ -37,15 +37,6 @@ public class VendorService : IVendorService
         _unitOfWork = unitOfWork;
     }
 
-    private Vendor CreateVendorFromDto(VendorUser user,
-        VendorRegistrationDto registrationData) => new Vendor
-    {
-        BusinessName = registrationData.BusinessName,
-        Address = registrationData.Adress,
-        Email = registrationData.Email,
-        VendorUsers = new List<VendorUser> { user }
-    };
-
     private bool ValidateString(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -61,31 +52,6 @@ public class VendorService : IVendorService
         vendor.BusinessName = vendorData.BusinessName ?? vendor.BusinessName;
         vendor.Address = vendorData.Address ?? vendor.Address;
         vendor.Email = vendorData.Email ?? vendor.Email;
-    }
-
-    public async Task<Response<BusinessFrontEndDto>> RegisterVendorAsync(int vendorUserId,
-        VendorRegistrationDto registrationData)
-    {
-        if (registrationData.BusinessName.Length == 0 || registrationData.Email.Length == 0)
-        {
-            return new Response<BusinessFrontEndDto>
-            {
-                ErrorMessage = "Invalid Vendor Registration Data",
-                ErrorCode = (int)ErrorCodes.InvalidBusinessRegistrationData
-            };
-        }
-
-        var vendorUser = await _vendorUserRepository.GetByIdAsync(vendorUserId);
-        var vendor = CreateVendorFromDto(vendorUser, registrationData);
-
-        await _vendorRepository.CreateAsync(vendor);
-
-        var result = vendor.ToFrontEndDto();
-
-        return new Response<BusinessFrontEndDto>
-        {
-            Data = result,
-        };
     }
 
     public async Task<Response<List<BusinessFrontEndDto>>> SearchOperatorsAsync(OperatorSearchDto operatorSearchDto)
