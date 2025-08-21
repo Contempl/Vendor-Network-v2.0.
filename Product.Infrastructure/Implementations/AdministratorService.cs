@@ -96,7 +96,7 @@ public class AdministratorService : IAdministratorService
 
 		await _userRepository.CreateAsync(vendorUser);
 
-		var invite = _inviteService.CreateInvite(vendorUser, admin);
+		var invite = _inviteService.CreateInviteByAdmin(vendorUser, admin);
 		await _inviteRepository.CreateAsync(invite);
 
 		var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
@@ -140,7 +140,7 @@ public class AdministratorService : IAdministratorService
 
 		await _userRepository.CreateAsync(operatorUser);
 
-		var invite = _inviteService.CreateInvite(operatorUser, admin);
+		var invite = _inviteService.CreateInviteByAdmin(operatorUser, admin);
 		await _inviteRepository.CreateAsync(invite);
 
 		var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
@@ -208,7 +208,7 @@ public class AdministratorService : IAdministratorService
 		}
 
 		var existingUser = await _userRepository.GetByEmailAsync(invitationData.UserEmail);
-		var invite = _inviteService.CreateInvite(existingUser, admin);
+		var invite = _inviteService.CreateInviteByAdmin(existingUser, admin);
 		await _inviteRepository.CreateAsync(invite);
 		var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
 			

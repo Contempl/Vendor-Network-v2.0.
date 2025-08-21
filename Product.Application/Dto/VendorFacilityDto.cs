@@ -7,5 +7,5 @@ public class VendorFacilityDto
 	public double Longitude { get; set; }
 	public double Latitude { get; set; }
 	public double RadiusOfWork { get; set; }
-	public List<string>? Services { get; set; }
+	public List<string>? Services { get; set; } = new();
 }
