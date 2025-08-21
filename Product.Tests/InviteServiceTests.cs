@@ -1,5 +1,4 @@
-using System;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
@@ -14,7 +13,6 @@ namespace Product.Tests;
 public class InviteServiceTests
 {
 	private readonly Mock<IInviteRepository> _inviteRepositoryMock = new();
-
 	private readonly Mock<IUserRepository> _userRepositoryMock = new();
 	private readonly Mock<IOperatorUserRepository> _operatorUserRepositoryMock = new();
 	private readonly Mock<IVendorUserRepository> _vendorUserRepositoryMock = new();
@@ -41,11 +39,11 @@ public class InviteServiceTests
 		var sender = new Administrator { Id = 1, Email = "admin@test.com" };
 
 		// Act
-		var invite = _inviteService.CreateInvite(user, sender);
+		var invite = _inviteService.CreateInviteByAdmin(user, sender);
 
 		// Assert
 		Assert.NotNull(invite);
-		Assert.Equal(user.Id, invite.InvitedUserId);
+		Assert.Equal(user, invite.InvitedUser);
 		Assert.Equal(sender.Id, invite.SenderId);
 		Assert.Equal(InvitationStatus.Sent, invite.Status);
 		Assert.True(invite.CreatedAt <= DateTime.UtcNow);

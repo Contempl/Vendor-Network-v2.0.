@@ -64,6 +64,7 @@ public class VendorFacilityServiceTests
             Name = "Test Name", Location = "Test Location", Longitude = 10, Latitude = 20, RadiusOfWork = 40000,
             Services = {"Service Name #1", "Service Name #2", "Service Name #3", "Service Name #4"},
         };
+        
         _vendorRepositoryMock.Setup(r => r.GetByIdAsync(vendorId))
             .ReturnsAsync(_testVendor);
         

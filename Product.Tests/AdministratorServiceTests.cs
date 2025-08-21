@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Moq;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
@@ -21,6 +19,9 @@ public class AdministratorServiceTests
     private readonly Mock<IInviteService> _inviteServiceMock = new();
     private readonly Mock<IVendorRepository> _vendorRepositoryMock = new();
     private readonly Mock<IOperatorRepository> _operatorRepositoryMock = new();
+    private readonly Mock<IJwtTokenService> _jwtTokenServiceMock = new();
+    private readonly Mock<IPasswordHasher> _passhwordHasherMock = new();
+    
 
     private readonly AdministratorService _adminService;
 
@@ -33,7 +34,9 @@ public class AdministratorServiceTests
             _inviteServiceMock.Object,
             _inviteRepositoryMock.Object,
             _vendorRepositoryMock.Object,
-            _operatorRepositoryMock.Object
+            _operatorRepositoryMock.Object,
+            _passhwordHasherMock.Object,
+            _jwtTokenServiceMock.Object
         );
     }
 
@@ -65,14 +68,21 @@ public class AdministratorServiceTests
             Status = Sent,
         };
 
-        _adminRepositoryMock.Setup(r => r.GetByIdOrDefaultAsync( _testAdmin.Id))
+        _adminRepositoryMock
+            .Setup(r => r.GetByIdOrDefaultAsync( _testAdmin.Id))
             .ReturnsAsync(admin);
 
-        _inviteServiceMock.Setup(s => s.CreateInvite(createdUser, admin)).Returns(invite);
+        _inviteServiceMock
+            .Setup(s => s.CreateInviteByAdmin(It.IsAny<User>(), It.IsAny<Administrator>()))
+            .Returns(invite);
 
         _userRepositoryMock
             .Setup(r => r.GetByEmailAsync(inviteDto.Email))
             .ReturnsAsync(createdUser);
+        
+        _emailServiceMock
+            .Setup(e => e.CreateInviteUrl(It.IsAny<int>()))
+            .Returns("https://invite.url/token");;
 
         // Act
         var result = await _adminService.InviteVendorUser( _testAdmin.Id, inviteDto);
@@ -122,7 +132,8 @@ public class AdministratorServiceTests
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(inviteDto.Email))
             .ReturnsAsync(createdUser);
 
-        _inviteServiceMock.Setup(s => s.CreateInvite(createdUser, admin))
+        _inviteServiceMock
+            .Setup(s => s.CreateInviteByAdmin(It.IsAny<User>(), It.IsAny<Administrator>()))
             .Returns(invite);
 
         _emailServiceMock.Setup(e => e.CreateInviteUrl(invite.Id))
@@ -159,7 +170,8 @@ public class AdministratorServiceTests
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(inviteDto.Email))
             .ReturnsAsync(_testOperatorUser);
 
-        _inviteServiceMock.Setup(s => s.CreateInvite(_testOperatorUser, _testAdmin))
+        _inviteServiceMock
+            .Setup(s => s.CreateInviteByAdmin(It.IsAny<User>(), It.IsAny<Administrator>()))
             .Returns(_testInvite);
 
         _emailServiceMock.Setup(e => e.CreateInviteUrl(_testInvite.Id))
@@ -213,7 +225,7 @@ public class AdministratorServiceTests
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(invitationData.UserEmail))
             .ReturnsAsync(_testVenodrUser);
 
-        _inviteServiceMock.Setup(s => s.CreateInvite(_testVenodrUser, _testAdmin))
+        _inviteServiceMock.Setup(s => s.CreateInviteByAdmin(_testVenodrUser, _testAdmin))
             .Returns(invite);
 
         _inviteRepositoryMock.Setup(r => r.CreateAsync(invite));
@@ -280,7 +292,7 @@ public class AdministratorServiceTests
 
         // Assert
         Assert.Equal((int)ErrorCodes.UserNotFound, result.ErrorCode);
-        Assert.Equal("Administrator not found.", result.ErrorMessage);
+        Assert.Equal("Admin not found.", result.ErrorMessage);
     }
     
     [Fact]

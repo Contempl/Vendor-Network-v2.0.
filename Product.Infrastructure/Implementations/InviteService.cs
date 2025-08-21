@@ -41,6 +41,16 @@ public class InviteService : IInviteService
 		SenderId = sender.Id
 	};
 
+	public Invite CreateInviteByAdmin(User user, Administrator sender) => new Invite
+	{
+		InvitedUser = user,
+		Status = InvitationStatus.Sent,
+		CreatedAt = DateTime.UtcNow,
+		ExpiresAt = DateTime.UtcNow.AddDays(30),
+		SenderId = sender.Id
+	};
+
+
 	public async Task<Response<InviteIdToFrontEnd>> Register(int inviteId)
 	{
 		var invite = await _inviteRepository.GetByIdAsync(inviteId);
