@@ -44,9 +44,9 @@ public class UserService : IUserService
 		user.PasswordHash = _passwordHasher.HashThePassword(dto.Password);
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData)
+	public async Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData, CancellationToken cancellationToken)
 	{
-		var userByEmail = await _userRepository.GetByEmailAsync(registrationData.Email);
+		var userByEmail = await _userRepository.GetByEmailAsync(registrationData.Email, cancellationToken);
 		if (userByEmail != null)
 		{
 			return new Response<UserDtoToFrontEnd>
@@ -60,7 +60,7 @@ public class UserService : IUserService
 		{
 			var newVendor = MapVendorUserFromDto(registrationData);
 
-			await _vendorUserRepository.CreateAsync(newVendor);
+			await _vendorUserRepository.CreateAsync(newVendor, cancellationToken);
 			var vendorUserDto = newVendor.MapToFrontEndDto();
 			return new Response<UserDtoToFrontEnd>
 			{
@@ -69,7 +69,7 @@ public class UserService : IUserService
 		}
 		
 		var newOperator = MapOperatorUserFromDto(registrationData);
-		await _operatorUserRepository.CreateAsync(newOperator);
+		await _operatorUserRepository.CreateAsync(newOperator, cancellationToken);
 		
 		var operatorUserDto = newOperator.MapToFrontEndDto();
 
@@ -78,9 +78,10 @@ public class UserService : IUserService
 			Data = operatorUserDto
 		};
 	}
-	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId)
+
+	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken)
 	{
-		var user = await _userRepository.GetByIdAsync(userId);
+		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 
 		var userDto = user.MapToFrontEndDto();
 
@@ -90,9 +91,9 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<TokenDto>> Login(UserLoginDto userData)
+	public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken)
 	{
-		var user = await _userRepository.GetByEmailAsync(userData.Email);
+		var user = await _userRepository.GetByEmailAsync(userData.Email, cancellationToken);
 
 		if (user == null)
 		{
@@ -123,10 +124,10 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<int>> RemoveUserAsync(int userId)
+	public async Task<Response<int>> RemoveUserAsync(int userId, CancellationToken cancellationToken)
 	{
-		var user = await _userRepository.GetByIdAsync(userId);
-		await _userRepository.DeleteAsync(user);
+		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+		await _userRepository.DeleteAsync(user, cancellationToken);
 		
 		return new Response<int>
 		{
@@ -134,7 +135,7 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> UpdateUserAsync(UserToUpdateDto userUpdateData, int userId)
+	public async Task<Response<UserDtoToFrontEnd>> UpdateUserAsync(UserToUpdateDto userUpdateData, int userId, CancellationToken cancellationToken)
 	{
 		var thisUserId = _userPrincipalService.UserId!.Value;
 		if (thisUserId != userId)
@@ -146,41 +147,17 @@ public class UserService : IUserService
 			};
 		}
 		
-		var user = await _userRepository.GetByIdWithInvitesAsync(userId);
+		var user = await _userRepository.GetByIdWithInvitesAsync(userId, cancellationToken);
 		user.MapUserToUpdate(userUpdateData);
 		
-		await _userRepository.UpdateAsync(user);
+		await _userRepository.UpdateAsync(user, cancellationToken);
 		return new Response<UserDtoToFrontEnd>
 		{
 			Data = user.MapToFrontEndDto()
 		};
 	}
-
-
-
-	public async Task<Response<UserDto>> AddUserToCache(long userId)
-	{
-		var user = await _userRepository.GetAll().FirstOrDefaultAsync(x => x.Id == userId);
-		if (user == null)
-		{
-			return new Response<UserDto>()
-			{
-				ErrorMessage = "Пользователь не найден",
-				ErrorCode = (int)ErrorCodes.UserNotFound,
-			};
-		}
-        
-		var options = new DistributedCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(1));
-        
-		await _redisCacheService.SetAsync($"User_{user.Id}", user, options);
-		Debug.Write($"В кеш добавился ключ User_{user.Id}");
-
-		return new Response<UserDto>()
-		{
-			Data = user.MapToDto()
-		};
-	}
-
+	
+	
 	private VendorUser MapVendorUserFromDto(UserRegistrationDto registrationData) => new VendorUser
 	{
 		UserName = registrationData.UserName,

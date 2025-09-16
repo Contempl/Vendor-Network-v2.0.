@@ -23,9 +23,9 @@ public class AccountController : ControllerBase
 
 	[HttpGet("Register/User/{inviteId}")]
 	[EnsureInviteExists]
-	public async Task<ActionResult<Response<InviteIdToFrontEnd>>> RegisterUser (int inviteId)
+	public async Task<ActionResult<Response<InviteIdToFrontEnd>>> RegisterUser (int inviteId, CancellationToken cancellationToken)
 	{
-		var response = await _inviteService.Register(inviteId);
+		var response = await _inviteService.Register(inviteId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -37,9 +37,9 @@ public class AccountController : ControllerBase
 	[HttpPost("Register/User/{inviteId}")]
 	[EnsureInviteExists]
 	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> RegisterUserByInvite (int inviteId, 
-		[FromBody] UserRegistrationByInviteDto registrationData)
+		[FromBody] UserRegistrationByInviteDto registrationData, CancellationToken cancellationToken)
 	{
-		var response = await _inviteService.RegisterByInvite(inviteId, registrationData);
+		var response = await _inviteService.RegisterByInvite(inviteId, registrationData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -48,9 +48,10 @@ public class AccountController : ControllerBase
 	}
 
 	[HttpPost("Register/User")]
-	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> RegisterUser([FromBody] UserRegistrationDto registrationData)
+	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> RegisterUser([FromBody] UserRegistrationDto registrationData,
+		CancellationToken cancellationToken)
 	{
-		var response = await _userService.RegisterUser(registrationData);
+		var response = await _userService.RegisterUser(registrationData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -62,9 +63,9 @@ public class AccountController : ControllerBase
 	[HttpGet("User/{userId}")]
 	[EnsureUserExists]
 	[Authorize(policy: "All")]
-	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> GetUser(int userId)
+	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> GetUser(int userId, CancellationToken cancellationToken)
 	{
-		var response = await _userService.GetUserAsync(userId);
+		var response = await _userService.GetUserAsync(userId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -73,9 +74,9 @@ public class AccountController : ControllerBase
 	}
 
 	[HttpPost("Login")]
-	public async Task<ActionResult<Response<TokenDto>>> Login (UserLoginDto userData)
+	public async Task<ActionResult<Response<TokenDto>>> Login (UserLoginDto userData, CancellationToken cancellationToken)
 	{
-		var response = await _userService.Login(userData);
+		var response = await _userService.Login(userData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -86,9 +87,9 @@ public class AccountController : ControllerBase
 	[HttpDelete("/{userId}")]
 	[EnsureUserExists]
 	[Authorize(policy: "Admin")]
-	public async Task<ActionResult<Response<int>>> RemoveUser(int userId)
+	public async Task<ActionResult<Response<int>>> RemoveUser(int userId, CancellationToken cancellationToken)
 	{
-		var response = await _userService.RemoveUserAsync(userId);
+		var response = await _userService.RemoveUserAsync(userId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -99,9 +100,10 @@ public class AccountController : ControllerBase
 	[HttpPut("/User/{userId}")]
 	[EnsureUserExists]
 	[Authorize(policy: "All")]
-	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> UpdateUser(UserToUpdateDto userUpdateData, int userId)
+	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> UpdateUser(UserToUpdateDto userUpdateData, int userId,
+		CancellationToken cancellationToken)
 	{
-		var response = await _userService.UpdateUserAsync(userUpdateData, userId);
+		var response = await _userService.UpdateUserAsync(userUpdateData, userId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);

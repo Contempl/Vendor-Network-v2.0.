@@ -23,8 +23,11 @@ public class OperatorService : IOperatorService
     private readonly IInviteService _inviteService;
     private readonly IUnitOfWork _unitOfWork;
 
-	public OperatorService(IOperatorRepository operatorRepository, 
-        IVendorRepository vendorRepository, IOperatorIndustryRepository operatorFacilityRepository, IUserRepository userRepository, IOperatorUserRepository operatorUserRepository, IEmailService emailService, IInviteRepository inviteRepository, IUserPrincipalService userPrincipalService, IInviteService inviteService, IUnitOfWork unitOfWork)
+	public OperatorService
+    (
+        IOperatorRepository operatorRepository, IVendorRepository vendorRepository, IOperatorIndustryRepository operatorFacilityRepository, 
+        IUserRepository userRepository, IOperatorUserRepository operatorUserRepository, IEmailService emailService, IInviteRepository inviteRepository, 
+        IUserPrincipalService userPrincipalService, IInviteService inviteService, IUnitOfWork unitOfWork)
 	{
 		_operatorRepository = operatorRepository;
         _vendorRepository = vendorRepository;
@@ -64,14 +67,14 @@ public class OperatorService : IOperatorService
 		@operator.Occupation = operatorData.Occupation ?? @operator.Occupation;
 	}
 
-    private async Task<List<Vendor>> SearchVendorsAsync(string serviceType, List<OperatorIndustry> operatorFacilities)
+    private async Task<List<Vendor>> SearchVendorsAsync(string serviceType, List<OperatorIndustry> operatorFacilities, CancellationToken cancellationToken)
     {
         if (operatorFacilities == null || !operatorFacilities.Any())
         {
             return new List<Vendor>();
         }
 
-        var vendorsWithService = await _vendorRepository.GetVendorsWithService(serviceType);
+        var vendorsWithService = await _vendorRepository.GetVendorsWithService(serviceType, cancellationToken);
 
         var matchingVendors = vendorsWithService.Where(vendor =>
             vendor.VendorFacilities.Any(facility =>
@@ -81,7 +84,7 @@ public class OperatorService : IOperatorService
         return matchingVendors;
     }
 
-    public async Task<Response<List<BusinessFrontEndDto>>> SearchForVendorsAsync(SearchVendorsForIndustriesDto industriesData)
+    public async Task<Response<List<BusinessFrontEndDto>>> SearchForVendorsAsync(SearchVendorsForIndustriesDto industriesData, CancellationToken cancellationToken)
     {
         var serviceIsValid = ValidateStringInput(industriesData.ServiceType);
         if (!serviceIsValid)
@@ -95,7 +98,7 @@ public class OperatorService : IOperatorService
 
         var operatorFacilities = GetAllOperatorIndustries(industriesData.IndustriesLocationIds);
 
-        var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities);
+        var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities, cancellationToken: cancellationToken);
         
         var vendorDtos = vendors.Select(v => v.ToFrontEndDto()).ToList();
 
@@ -132,7 +135,7 @@ public class OperatorService : IOperatorService
         return distance <= vendorFacility.RadiusOfWork;
     }
 
-    public async Task<Response<PagedList<Vendor>>> GetVendorsByNameAsync(VendorSearchDto vendorSearchDto)
+    public async Task<Response<PagedList<Vendor>>> GetVendorsByNameAsync(VendorSearchDto vendorSearchDto, CancellationToken cancellationToken)
     {
         var isValidVendor = ValidateStringInput(vendorSearchDto.VendorName);
         if (!isValidVendor)
@@ -145,7 +148,7 @@ public class OperatorService : IOperatorService
         }
 
         var pagedVendors = await _vendorRepository.GetVendorsQuery(vendorSearchDto.VendorName, vendorSearchDto.SortOrder,
-            vendorSearchDto.PageSize, vendorSearchDto.PageNumber);
+            vendorSearchDto.PageSize, vendorSearchDto.PageNumber, cancellationToken);
 
         var result = new PagedList<Vendor>
             (pagedVendors.Items, vendorSearchDto.PageSize, vendorSearchDto.PageNumber, pagedVendors.TotalCount);
@@ -156,9 +159,9 @@ public class OperatorService : IOperatorService
         };
     }
 
-    public async Task<Response<BusinessFrontEndDto>> GetOperatorAsync(int operatorId)
+    public async Task<Response<BusinessFrontEndDto>> GetOperatorAsync(int operatorId, CancellationToken cancellationToken)
     {
-        var @operator = await _operatorRepository.GetByIdAsync(operatorId);
+        var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
         var operatorDto = @operator.ToFrontEndDto();
 
         return new Response<BusinessFrontEndDto>
@@ -167,29 +170,29 @@ public class OperatorService : IOperatorService
         };
     }
 
-    public async Task<Response<MailMsg>> InviteOperatorUserAsync(int operatorUserId, EmailForInviteDto dto)
+    public async Task<Response<MailMsg>> InviteOperatorUserAsync(int operatorUserId, EmailForInviteDto dto, CancellationToken cancellationToken)
     {
         await using var transaction = await _unitOfWork.BeginTransactionAsync();
 
         try
         {
-            var operatorUser = await _userRepository.GetByIdAsync(operatorUserId);
+            var operatorUser = await _userRepository.GetByIdAsync(operatorUserId, cancellationToken);
 
             var operatorId = _userPrincipalService.BusinessId;
             var newOperatorUser = new OperatorUser
                 { Email = dto.Email, OperatorId = operatorId, UserType = UserType.OperatorUser };
 
-            await _operatorUserRepository.CreateAsync(newOperatorUser);
+            await _operatorUserRepository.CreateAsync(newOperatorUser, cancellationToken);
 
             var invite = _inviteService.CreateInvite(newOperatorUser, operatorUser);
             var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
-            await _inviteRepository.CreateAsync(invite);
+            await _inviteRepository.CreateAsync(invite, cancellationToken);
             var emailBody = _emailService.GenerateEmailTemplate(dto.Email, newOperatorUser, inviteUrl);
 
             var mailMessage = _emailService.CreateMessage(emailBody, operatorUser.Email);
             await _emailService.SendInvitationEmailAsync(mailMessage);
 
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(cancellationToken);
 
             return new Response<MailMsg>
             {
@@ -199,7 +202,7 @@ public class OperatorService : IOperatorService
 
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(cancellationToken);
 
             return new Response<MailMsg>
             {
@@ -208,12 +211,12 @@ public class OperatorService : IOperatorService
             };
         }
     }
-    public async Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(int operatorId, UpdateOperatorDto operatorUpdateData)
+    public async Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(int operatorId, UpdateOperatorDto operatorUpdateData, CancellationToken cancellationToken)
     {
-        var @operator = await _operatorRepository.GetByIdAsync(operatorId);
+        var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
         MapOperatorFromDtoToUpdate(@operator, operatorUpdateData);
 
-        await _operatorRepository.UpdateAsync(@operator);
+        await _operatorRepository.UpdateAsync(@operator, cancellationToken);
         return new Response<BusinessFrontEndDto>
         {
             Data = @operator.ToFrontEndDto()

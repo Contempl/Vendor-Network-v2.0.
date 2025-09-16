@@ -15,32 +15,33 @@ public class OperatorRepository : IOperatorRepository
 		_operators = _context.Operators;
 	}
 	public IQueryable<Operator> GetAll() => _operators;
-	public async Task CreateAsync(Operator @operator)
+	public async Task CreateAsync(Operator @operator, CancellationToken cancellationToken)
 	{
-		await _operators.AddAsync(@operator);
-		await SaveAsync();
+		await _operators.AddAsync(@operator, cancellationToken);
+		await SaveAsync(cancellationToken);
 	}
-	public async Task DeleteAsync(Operator @operator)
+	public async Task DeleteAsync(Operator @operator, CancellationToken cancellationToken)
 	{
 		_operators.Remove(@operator);
-		await SaveAsync();
+		await SaveAsync(cancellationToken);
 	}
+
 	public async Task<Operator?> GetByIdOrDefaultAsync(int operatorId) => await _operators.SingleOrDefaultAsync(oper => oper.Id == operatorId);
-	public async Task<Operator> GetByIdAsync(int operatorId) => await _operators.SingleAsync(oper => oper.Id == operatorId);
-	public async Task UpdateAsync(Operator @operator)
+	public async Task<Operator> GetByIdAsync(int operatorId, CancellationToken cancellationToken) => await _operators.SingleAsync(oper => oper.Id == operatorId, cancellationToken: cancellationToken);
+	public async Task UpdateAsync(Operator @operator, CancellationToken cancellationToken)
 	{
 		_operators.Update(@operator);
-		await SaveAsync();
+		await SaveAsync(cancellationToken);
 	}
-	public async Task<List<Operator>> GetOperatorsByNameAsync(string operatorName)
+	public async Task<List<Operator>> GetOperatorsByNameAsync(string operatorName, CancellationToken cancellationToken)
 	{
 		var operators = await _operators
 			.Where(op => op.BusinessName.Contains(operatorName))
 			.Include(op => op.Industries)
-			.ToListAsync();
+			.ToListAsync(cancellationToken);
 
 		return operators;
 	}
 
-	private async Task SaveAsync() => await _context.SaveChangesAsync();
+	private async Task SaveAsync(CancellationToken cancellationToken) => await _context.SaveChangesAsync(cancellationToken);
 }
