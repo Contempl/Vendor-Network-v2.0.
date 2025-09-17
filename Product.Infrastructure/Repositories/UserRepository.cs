@@ -19,14 +19,14 @@ public class UserRepository : IUserRepository
 		_users = _context.Set<User>();
 	}
 
-	public async Task CreateAsync(User entity, CancellationToken cancellationToken)
+	public async Task CreateAsync(User entity, CancellationToken cancellationToken = default)
 	{
 		await _users.AddAsync(entity, cancellationToken);
 		await SaveAsync(cancellationToken);
 		
 		await _redisCacheService.SetAsync(CachePrefix + entity.Id, entity);
 	}
-	public async Task DeleteAsync(User user, CancellationToken cancellationToken)
+	public async Task DeleteAsync(User user, CancellationToken cancellationToken = default)
 	{
 		try
 		{
@@ -41,7 +41,7 @@ public class UserRepository : IUserRepository
 	public IQueryable<User> GetAll() => _users;
 	public async Task<User?> GetByIdOrDefaultAsync(int id) => await _users.SingleOrDefaultAsync(u => u.Id == id);
 
-	public async Task<User> GetByIdAsync(int userId, CancellationToken cancellationToken)
+	public async Task<User> GetByIdAsync(int userId, CancellationToken cancellationToken = default)
 	{
 		var cacheKey = $"{CachePrefix}{userId}";
 		var cached = await _redisCacheService.GetAsync<User>(cacheKey);
@@ -58,7 +58,7 @@ public class UserRepository : IUserRepository
 		return user;
 	}
 
-	public async Task UpdateAsync(User entity, CancellationToken cancellationToken)
+	public async Task UpdateAsync(User entity, CancellationToken cancellationToken = default)
 	{
 		var cacheKey = $"{CachePrefix}{entity.Id}";
 		await _redisCacheService.RemoveAsync(cacheKey);
@@ -69,8 +69,8 @@ public class UserRepository : IUserRepository
 		await _redisCacheService.SetAsync(cacheKey, entity.MapToFrontEndDto());
 	}
 
-	private async Task SaveAsync(CancellationToken cancellationToken) => await _context.SaveChangesAsync(cancellationToken);
-	public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
+	private async Task SaveAsync(CancellationToken cancellationToken = default) => await _context.SaveChangesAsync(cancellationToken);
+	public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
 	{
 		var user = await _users.Where(u => u.Email.Trim() == email.Trim())
 			.SingleOrDefaultAsync(cancellationToken);
@@ -83,8 +83,9 @@ public class UserRepository : IUserRepository
 		return user; 
 	}
 			
-	public async Task<User> GetByIdWithInvitesAsync(int userId, CancellationToken cancellationToken)
+	public async Task<User> GetByIdWithInvitesAsync(int userId, CancellationToken cancellationToken = default)
 	{
-		return await _users.Include(u => u.SentInvites).FirstAsync(u => u.Id == userId, cancellationToken: cancellationToken);
+		return await _users.Include(u => u.SentInvites)
+			.FirstAsync(u => u.Id == userId, cancellationToken: cancellationToken);
 	}
 }

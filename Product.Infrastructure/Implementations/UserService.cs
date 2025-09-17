@@ -44,7 +44,8 @@ public class UserService : IUserService
 		user.PasswordHash = _passwordHasher.HashThePassword(dto.Password);
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData, CancellationToken cancellationToken)
+	public async Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData, 
+		CancellationToken cancellationToken = default)
 	{
 		var userByEmail = await _userRepository.GetByEmailAsync(registrationData.Email, cancellationToken);
 		if (userByEmail != null)
@@ -79,7 +80,7 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken)
+	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken = default)
 	{
 		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 
@@ -91,7 +92,7 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken)
+	public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken = default)
 	{
 		var user = await _userRepository.GetByEmailAsync(userData.Email, cancellationToken);
 
@@ -124,7 +125,7 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<int>> RemoveUserAsync(int userId, CancellationToken cancellationToken)
+	public async Task<Response<int>> RemoveUserAsync(int userId, CancellationToken cancellationToken = default)
 	{
 		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 		await _userRepository.DeleteAsync(user, cancellationToken);
@@ -135,7 +136,8 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> UpdateUserAsync(UserToUpdateDto userUpdateData, int userId, CancellationToken cancellationToken)
+	public async Task<Response<UserDtoToFrontEnd>> UpdateUserAsync(UserToUpdateDto userUpdateData, int userId, 
+		CancellationToken cancellationToken = default)
 	{
 		var thisUserId = _userPrincipalService.UserId!.Value;
 		if (thisUserId != userId)
