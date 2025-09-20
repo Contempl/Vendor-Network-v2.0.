@@ -17,23 +17,23 @@ public class AdministratorRepository : IAdministratorRepository
 		_redisCacheService = redisCacheService;
 		_administrators = _context.Administrators;
 	}
-	public async Task CreateAsync(Administrator admin)
+	public async Task CreateAsync(Administrator admin, CancellationToken cancellationToken)
 	{
-		await _administrators.AddAsync(admin);
-		await SaveAsync();
+		await _administrators.AddAsync(admin, cancellationToken);
+		await SaveAsync(cancellationToken);
 	}
-	public async Task DeleteAsync(Administrator admin)
+	public async Task DeleteAsync(Administrator admin, CancellationToken cancellationToken)
 	{
 		_administrators.Remove(admin);
-		await SaveAsync();
+		await SaveAsync(cancellationToken);
 	}
 	public IQueryable<Administrator> GetAll() => _administrators;
-	public async Task<Administrator?> GetByIdOrDefaultAsync(int AdminId) => await _administrators.SingleOrDefaultAsync(admin => admin.Id == AdminId);
-	public async Task<Administrator> GetByIdAsync(int AdminId) => await _administrators.SingleAsync(admin => admin.Id == AdminId);
-	public async Task<Administrator?> GetByEmailAsync(string email)
+	public async Task<Administrator?> GetByIdOrDefaultAsync(int adminId) => await _administrators.SingleOrDefaultAsync(admin => admin.Id == adminId);
+	public async Task<Administrator> GetByIdAsync(int adminId, CancellationToken cancellationToken) => await _administrators.SingleAsync(admin => admin.Id == adminId, cancellationToken);
+	public async Task<Administrator?> GetByEmailAsync(string email, CancellationToken cancellationToken)
 	{
 		var admin = await _administrators.Where(u => u.Email.Trim() == email.Trim())
-			.SingleOrDefaultAsync();
+			.SingleOrDefaultAsync(cancellationToken);
 		if (admin == null)
 			return null;
 		
@@ -43,10 +43,10 @@ public class AdministratorRepository : IAdministratorRepository
 		return admin; 
 	}
 
-	private Task SaveAsync() => _context.SaveChangesAsync();
-	public async Task UpdateAsync(Administrator admin)
+	private Task SaveAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
+	public async Task UpdateAsync(Administrator admin, CancellationToken cancellationToken)
 	{
 		_administrators.Update(admin);
-		await SaveAsync();
+		await SaveAsync(cancellationToken);
 	}
 }

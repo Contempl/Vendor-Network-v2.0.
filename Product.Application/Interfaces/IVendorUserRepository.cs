@@ -4,5 +4,5 @@ namespace Product.Application.Interfaces;
 
 public interface IVendorUserRepository : IRepository<VendorUser>
 {
-	Task<VendorUser> GetByIdAsync(int vendorId);
+	Task<VendorUser> GetByIdAsync(int vendorId, CancellationToken cancellationToken);
 }

@@ -27,9 +27,9 @@ public class VendorFacilityController : ControllerBase
 	[EnsureVendorFacilityExists]
 	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult<Response<VendorFacility>>> GetVendorFacility(int facilityId)
+	public async Task<ActionResult<Response<VendorFacility>>> GetVendorFacility(int facilityId, CancellationToken cancellationToken)
 	{
-		var response = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId);
+		var response = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -40,9 +40,9 @@ public class VendorFacilityController : ControllerBase
 	[HttpPost("/facility")]
 	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult<Response<VendorFacility>>> AddFacility(VendorFacilityDto facilityData)
+	public async Task<ActionResult<Response<VendorFacility>>> AddFacility(VendorFacilityDto facilityData, CancellationToken cancellationToken)
 	{
-		var response = await _vendorFacilityService.AddFacilityAsync(facilityData);
+		var response = await _vendorFacilityService.AddFacilityAsync(facilityData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -55,9 +55,9 @@ public class VendorFacilityController : ControllerBase
 	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
 	public async Task<ActionResult<Response<VendorFacility>>> UpdateFacility(int facilityId,
-		[FromBody] UpdateVendorFacilityDto facilityData)
+		[FromBody] UpdateVendorFacilityDto facilityData, CancellationToken cancellationToken)
 	{
-		var response = await _vendorFacilityService.UpdateFacilityAsync(facilityId, facilityData);
+		var response = await _vendorFacilityService.UpdateFacilityAsync(facilityId, facilityData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -68,9 +68,10 @@ public class VendorFacilityController : ControllerBase
 	[HttpDelete("{vendorId}/facilities/{facilityId}")]
 	[EnsureVendorFacilityExists] 
 	[Authorize(policy: "VendorUser")] 
-	public async Task<ActionResult<Response<int>>> DeleteFacility(int vendorId, int facilityId)
+	public async Task<ActionResult<Response<int>>> DeleteFacility(int vendorId, int facilityId,
+		CancellationToken cancellationToken)
 	{
-		var response = await _vendorFacilityService.RemoveFacilityAsync(vendorId, facilityId);
+		var response = await _vendorFacilityService.RemoveFacilityAsync(vendorId, facilityId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -82,9 +83,10 @@ public class VendorFacilityController : ControllerBase
 	[HttpGet("/facility/{facilityId}/service/{facilityServiceId}")]
 	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult<Response<VendorFacilityService>>> GetVendorFacilityService(int facilityId, int facilityServiceId)
+	public async Task<ActionResult<Response<VendorFacilityService>>> GetVendorFacilityService(int facilityId, 
+		int facilityServiceId, CancellationToken cancellationToken)
 	{
-		var response = await _vendorFacilityService.GetVendorFacilityServiceAsync(facilityId, facilityServiceId);
+		var response = await _vendorFacilityService.GetVendorFacilityServiceAsync(facilityId, facilityServiceId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -96,9 +98,10 @@ public class VendorFacilityController : ControllerBase
 	[HttpGet("/facility/{facilityId}/services")]
 	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult<List<VendorFacilityService>>> GetVendorFacilityServices(int facilityId)
+	public async Task<ActionResult<List<VendorFacilityService>>> GetVendorFacilityServices(int facilityId,
+		CancellationToken cancellationToken)
 	{
-		var response = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId);
+		var response = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -110,9 +113,10 @@ public class VendorFacilityController : ControllerBase
 	[EnsureVendorFacilityExists]
 	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult<Response<VendorFacilityService>>> AddFacilityService(int facilityId, [FromBody] string facilityServiceName)
+	public async Task<ActionResult<Response<VendorFacilityService>>> AddFacilityService(int facilityId, 
+		[FromBody] string facilityServiceName, CancellationToken cancellationToken)
 	{
-		var response = await _facilityService.AddFacilityServiceAsync(facilityId, facilityServiceName);
+		var response = await _facilityService.AddFacilityServiceAsync(facilityId, facilityServiceName, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -124,9 +128,13 @@ public class VendorFacilityController : ControllerBase
 	[EnsureVendorFacilityServiceExists]
 	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult<Response<VendorFacilityService>>> UpdateFacilityService(int facilityId, int facilityServiceId, [FromBody] VendorFacilityServiceDto facilityServiceDto)
+	public async Task<ActionResult<Response<VendorFacilityService>>> UpdateFacilityService(int facilityId, 
+		int facilityServiceId, [FromBody] VendorFacilityServiceDto facilityServiceDto, 
+		CancellationToken cancellationToken)
 	{
-		var response = await _facilityService.UpdateFacilityServiceAsync(facilityId, facilityServiceId, facilityServiceDto);
+		var response = await _facilityService.UpdateFacilityServiceAsync(facilityId, facilityServiceId, 
+			facilityServiceDto, cancellationToken);
+		
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -138,9 +146,10 @@ public class VendorFacilityController : ControllerBase
 	[EnsureVendorFacilityServiceExists]
 	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult<Response<VendorFacilityService>>> DeleteFacilityService(int facilityId, int facilityServiceId)
+	public async Task<ActionResult<Response<VendorFacilityService>>> DeleteFacilityService(int facilityId, 
+		int facilityServiceId, CancellationToken cancellationToken)
 	{
-		var response = await _facilityService.RemoveFacilityServiceAsync(facilityId, facilityServiceId);
+		var response = await _facilityService.RemoveFacilityServiceAsync(facilityId, facilityServiceId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);

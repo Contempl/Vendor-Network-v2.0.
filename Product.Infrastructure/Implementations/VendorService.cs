@@ -54,7 +54,7 @@ public class VendorService : IVendorService
         vendor.Email = vendorData.Email ?? vendor.Email;
     }
 
-    public async Task<Response<List<BusinessFrontEndDto>>> SearchOperatorsAsync(OperatorSearchDto operatorSearchDto)
+    public async Task<Response<List<BusinessFrontEndDto>>> SearchOperatorsAsync(OperatorSearchDto operatorSearchDto, CancellationToken cancellationToken)
     {
         var operatorIsValid = ValidateString(operatorSearchDto.Name);
         if (!operatorIsValid)
@@ -66,7 +66,7 @@ public class VendorService : IVendorService
             };
         }
 
-        var operators = await _operatorRepository.GetOperatorsByNameAsync(operatorSearchDto.Name);
+        var operators = await _operatorRepository.GetOperatorsByNameAsync(operatorSearchDto.Name, cancellationToken);
         var result = operators.Select(o => o.ToFrontEndDto()).ToList();
 
         return new Response<List<BusinessFrontEndDto>>
@@ -75,9 +75,9 @@ public class VendorService : IVendorService
         };
     }
 
-    public async Task<Response<BusinessFrontEndDto>> GetVendorByIdAsync(int vendorId)
+    public async Task<Response<BusinessFrontEndDto>> GetVendorByIdAsync(int vendorId, CancellationToken cancellationToken)
     {
-        var vendor = await _vendorRepository.GetByIdAsync(vendorId);
+        var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
         var result = vendor.ToFrontEndDto();
 
         return new Response<BusinessFrontEndDto>
@@ -86,14 +86,14 @@ public class VendorService : IVendorService
         };
     }
 
-    public async Task<Response<BusinessFrontEndDto>> UpdateVendorAsync(UpdateVendorDto vendorData)
+    public async Task<Response<BusinessFrontEndDto>> UpdateVendorAsync(UpdateVendorDto vendorData, CancellationToken cancellationToken)
     {
         var vendorId = _userPrincipalService.BusinessId!.Value;
-        var existingVendor = await _vendorRepository.GetByIdAsync(vendorId);
+        var existingVendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
 
         MapVendorToUpdate(existingVendor, vendorData);
 
-        await _vendorRepository.UpdateAsync(existingVendor);
+        await _vendorRepository.UpdateAsync(existingVendor, cancellationToken);
 
         var result = existingVendor.ToFrontEndDto();
         return new Response<BusinessFrontEndDto>
@@ -102,24 +102,24 @@ public class VendorService : IVendorService
         };
     }
 
-    public async Task<Response<MailMsg>> InviteVendorUserAsync(EmailForInviteDto emailDto)
+    public async Task<Response<MailMsg>> InviteVendorUserAsync(EmailForInviteDto emailDto, CancellationToken cancellationToken)
     {
         var transaction = await _unitOfWork.BeginTransactionAsync();
         try
         {
             var vendorUserId = _userPrincipalService.UserId!.Value;
             var vendorId = _userPrincipalService.BusinessId;
-            var vendorUser = await _vendorUserRepository.GetByIdAsync(vendorUserId);
+            var vendorUser = await _vendorUserRepository.GetByIdAsync(vendorUserId, cancellationToken);
 
             var email = emailDto.Email;
 
             var newVendorUser = new VendorUser { Email = email, VendorId = vendorId, UserType = UserType.VendorUser };
 
-            await _vendorUserRepository.CreateAsync(newVendorUser);
+            await _vendorUserRepository.CreateAsync(newVendorUser, cancellationToken);
 
             var invite = _inviteService.CreateInvite(newVendorUser, vendorUser);
             var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
-            await _inviteRepository.CreateAsync(invite);
+            await _inviteRepository.CreateAsync(invite, cancellationToken);
 
             var emailBody = _emailService.GenerateEmailTemplate(email, newVendorUser, inviteUrl);
 
@@ -127,7 +127,7 @@ public class VendorService : IVendorService
 
             await _emailService.SendInvitationEmailAsync(mailMessage);
 
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(cancellationToken);
 
             return new Response<MailMsg>
             {
@@ -136,7 +136,7 @@ public class VendorService : IVendorService
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(cancellationToken);
             
             return new Response<MailMsg>
             {

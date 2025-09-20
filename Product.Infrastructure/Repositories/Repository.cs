@@ -14,21 +14,21 @@ public class Repository<T> : IRepository<T> where T : class
         _table = _context.Set<T>();
     }
 	public IQueryable<T> GetAll() => _table;
-    public async Task CreateAsync(T entity)
+    public async Task CreateAsync(T entity, CancellationToken cancellationToken)
     {
-        await _table.AddAsync(entity);
-        await SaveAsync();
+        await _table.AddAsync(entity, cancellationToken);
+        await SaveAsync(cancellationToken);
 	}
-    public async Task DeleteAsync(T entity)
+    public async Task DeleteAsync(T entity, CancellationToken cancellationToken)
     {
         _context.Remove(entity);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
     }
     public async Task<T?> GetByIdOrDefaultAsync(int id) => await _table.FindAsync(id);
-    private async Task SaveAsync() => await _context.SaveChangesAsync();
-    public async Task UpdateAsync(T entity)
+    private async Task SaveAsync(CancellationToken cancellationToken) => await _context.SaveChangesAsync(cancellationToken);
+    public async Task UpdateAsync(T entity, CancellationToken cancellationToken)
     {
 		_table.Update(entity);
-        await SaveAsync();
+        await SaveAsync(cancellationToken);
     }
 }

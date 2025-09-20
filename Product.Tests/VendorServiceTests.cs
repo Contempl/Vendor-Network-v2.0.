@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
@@ -92,17 +93,27 @@ public class VendorServiceTests
     }
     
     [Fact]
-    public async Task InviteVendorUserAsync()
+    public async Task InviteVendorUserAsync_CallsAllMethodsWithWhenParametersAreValid()
     {
         // Arrange
         var emailDto = new EmailForInviteDto { Email = "test@test.com" };
         var newVendorUser = new VendorUser { Email = emailDto.Email, VendorId = _testVendor.Id };
+        var transactionMock = new Mock<IDbContextTransaction>();
+        
         _userPrincipalServiceMock.SetupProperty(r => r.UserId, _testVendorUser.Id);
+        
         _userPrincipalServiceMock.SetupProperty(r => r.BusinessId, _testVendorUser.Id);
+        
+        _unitOfWorkMock
+            .Setup(u => u.BeginTransactionAsync())
+            .ReturnsAsync(transactionMock.Object);;
+        
         _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id))
             .ReturnsAsync(_testVendor);
+        
         _vendorUserRepositoryMock.Setup(r => r.GetByIdAsync(_testVendorUser.Id))
             .ReturnsAsync(_testVendorUser);
+        
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(emailDto.Email))
             .ReturnsAsync(newVendorUser);
 

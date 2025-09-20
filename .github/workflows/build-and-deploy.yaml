@@ -23,7 +23,7 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore Product.WebApi/Product.WebApi.csproj
         
-      - name: Builde solution
+      - name: Build solution
         run: dotnet build Product.WebApi/Product.WebApi.csproj --configuration Release --no-restore
           
       - name: Run tests
@@ -34,5 +34,3 @@ jobs:
         
       - name: Build Docker image
         run: docker build -t product-api:latest -f Product.WebApi/Dockerfile .
-      
-    
