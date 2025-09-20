@@ -38,9 +38,9 @@ public class AdministratorService : IAdministratorService
     }
 
 
-    public async Task<Response<TokenDto>> Login(UserLoginDto userData)
+    public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken)
     {
-	    var admin = await _adminRepository.GetByEmailAsync(userData.Email);
+	    var admin = await _adminRepository.GetByEmailAsync(userData.Email, cancellationToken);
 
 	    if (admin == null)
 	    {
@@ -71,7 +71,7 @@ public class AdministratorService : IAdministratorService
 	    };
     }
 
-    public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData)
+    public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData, CancellationToken cancellationToken)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -94,10 +94,10 @@ public class AdministratorService : IAdministratorService
 		}
 		var vendorUser = new VendorUser { Email = inviteData.Email, VendorId = inviteData.BusinessId, UserType = UserType.VendorUser };
 
-		await _userRepository.CreateAsync(vendorUser);
+		await _userRepository.CreateAsync(vendorUser, cancellationToken);
 
 		var invite = _inviteService.CreateInviteByAdmin(vendorUser, admin);
-		await _inviteRepository.CreateAsync(invite);
+		await _inviteRepository.CreateAsync(invite, cancellationToken);
 
 		var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
 			
@@ -115,7 +115,7 @@ public class AdministratorService : IAdministratorService
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(int adminId, DataForInviteDto inviteData)
+	public async Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(int adminId, DataForInviteDto inviteData, CancellationToken cancellationToken)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -138,10 +138,10 @@ public class AdministratorService : IAdministratorService
 		}
 		var operatorUser = new OperatorUser { Email = inviteData.Email, OperatorId = inviteData.BusinessId };
 
-		await _userRepository.CreateAsync(operatorUser);
+		await _userRepository.CreateAsync(operatorUser, cancellationToken);
 
 		var invite = _inviteService.CreateInviteByAdmin(operatorUser, admin);
-		await _inviteRepository.CreateAsync(invite);
+		await _inviteRepository.CreateAsync(invite, cancellationToken);
 
 		var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
 			
@@ -159,7 +159,7 @@ public class AdministratorService : IAdministratorService
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> InviteBusiness(int adminId, BusinessInvitationData invitationData)
+	public async Task<Response<UserDtoToFrontEnd>> InviteBusiness(int adminId, BusinessInvitationData invitationData, CancellationToken cancellationToken)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -179,7 +179,7 @@ public class AdministratorService : IAdministratorService
 			vendor.Address = invitationData.BusinessAddress;
 			vendor.Email = invitationData.BusinessEmail;
 			
-			await _vendorRepository.CreateAsync(vendor);
+			await _vendorRepository.CreateAsync(vendor, cancellationToken);
 
 			var vendorUser = new VendorUser
 			{
@@ -187,7 +187,7 @@ public class AdministratorService : IAdministratorService
 				FirstName = invitationData.FirstName,
 				LastName = invitationData.LastName,
 			};
-			await _userRepository.CreateAsync(vendorUser);
+			await _userRepository.CreateAsync(vendorUser, cancellationToken);
 		}
 		else if (!invitationData.BusinessIsVendor)
 		{
@@ -196,7 +196,7 @@ public class AdministratorService : IAdministratorService
 			@operator.Address = invitationData.BusinessAddress;
 			@operator.Email = invitationData.BusinessEmail;
 			
-			await _operatorRepository.CreateAsync(@operator);
+			await _operatorRepository.CreateAsync(@operator, cancellationToken);
 
 			var operatorUser = new OperatorUser
 			{
@@ -204,12 +204,12 @@ public class AdministratorService : IAdministratorService
 				FirstName = invitationData.FirstName,
 				LastName = invitationData.LastName,
 			};
-			await _userRepository.CreateAsync(operatorUser);
+			await _userRepository.CreateAsync(operatorUser, cancellationToken);
 		}
 
-		var existingUser = await _userRepository.GetByEmailAsync(invitationData.UserEmail);
+		var existingUser = await _userRepository.GetByEmailAsync(invitationData.UserEmail, cancellationToken);
 		var invite = _inviteService.CreateInviteByAdmin(existingUser, admin);
-		await _inviteRepository.CreateAsync(invite);
+		await _inviteRepository.CreateAsync(invite, cancellationToken);
 		var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
 			
 		var emailBody = _emailService.GenerateEmailTemplate(invitationData.UserEmail,
@@ -226,20 +226,20 @@ public class AdministratorService : IAdministratorService
 		};
 	}
 	
-	public async Task<Response<int>> RemoveOperatorAsync(int operatorId)
+	public async Task<Response<int>> RemoveOperatorAsync(int operatorId, CancellationToken cancellationToken)
 	{
-		var @operator = await _operatorRepository.GetByIdAsync(operatorId);
-		await _operatorRepository.DeleteAsync(@operator);
+		var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
+		await _operatorRepository.DeleteAsync(@operator, cancellationToken);
 		return new Response<int>
 		{
 			Data = @operator.Id
 		};
 	}
 
-	public async Task<Response<int>> RemoveVendorAsync(int vendorId)
+	public async Task<Response<int>> RemoveVendorAsync(int vendorId, CancellationToken cancellationToken)
 	{
-		var vendor = await _vendorRepository.GetByIdAsync(vendorId);
-		await _vendorRepository.DeleteAsync(vendor);
+		var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
+		await _vendorRepository.DeleteAsync(vendor, cancellationToken);
 		return new Response<int>
 		{
 			Data = vendor.Id

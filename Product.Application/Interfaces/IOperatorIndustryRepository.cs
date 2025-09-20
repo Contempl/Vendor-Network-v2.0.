@@ -4,6 +4,6 @@ namespace Product.Application.Interfaces;
 
 public interface IOperatorIndustryRepository : IRepository<OperatorIndustry>
 {
-	Task<OperatorIndustry> GetByIdAsync(int operatorId, int industryId);
-	Task<List<OperatorIndustry>> GetOperatorsIndustriesAsync(int operatorId);
+	Task<OperatorIndustry> GetByIdAsync(int operatorId, int industryId, CancellationToken cancellationToken);
+	Task<List<OperatorIndustry>> GetOperatorsIndustriesAsync(int operatorId, CancellationToken cancellationToken);
 }

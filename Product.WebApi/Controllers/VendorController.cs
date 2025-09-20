@@ -23,9 +23,10 @@ namespace Product.WebApi.Controllers
 
 		[HttpPost("Search/Operators/")]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> GetOperators([FromBody]OperatorSearchDto operatorData)
+		public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> GetOperators([FromBody]OperatorSearchDto operatorData,
+			CancellationToken cancellationToken)
 		{
-			var response = await _vendorService.SearchOperatorsAsync(operatorData);
+			var response = await _vendorService.SearchOperatorsAsync(operatorData, cancellationToken);
 			if (response.IsSuccess)
 			{
 				return Ok(response);
@@ -36,9 +37,9 @@ namespace Product.WebApi.Controllers
 		[HttpGet("{vendorId}")]
 		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Vendor>> GetVendor(int vendorId)
+		public async Task<ActionResult<Vendor>> GetVendor(int vendorId, CancellationToken cancellationToken)
 		{
-			var response = await _vendorService.GetVendorByIdAsync(vendorId);
+			var response = await _vendorService.GetVendorByIdAsync(vendorId, cancellationToken);
 			if (response.IsSuccess)
 			{
 				return Ok(response);
@@ -49,9 +50,10 @@ namespace Product.WebApi.Controllers
 		[HttpPut]
 		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateVendor([FromBody] UpdateVendorDto vendorData)
+		public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateVendor([FromBody] UpdateVendorDto vendorData,
+			CancellationToken cancellationToken)
 		{
-			var response = await _vendorService.UpdateVendorAsync(vendorData);
+			var response = await _vendorService.UpdateVendorAsync(vendorData, cancellationToken);
 			if (response.IsSuccess)
 			{
 				return Ok(response);
@@ -62,9 +64,10 @@ namespace Product.WebApi.Controllers
 		[HttpPost("invite")]
 		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteVendorUser([FromBody] EmailForInviteDto email)
+		public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteVendorUser([FromBody] EmailForInviteDto email,
+			CancellationToken cancellationToken)
 		{
-			var response = await _vendorService.InviteVendorUserAsync(email);
+			var response = await _vendorService.InviteVendorUserAsync(email, cancellationToken);
 			if (response.IsSuccess)
 			{
 				return Ok(response);

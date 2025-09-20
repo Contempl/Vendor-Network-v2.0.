@@ -22,22 +22,22 @@ public class OperatorIndustryService : IOperatorIndustryService
 	    _operatorRepository = operatorRepository;
     }
 
-    public async Task<Response<int>> RemoveOperatorIndustryAsync(int industryId)
+    public async Task<Response<int>> RemoveOperatorIndustryAsync(int industryId, CancellationToken cancellationToken)
     {
 	    var operatorId = _userPrincipalService.BusinessId!.Value;
-	    var operatorIndustry = await _operatorIndustryRepository.GetByIdAsync(operatorId, industryId);
+	    var operatorIndustry = await _operatorIndustryRepository.GetByIdAsync(operatorId, industryId, cancellationToken);
 
-	    await _operatorIndustryRepository.DeleteAsync(operatorIndustry);
+	    await _operatorIndustryRepository.DeleteAsync(operatorIndustry, cancellationToken);
 
 	    return new Response<int>
 	    {
 		    Data = industryId,
 	    };
     }
-    public async Task<Response<List<OpIndustryFrontEndDto>>> GetOperatorsIndustriesAsync()
+    public async Task<Response<List<OpIndustryFrontEndDto>>>? GetOperatorsIndustriesAsync(CancellationToken cancellationToken)
     {
 	    var operatorId = _userPrincipalService.BusinessId!.Value;
-	    var industries = await _operatorIndustryRepository.GetOperatorsIndustriesAsync(operatorId);
+	    var industries = await _operatorIndustryRepository.GetOperatorsIndustriesAsync(operatorId, cancellationToken);
 
 	    if (!industries.Any())
 	    {
@@ -77,10 +77,13 @@ public class OperatorIndustryService : IOperatorIndustryService
 		industry.Longitude = industryData.Longitude ?? industry.Longitude;
 	}
 
-    public async Task<Response<OpIndustryFrontEndDto>> CreateOperatorIndustryAsync(OperatorIndustryCreationDto industryCreationData)
+    public async Task<Response<OpIndustryFrontEndDto>> CreateOperatorIndustryAsync
+    (
+	    OperatorIndustryCreationDto industryCreationData, 
+	    CancellationToken cancellationToken)
     {
 	    var operatorId = _userPrincipalService.BusinessId!.Value;
-	    var existingOperator = await _operatorRepository.GetByIdAsync(operatorId);
+	    var existingOperator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
 
 	    if (existingOperator == null)
 	    {
@@ -93,7 +96,7 @@ public class OperatorIndustryService : IOperatorIndustryService
 
 	    var newIndustry = MapIndustryToCreateOperator(existingOperator, industryCreationData);
 
-	    await _operatorIndustryRepository.CreateAsync(newIndustry);
+	    await _operatorIndustryRepository.CreateAsync(newIndustry, cancellationToken);
 
 	    var result = newIndustry.ToFrontEndDto();
 	    
@@ -103,10 +106,10 @@ public class OperatorIndustryService : IOperatorIndustryService
 	    };
     }
 
-    public async Task<Response<OpIndustryFrontEndDto>> GetOpIndustryByIdAsync(int industryId)
+    public async Task<Response<OpIndustryFrontEndDto>> GetOpIndustryByIdAsync(int industryId, CancellationToken cancellationToken)
     {
 	    var operatorId = _userPrincipalService.BusinessId!.Value;
-	    var industry = await _operatorIndustryRepository.GetByIdAsync(operatorId, industryId);
+	    var industry = await _operatorIndustryRepository.GetByIdAsync(operatorId, industryId, cancellationToken);
 
 	    return new Response<OpIndustryFrontEndDto>
 	    {
@@ -114,10 +117,11 @@ public class OperatorIndustryService : IOperatorIndustryService
 	    };
     }
 
-    public async Task<Response<OpIndustryFrontEndDto>> UpdateOperatorIndustryAsync(int industryId, UpdateOperatorIndustryDto industryData)
+    public async Task<Response<OpIndustryFrontEndDto>> UpdateOperatorIndustryAsync(int industryId, 
+	    UpdateOperatorIndustryDto industryData, CancellationToken cancellationToken)
     {
 	    var operatorId = _userPrincipalService.BusinessId!.Value;
-	    var existingIndustry = await _operatorIndustryRepository.GetByIdAsync(operatorId, industryId);
+	    var existingIndustry = await _operatorIndustryRepository.GetByIdAsync(operatorId, industryId, cancellationToken);
 	    
 	    if (existingIndustry == null)
 	    {
@@ -129,7 +133,7 @@ public class OperatorIndustryService : IOperatorIndustryService
 	    }
 
 	    MapIndustryToUpdate(existingIndustry, industryData);
-	    await _operatorIndustryRepository.UpdateAsync(existingIndustry);
+	    await _operatorIndustryRepository.UpdateAsync(existingIndustry, cancellationToken);
 	    
 	    var result = existingIndustry.ToFrontEndDto();
 

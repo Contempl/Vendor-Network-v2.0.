@@ -21,16 +21,16 @@ public class VendorRepository : IVendorRepository
 		_vendors = _context.Vendors;
 	}
 
-	public async Task CreateAsync(Vendor entity)
+	public async Task CreateAsync(Vendor entity, CancellationToken cancellationToken)
 	{
-		await _vendors.AddAsync(entity);
-		await SaveAsync();
+		await _vendors.AddAsync(entity, cancellationToken);
+		await SaveAsync(cancellationToken);
 		await _reddisCacheService.SetAsync(CachePrefix + entity.Id, entity);
 	}
-	public async Task DeleteAsync(Vendor vendor)
+	public async Task DeleteAsync(Vendor vendor, CancellationToken cancellationToken)
 	{
 		_vendors.Remove(vendor);
-		await SaveAsync();
+		await SaveAsync(cancellationToken);
 	}
 	public IQueryable<Vendor> GetAll() => _vendors;
 
@@ -47,7 +47,7 @@ public class VendorRepository : IVendorRepository
 		return business;
 	}
 
-	public async Task<Vendor> GetByIdAsync(int businessId)
+	public async Task<Vendor> GetByIdAsync(int businessId, CancellationToken cancellationToken)
 	{
 		var cacheKey = CachePrefix + businessId;
 		
@@ -56,30 +56,30 @@ public class VendorRepository : IVendorRepository
 		{
 			return cachedBusiness;
 		}
-		var business = await _context.Vendors.SingleAsync(v => v.Id == businessId);
+		var business = await _context.Vendors.SingleAsync(v => v.Id == businessId, cancellationToken);
 		
 		await _reddisCacheService.SetAsync(cacheKey, business);
 		return business;
 	}
 
-	public async Task UpdateAsync(Vendor vendor)
+	public async Task UpdateAsync(Vendor vendor, CancellationToken cancellationToken)
 	{
 		await _reddisCacheService.RemoveAsync(CachePrefix + vendor.Id);
 		_vendors.Update(vendor);
-		await SaveAsync();
+		await SaveAsync(cancellationToken);
 		await _reddisCacheService.SetAsync(CachePrefix + vendor.Id, vendor);
 	}
 
-	public async Task<List<Vendor>> GetVendorsWithService(string serviceType)
+	public async Task<List<Vendor>> GetVendorsWithService(string serviceType, CancellationToken cancellationToken)
 	{
 		return await GetAll()
 			.Include(v => v.VendorFacilities)
 			.ThenInclude(vf => vf.Services)
 			.Where(v => v.VendorFacilities.Any(vf => vf.Services.Any(s => s.Name == serviceType)))
-			.ToListAsync();
+			.ToListAsync(cancellationToken: cancellationToken);
 	}
 	public async Task<PagedResult<Vendor>> GetVendorsQuery(string searchName, SortOrder sortOrder,
-		int pageSize, int pageNumber)
+		int pageSize, int pageNumber, CancellationToken cancellationToken)
 	{
 		var query = _vendors.AsQueryable();
 
@@ -89,8 +89,8 @@ public class VendorRepository : IVendorRepository
 			? query.OrderBy(v => v.BusinessName)
 			: query.OrderByDescending(v => v.BusinessName);
 
-		var totalCount = await query.CountAsync();
-		var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+		var totalCount = await query.CountAsync(cancellationToken: cancellationToken);
+		var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
 
 		return new PagedResult<Vendor>()
 		{
@@ -98,5 +98,5 @@ public class VendorRepository : IVendorRepository
 			TotalCount = totalCount
 		};
 	}
-	private async Task SaveAsync() => await _context.SaveChangesAsync();
+	private async Task SaveAsync(CancellationToken cancellationToken) => await _context.SaveChangesAsync(cancellationToken);
 }

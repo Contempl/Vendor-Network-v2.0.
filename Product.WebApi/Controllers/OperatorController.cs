@@ -27,9 +27,9 @@ public class OperatorController : Controller
 	[HttpPost("search/vendors")]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> SearchVendorsToServeFacilities([FromBody] SearchVendorsForIndustriesDto industriesData)
+	public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> SearchVendorsToServeFacilities([FromBody] SearchVendorsForIndustriesDto industriesData, CancellationToken cancellationToken)
 	{
-		var response = await _operatorService.SearchForVendorsAsync(industriesData);
+		var response = await _operatorService.SearchForVendorsAsync(industriesData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -39,9 +39,9 @@ public class OperatorController : Controller
 
 	[HttpPost("search/vendor")]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<PagedList<Vendor>>>> GetVendors([FromBody] VendorSearchDto vendorSearchDto)
+	public async Task<ActionResult<Response<PagedList<Vendor>>>> GetVendors([FromBody] VendorSearchDto vendorSearchDto, CancellationToken cancellationToken)
 	{
-		var response =  await _operatorService.GetVendorsByNameAsync(vendorSearchDto);
+		var response =  await _operatorService.GetVendorsByNameAsync(vendorSearchDto, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -53,10 +53,10 @@ public class OperatorController : Controller
 	[HttpGet]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<BusinessFrontEndDto>>> GetOperator()
+	public async Task<ActionResult<Response<BusinessFrontEndDto>>> GetOperator(CancellationToken cancellationToken)
 	{
 		var operatorId = _userPrincipalService.BusinessId!.Value;
-		var response = await _operatorService.GetOperatorAsync(operatorId);
+		var response = await _operatorService.GetOperatorAsync(operatorId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -67,10 +67,10 @@ public class OperatorController : Controller
 	[HttpPut]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateOperator([FromBody] UpdateOperatorDto operatorData)
+	public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateOperator([FromBody] UpdateOperatorDto operatorData, CancellationToken cancellationToken)
 	{
 		var operatorId = _userPrincipalService.BusinessId!.Value;
-		var response = await _operatorService.UpdateOperatorAsync(operatorId, operatorData);
+		var response = await _operatorService.UpdateOperatorAsync(operatorId, operatorData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -81,10 +81,10 @@ public class OperatorController : Controller
 	[HttpPost("invite")]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<MailMsg>>> InviteOperatorUser([FromBody] EmailForInviteDto dto)
+	public async Task<ActionResult<Response<MailMsg>>> InviteOperatorUser([FromBody] EmailForInviteDto dto, CancellationToken cancellationToken)
 	{
 		var operatorUserId = _userPrincipalService.UserId!.Value;
-		var response = await _operatorService.InviteOperatorUserAsync(operatorUserId, dto);
+		var response = await _operatorService.InviteOperatorUserAsync(operatorUserId, dto, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);

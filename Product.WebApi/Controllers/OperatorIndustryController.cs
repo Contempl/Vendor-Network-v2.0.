@@ -26,9 +26,9 @@ public class OperatorIndustryController : ControllerBase
 	[HttpGet("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> GetOperatorIndustry(int industryId)
+	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> GetOperatorIndustry(int industryId, CancellationToken cancellationToken)
 	{
-		var response = await _operatorIndustryService.GetOpIndustryByIdAsync(industryId);
+		var response = await _operatorIndustryService.GetOpIndustryByIdAsync(industryId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -38,9 +38,9 @@ public class OperatorIndustryController : ControllerBase
 
 	[HttpGet("industries")]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<List<OperatorIndustry>>>> GetOperatorIndustries()
+	public async Task<ActionResult<Response<List<OperatorIndustry>>>> GetOperatorIndustries(CancellationToken cancellationToken)
 	{
-		var response = await _operatorIndustryService.GetOperatorsIndustriesAsync();
+		var response = await _operatorIndustryService.GetOperatorsIndustriesAsync(cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -51,9 +51,10 @@ public class OperatorIndustryController : ControllerBase
 	[HttpPost("{operatorId}/industry")]
 
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> AddOperatorIndustry([FromBody] OperatorIndustryCreationDto industryData)
+	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> AddOperatorIndustry([FromBody] OperatorIndustryCreationDto industryData,
+		CancellationToken cancellationToken)
 	{
-		var response = await _operatorIndustryService.CreateOperatorIndustryAsync(industryData);
+		var response = await _operatorIndustryService.CreateOperatorIndustryAsync(industryData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -65,9 +66,9 @@ public class OperatorIndustryController : ControllerBase
 	[EnsureOperatorIndustryExists]
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> UpdateOperatorIndustry(int industryId,
-		UpdateOperatorIndustryDto industryData)
+		UpdateOperatorIndustryDto industryData, CancellationToken cancellationToken)
 	{
-		var response = await _operatorIndustryService.UpdateOperatorIndustryAsync(industryId, industryData);
+		var response = await _operatorIndustryService.UpdateOperatorIndustryAsync(industryId, industryData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -78,9 +79,9 @@ public class OperatorIndustryController : ControllerBase
 	[HttpDelete("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<int>>> RemoveOperatorIndustry(int industryId)
+	public async Task<ActionResult<Response<int>>> RemoveOperatorIndustry(int industryId, CancellationToken cancellationToken)
 	{
-		var response = await _operatorIndustryService.RemoveOperatorIndustryAsync(industryId);
+		var response = await _operatorIndustryService.RemoveOperatorIndustryAsync(industryId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);

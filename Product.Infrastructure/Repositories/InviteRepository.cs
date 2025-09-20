@@ -15,33 +15,33 @@ public class InviteRepository : IInviteRepository
 		_invites = _context.Invites;
 	}
 
-	public async Task CreateAsync(Invite invite)
+	public async Task CreateAsync(Invite invite, CancellationToken cancellationToken)
 	{
-		await _invites.AddAsync(invite);
-		await SaveAsync();
+		await _invites.AddAsync(invite, cancellationToken);
+		await SaveAsync(cancellationToken);
 	}
-	public async Task DeleteAsync(Invite invite)
+	public async Task DeleteAsync(Invite invite, CancellationToken cancellationToken)
 	{
 		_invites.Remove(invite);
-		await SaveAsync();
+		await SaveAsync(cancellationToken);
 	}
 	public IQueryable<Invite> GetAll() => _invites;
 	public async Task<Invite?> GetByIdOrDefaultAsync(int inviteId) => await _invites.SingleOrDefaultAsync(w => w.Id == inviteId);
-	public async Task<Invite> GetByIdAsync(int inviteId) => await _invites.SingleAsync(w => w.Id == inviteId);
-	public async Task UpdateAsync(Invite invite)
+	public async Task<Invite> GetByIdAsync(int inviteId, CancellationToken cancellationToken) => await _invites.SingleAsync(w => w.Id == inviteId, cancellationToken);
+	public async Task UpdateAsync(Invite invite, CancellationToken cancellationToken)
 	{
 		_invites.Update(invite);
-		await SaveAsync();
+		await SaveAsync(cancellationToken);
 	}
-	public async Task<Invite> GetInviteWithUserAsync(int inviteId)
+	public async Task<Invite> GetInviteWithUserAsync(int inviteId, CancellationToken cancellationToken)
 	{
 		var invite = await GetAll()
 			.Where(i => i.Id == inviteId)
 			.Include(i => i.InvitedUser)
-			.FirstAsync();
+			.FirstAsync(cancellationToken: cancellationToken);
 
 		return invite;
 	}
 
-	private async Task SaveAsync() => await _context.SaveChangesAsync();
+	private async Task SaveAsync(CancellationToken cancellationToken) => await _context.SaveChangesAsync(cancellationToken);
 }

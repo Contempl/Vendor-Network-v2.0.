@@ -51,9 +51,9 @@ public class InviteService : IInviteService
 	};
 
 
-	public async Task<Response<InviteIdToFrontEnd>> Register(int inviteId)
+	public async Task<Response<InviteIdToFrontEnd>> Register(int inviteId, CancellationToken cancellationToken)
 	{
-		var invite = await _inviteRepository.GetByIdAsync(inviteId);
+		var invite = await _inviteRepository.GetByIdAsync(inviteId, cancellationToken);
 		
 		var inviteIsValid = ValidateInvite(invite);
 
@@ -73,9 +73,9 @@ public class InviteService : IInviteService
 		};
 	}
 	
-	public async Task<Response<UserDtoToFrontEnd>> RegisterByInvite(int inviteId, UserRegistrationByInviteDto registrationData)
+	public async Task<Response<UserDtoToFrontEnd>> RegisterByInvite(int inviteId, UserRegistrationByInviteDto registrationData, CancellationToken cancellationToken)
 	{
-		var invite = await _inviteRepository.GetInviteWithUserAsync(inviteId);
+		var invite = await _inviteRepository.GetInviteWithUserAsync(inviteId, cancellationToken);
 		
 		var inviteIsValid = ValidateInvite(invite);
 
@@ -88,7 +88,7 @@ public class InviteService : IInviteService
 			};
 		}
 		
-		await UpdateInviteAndUser(registrationData, invite, inviteId);
+		await UpdateInviteAndUser(registrationData, invite, inviteId, cancellationToken);
 		
 		var updatedUser = await _userRepository.GetByIdOrDefaultAsync(invite.InvitedUserId!.Value);
 
@@ -98,19 +98,20 @@ public class InviteService : IInviteService
 		};
 	}
 	
-	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite, int inviteId)
+	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite, int inviteId, CancellationToken cancellationToken)
 	{
-		var user = await _userRepository.GetByIdAsync(invite.InvitedUserId!.Value);
+		var inviteUserId = invite.InvitedUserId.Value;
+		var user = await _userRepository.GetByIdAsync(inviteUserId, cancellationToken);
 
 		_userService.MapUserToUpdateByInvite(dto, user);
 
 		if (user is VendorUser vendorUser)
 		{
-			await _vendorUserRepository.UpdateAsync(vendorUser);
+			await _vendorUserRepository.UpdateAsync(vendorUser, cancellationToken);
 		}
 		else if (user is OperatorUser operatorUser)
 		{
-			await _operatorUserRepository.UpdateAsync(operatorUser);
+			await _operatorUserRepository.UpdateAsync(operatorUser, cancellationToken);
 		}
 		else
 		{
@@ -118,6 +119,6 @@ public class InviteService : IInviteService
 		}
 		invite.Id = inviteId;
 		invite.Status = InvitationStatus.Accepted;
-		 await _inviteRepository.UpdateAsync(invite);
+		 await _inviteRepository.UpdateAsync(invite, cancellationToken);
 	}
 }
