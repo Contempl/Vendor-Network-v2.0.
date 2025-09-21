@@ -48,7 +48,7 @@ public class VendorServiceTests
         var operatorSearchDto = new OperatorSearchDto { Name = "" };
         
         // Act
-        var result = await _vendorService.SearchOperatorsAsync(operatorSearchDto);
+        var result = await _vendorService.SearchOperatorsAsync(operatorSearchDto, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.Equal((int)ErrorCodes.InvalidBusinessName, result.ErrorCode);
@@ -59,16 +59,16 @@ public class VendorServiceTests
     public async Task GetVendorByIdAsync_ReturnsVendor()
     {
         // Arrange
-        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id))
+        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testVendor);
         
         // Act
-        var result = await _vendorService.GetVendorByIdAsync(_testVendorUser.Id);
+        var result = await _vendorService.GetVendorByIdAsync(_testVendorUser.Id, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.Equal(_testVendor.BusinessName, result.Data.BusinessName);
         Assert.Equal(_testVendor.Address, result.Data.Address);
-        _vendorRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<int>()), Times.Once);
+        _vendorRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
     }
     
     [Fact]
@@ -80,16 +80,16 @@ public class VendorServiceTests
             BusinessName = "Business Name", Address = "Test Address", Email = "test@test.com",
         };
         _userPrincipalServiceMock.SetupProperty(r => r.BusinessId, 1);
-        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id))
+        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testVendor);
 
         // Act
-        var result = await _vendorService.UpdateVendorAsync(updateVendorDto);
+        var result = await _vendorService.UpdateVendorAsync(updateVendorDto, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.Equal(updateVendorDto.BusinessName, result.Data.BusinessName);
         Assert.Equal(updateVendorDto.Address, result.Data.Address);
-        _vendorRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Vendor>()), Times.Once);
+        _vendorRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Vendor>(), It.IsAny<CancellationToken>()), Times.Once);
     }
     
     [Fact]
@@ -108,23 +108,23 @@ public class VendorServiceTests
             .Setup(u => u.BeginTransactionAsync())
             .ReturnsAsync(transactionMock.Object);;
         
-        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id))
+        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testVendor);
         
-        _vendorUserRepositoryMock.Setup(r => r.GetByIdAsync(_testVendorUser.Id))
+        _vendorUserRepositoryMock.Setup(r => r.GetByIdAsync(_testVendorUser.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testVendorUser);
         
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(emailDto.Email))
+        _userRepositoryMock.Setup(r => r.GetByEmailAsync(emailDto.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(newVendorUser);
 
         _inviteServiceMock.Setup(s => s.CreateInvite(It.IsAny<User>(), It.IsAny<User>()))
             .Returns(new Invite());
         
         // Act
-        var result = await _vendorService.InviteVendorUserAsync(emailDto);
+        var result = await _vendorService.InviteVendorUserAsync(emailDto, It.IsAny<CancellationToken>());
         
         // Assert
-        _vendorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>()), Times.Once);
+        _vendorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>(), It.IsAny<CancellationToken>()), Times.Once);
         _emailServiceMock.Verify(s => s.CreateMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         _emailServiceMock.Verify(s => s.SendInvitationEmailAsync(It.IsAny<MailMsg>()), Times.Once);
     }
