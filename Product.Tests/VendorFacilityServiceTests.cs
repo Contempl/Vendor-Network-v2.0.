@@ -41,11 +41,11 @@ public class VendorFacilityServiceTests
 
         _userPrincipalServiceMock.SetupProperty(s => s.BusinessId, _testVendor.Id);
         _vendorFacilityRepositoryMock.Setup(r => 
-                r.GetFacilityWithServicesByIdAsync(facilityId, _testVendor.Id))
+                r.GetFacilityWithServicesByIdAsync(facilityId, _testVendor.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(vendorFacility);
         
         // Act
-        var result = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId);
+        var result = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, It.IsAny<CancellationToken>());
         
         
         // Assert
@@ -65,16 +65,16 @@ public class VendorFacilityServiceTests
             Services = {"Service Name #1", "Service Name #2", "Service Name #3", "Service Name #4"},
         };
         
-        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(vendorId))
+        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(vendorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testVendor);
         
         // Act
-        var result = await _vendorFacilityService.AddFacilityAsync(creationDto);
+        var result = await _vendorFacilityService.AddFacilityAsync(creationDto, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.IsType<VendorFacility>(result.Data);
         Assert.Equal("Test Name", result.Data.Name);
-        _vendorFacilityRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorFacility>()), Times.Once);
+        _vendorFacilityRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorFacility>(), It.IsAny<CancellationToken>()), Times.Once);
     }
     
     [Fact]
@@ -86,11 +86,11 @@ public class VendorFacilityServiceTests
         {
             Name = "Test Name", Location = "Test Location", Longitude = 10, Latitude = 20, RadiusOfWork = 40000,
         };
-        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id))
+        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testVendor);
         
         // Act
-        var result = await _vendorFacilityService.AddFacilityAsync(creationDto);
+        var result = await _vendorFacilityService.AddFacilityAsync(creationDto, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.Equal((int)ErrorCodes.InvalidVendorFacilityData, result.ErrorCode);
@@ -110,16 +110,16 @@ public class VendorFacilityServiceTests
         _userPrincipalServiceMock.SetupProperty(s => s.BusinessId, _testVendor.Id);
         
         _vendorFacilityRepositoryMock.Setup(r => 
-            r.GetFacilityWithServicesByIdAsync(_testVendor.Id, _testVendorFacility.Id))
+            r.GetFacilityWithServicesByIdAsync(_testVendor.Id, _testVendorFacility.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testVendorFacility);
         
         
         // Act
         var result =  await _vendorFacilityService
-            .UpdateFacilityAsync(vendFacility.Id, updateDto);
+            .UpdateFacilityAsync(vendFacility.Id, updateDto, It.IsAny<CancellationToken>());
 
         // Assert
-        _vendorFacilityRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<VendorFacility>()), Times.Once);
+        _vendorFacilityRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<VendorFacility>(), It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(updateDto.Name, result.Data.Name);
         Assert.Equal(updateDto.Location, result.Data.Location);
     }
@@ -138,15 +138,15 @@ public class VendorFacilityServiceTests
         _userPrincipalServiceMock.SetupProperty(s => s.BusinessId, _testVendor.Id);
         
         _vendorFacilityRepositoryMock.Setup(r => 
-                r.GetFacilityWithServicesByIdAsync(_testVendor.Id, _testVendorFacility.Id))
+                r.GetFacilityWithServicesByIdAsync(_testVendor.Id, _testVendorFacility.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testVendorFacility);
         
         // Act
         var result =  await _vendorFacilityService
-            .UpdateFacilityAsync(vendFacility.Id, updateDto);
+            .UpdateFacilityAsync(vendFacility.Id, updateDto, It.IsAny<CancellationToken>());
 
         // Assert
-        _vendorFacilityRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<VendorFacility>()), Times.Once);
+        _vendorFacilityRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<VendorFacility>(), It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(updateDto.Services[0], result.Data.Services[0].Name);
     }
     
@@ -157,15 +157,15 @@ public class VendorFacilityServiceTests
         // Arrange
         _userPrincipalServiceMock.SetupProperty(s => s.BusinessId, _testVendor.Id);
         _vendorFacilityRepositoryMock.Setup(r => 
-                r.GetByIdAsync(_testVendor.Id, _testVendorFacility.Id))
+                r.GetByIdAsync(_testVendor.Id, _testVendorFacility.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testVendorFacility);
         
         // Act
-        var result = await _vendorFacilityService.RemoveFacilityAsync(_testVendor.Id, _testVendorFacility.Id);
+        var result = await _vendorFacilityService.RemoveFacilityAsync(_testVendor.Id, _testVendorFacility.Id, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.Equal(_testVendorFacility.Id, result.Data);
-        _vendorFacilityRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<VendorFacility>()), Times.Once);
+        _vendorFacilityRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<VendorFacility>(), It.IsAny<CancellationToken>()), Times.Once);
     }
     
     [Fact]
@@ -176,11 +176,11 @@ public class VendorFacilityServiceTests
         vendorFacility.Services = _testVendorFacilityServices;
         _userPrincipalServiceMock.SetupProperty(s => s.BusinessId, _testVendor.Id);
         _vendorFacilityRepositoryMock.Setup(r => 
-            r.GetFacilityWithServicesByIdAsync(_testVendor.Id, _testVendorFacility.Id)).ReturnsAsync(vendorFacility);
+            r.GetFacilityWithServicesByIdAsync(_testVendor.Id, _testVendorFacility.Id, It.IsAny<CancellationToken>())).ReturnsAsync(vendorFacility);
         
         // Act
         var result = await _vendorFacilityService
-            .GetVendorFacilityServiceAsync(_testVendorFacility.Id, 16);
+            .GetVendorFacilityServiceAsync(_testVendorFacility.Id, 16, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.Equal((int)ErrorCodes.InvalidVendorFacilityServiceData, result.ErrorCode);
