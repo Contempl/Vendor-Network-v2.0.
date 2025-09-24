@@ -19,16 +19,22 @@ public class Repository<T> : IRepository<T> where T : class
         await _table.AddAsync(entity, cancellationToken);
         await SaveAsync(cancellationToken);
 	}
-    public async Task DeleteAsync(T entity, CancellationToken cancellationToken)
+    public Task DeleteAsync(T entity, CancellationToken cancellationToken)
     {
         _context.Remove(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        return _context.SaveChangesAsync(cancellationToken);
     }
-    public async Task<T?> GetByIdOrDefaultAsync(int id) => await _table.FindAsync(id);
-    private async Task SaveAsync(CancellationToken cancellationToken) => await _context.SaveChangesAsync(cancellationToken);
-    public async Task UpdateAsync(T entity, CancellationToken cancellationToken)
+
+    public async Task<T?> GetByIdOrDefaultAsync(int id)
+    {
+        var entity = await _table.FindAsync(id);
+        return entity;
+    }
+    
+    private Task SaveAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
+    public Task UpdateAsync(T entity, CancellationToken cancellationToken)
     {
 		_table.Update(entity);
-        await SaveAsync(cancellationToken);
+        return SaveAsync(cancellationToken);
     }
 }

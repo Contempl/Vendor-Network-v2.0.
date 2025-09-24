@@ -98,7 +98,7 @@ public class OperatorService : IOperatorService
 
         var operatorFacilities = GetAllOperatorIndustries(industriesData.IndustriesLocationIds);
 
-        var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities, cancellationToken: cancellationToken);
+        var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities, cancellationToken);
         
         var vendorDtos = vendors.Select(v => v.ToFrontEndDto()).ToList();
 
@@ -211,15 +211,15 @@ public class OperatorService : IOperatorService
             };
         }
     }
-    public async Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(int operatorId, UpdateOperatorDto operatorUpdateData, CancellationToken cancellationToken)
+    public Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(int operatorId, UpdateOperatorDto operatorUpdateData, CancellationToken cancellationToken)
     {
-        var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
+        var @operator = _operatorRepository.GetByIdAsync(operatorId, cancellationToken).Result;
         MapOperatorFromDtoToUpdate(@operator, operatorUpdateData);
 
-        await _operatorRepository.UpdateAsync(@operator, cancellationToken);
-        return new Response<BusinessFrontEndDto>
+        _operatorRepository.UpdateAsync(@operator, cancellationToken);
+        return Task.FromResult(new Response<BusinessFrontEndDto>
         {
             Data = @operator.ToFrontEndDto()
-        };
+        });
     }
 }   
