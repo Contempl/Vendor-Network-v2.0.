@@ -117,7 +117,7 @@ public class OperatorServiceTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _operatorService.InviteOperatorUserAsync(operatorUserId, emailDto, It.IsAny<CancellationToken>());
+        var result = await _operatorService.InviteOperatorUserAsync(emailDto, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.NotNull(result.Data);
@@ -150,7 +150,7 @@ public class OperatorServiceTests
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _operatorService.UpdateOperatorAsync(operatorId, updateDto, It.IsAny<CancellationToken>());
+        var result = await _operatorService.UpdateOperatorAsync(updateDto, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.NotNull(result.Data);
