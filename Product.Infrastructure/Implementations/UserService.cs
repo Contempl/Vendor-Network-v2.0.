@@ -23,7 +23,10 @@ public class UserService : IUserService
 	private readonly IOperatorUserRepository _operatorUserRepository;
 	private readonly IRedisCacheService _redisCacheService;
 
-	public UserService(IUserRepository userRepository, IPasswordHasher userPrincipalService, IJwtTokenService jwtTokenService, IVendorUserRepository vendorUserRepository, IOperatorUserRepository operatorUserRepository, IRedisCacheService redisCacheService, IUserPrincipalService userPrincipalService1)
+	public UserService(IUserRepository userRepository, IPasswordHasher userPrincipalService, 
+		IJwtTokenService jwtTokenService, IVendorUserRepository vendorUserRepository, 
+		IOperatorUserRepository operatorUserRepository, IRedisCacheService redisCacheService, 
+		IUserPrincipalService userPrincipalService1)
 	{
 		_userRepository = userRepository;
 		_passwordHasher = userPrincipalService;
@@ -41,9 +44,9 @@ public class UserService : IUserService
 		user.PasswordHash = _passwordHasher.HashThePassword(dto.Password);
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData)
+	public async Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData, CancellationToken cancellationToken)
 	{
-		var userByEmail = await _userRepository.GetByEmailAsync(registrationData.Email);
+		var userByEmail = await _userRepository.GetByEmailAsync(registrationData.Email, cancellationToken);
 		if (userByEmail != null)
 		{
 			return new Response<UserDtoToFrontEnd>
@@ -57,7 +60,7 @@ public class UserService : IUserService
 		{
 			var newVendor = MapVendorUserFromDto(registrationData);
 
-			await _vendorUserRepository.CreateAsync(newVendor);
+			await _vendorUserRepository.CreateAsync(newVendor, cancellationToken);
 			var vendorUserDto = newVendor.MapToFrontEndDto();
 			return new Response<UserDtoToFrontEnd>
 			{
@@ -66,7 +69,7 @@ public class UserService : IUserService
 		}
 		
 		var newOperator = MapOperatorUserFromDto(registrationData);
-		await _operatorUserRepository.CreateAsync(newOperator);
+		await _operatorUserRepository.CreateAsync(newOperator, cancellationToken);
 		
 		var operatorUserDto = newOperator.MapToFrontEndDto();
 
@@ -75,22 +78,12 @@ public class UserService : IUserService
 			Data = operatorUserDto
 		};
 	}
-	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId)
+
+	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"User_{userId}";
-		var cachedUser = await _redisCacheService.GetAsync<UserDtoToFrontEnd>(cacheKey);
+		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 
-		if (cachedUser is not null)
-		{
-			return new Response<UserDtoToFrontEnd>
-			{
-				Data = cachedUser
-			};
-		}
-		
-		var existingUser = await _userRepository.GetByIdAsync(userId);
-
-		var userDto = existingUser.MapToFrontEndDto();
+		var userDto = user.MapToFrontEndDto();
 
 		return new Response<UserDtoToFrontEnd>
 		{
@@ -98,9 +91,9 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<TokenDto>> Login(UserLoginDto userData)
+	public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken)
 	{
-		var user = await _userRepository.GetByEmailAsync(userData.Email);
+		var user = await _userRepository.GetByEmailAsync(userData.Email, cancellationToken);
 
 		if (user == null)
 		{
@@ -122,7 +115,8 @@ public class UserService : IUserService
 			};
 		}
 
-		var token = _jwtTokenService.GenerateToken(user);
+		var userClaims = user.MapUserToClaimDto();
+		var token = _jwtTokenService.GenerateToken(userClaims);
 
 		return new Response<TokenDto>
 		{
@@ -130,10 +124,10 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<int>> RemoveUserAsync(int userId)
+	public async Task<Response<int>> RemoveUserAsync(int userId, CancellationToken cancellationToken)
 	{
-		var user = await _userRepository.GetByIdAsync(userId);
-		await _userRepository.DeleteAsync(user);
+		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+		await _userRepository.DeleteAsync(user, cancellationToken);
 		
 		return new Response<int>
 		{
@@ -141,7 +135,7 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> UpdateUserAsync(UserToUpdateDto userUpdateData, int userId)
+	public async Task<Response<UserDtoToFrontEnd>> UpdateUserAsync(UserToUpdateDto userUpdateData, int userId, CancellationToken cancellationToken)
 	{
 		var thisUserId = _userPrincipalService.UserId!.Value;
 		if (thisUserId != userId)
@@ -153,47 +147,17 @@ public class UserService : IUserService
 			};
 		}
 		
-		var user = await _userRepository.GetByIdWithInvitesAsync(userId);
-		MapUserToUpdate(user, userUpdateData);
+		var user = await _userRepository.GetByIdWithInvitesAsync(userId, cancellationToken);
+		user.MapUserToUpdate(userUpdateData);
 		
-		await _userRepository.UpdateAsync(user);
+		await _userRepository.UpdateAsync(user, cancellationToken);
 		return new Response<UserDtoToFrontEnd>
 		{
 			Data = user.MapToFrontEndDto()
 		};
 	}
-
-	private void MapUserToUpdate(User user, UserToUpdateDto userUpdateData)
-	{
-		user.UserName = userUpdateData.UserName ?? user.UserName;
-		user.FirstName = userUpdateData.FirstName ?? user.FirstName;
-		user.LastName = userUpdateData.LastName ?? user.LastName;
-		user.Email = userUpdateData.Email ?? user.Email;
-	}
-
-	public async Task<Response<UserDto>> AddUserToCache(long userId)
-	{
-		var user = await _userRepository.GetAll().FirstOrDefaultAsync(x => x.Id == userId);
-		if (user == null)
-		{
-			return new Response<UserDto>()
-			{
-				ErrorMessage = "Пользователь не найден",
-				ErrorCode = (int)ErrorCodes.UserNotFound,
-			};
-		}
-        
-		var options = new DistributedCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(1));
-        
-		await _redisCacheService.SetAsync($"User_{user.Id}", user, options);
-		Debug.Write($"В кеш добавился ключ User_{user.Id}");
-
-		return new Response<UserDto>()
-		{
-			Data = user.MapToDto()
-		};
-	}
-
+	
+	
 	private VendorUser MapVendorUserFromDto(UserRegistrationDto registrationData) => new VendorUser
 	{
 		UserName = registrationData.UserName,
@@ -201,6 +165,7 @@ public class UserService : IUserService
 		LastName = registrationData.LastName,
 		Email = registrationData.Email,
 		PasswordHash = _passwordHasher.HashThePassword(registrationData.Password),
+		UserType = UserType.VendorUser,
 	};
 
 	private OperatorUser MapOperatorUserFromDto(UserRegistrationDto registrationData) => new OperatorUser
@@ -209,6 +174,7 @@ public class UserService : IUserService
 		FirstName = registrationData.FirstName,
 		LastName = registrationData.LastName,
 		Email = registrationData.Email,
-		PasswordHash = _passwordHasher.HashThePassword(registrationData.Password)
+		PasswordHash = _passwordHasher.HashThePassword(registrationData.Password),
+		UserType = UserType.OperatorUser,
 	};
 }

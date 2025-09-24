@@ -6,7 +6,8 @@ namespace Product.Application.ServiceInterfaces;
 
 public interface IFacilityService
 {
-    Task<Response<VendorFacilityService>> AddFacilityServiceAsync(int facilityId, string serviceName);
-    Task<Response<VendorFacilityService>> UpdateFacilityServiceAsync(int facilityId, int facilityServiceId, VendorFacilityServiceDto facilityServiceDto);
-    Task<Response<int>> RemoveFacilityServiceAsync(int facilityId, int facilityServiceId);
+    Task<Response<VendorFacilityService>> AddFacilityServiceAsync(int facilityId, string serviceName,
+        CancellationToken cancellationToken);
+    Task<Response<VendorFacilityService>> UpdateFacilityServiceAsync(int facilityId, int facilityServiceId, VendorFacilityServiceDto facilityServiceDto, CancellationToken cancellationToken);
+    Task<Response<int>> RemoveFacilityServiceAsync(int facilityId, int facilityServiceId, CancellationToken cancellationToken);
 }

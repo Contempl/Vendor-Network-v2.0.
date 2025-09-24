@@ -22,7 +22,7 @@ internal class VendorConfiguration : IEntityTypeConfiguration<Vendor>
 			.HasColumnName("Email")
 			.HasMaxLength(50)
 			.IsRequired();
-
+		
 		builder.HasMany(v => v.VendorUsers)
 			.WithOne(vu => vu.Vendor)
 			.HasForeignKey(vu => vu.VendorId)

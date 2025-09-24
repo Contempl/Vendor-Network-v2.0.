@@ -22,15 +22,15 @@ public class JwtTokenService : IJwtTokenService
         _options = options.Value;
     }
 
-    public TokenDto GenerateToken(User user) 
+    public TokenDto GenerateToken(UserClaimDto userClaim) 
     {
         var key = Encoding.UTF8.GetBytes(_options.Secret);
         var claims = new List<Claim>
         {
-            new Claim("userId", user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email!),
-            new Claim("userType", user.UserType.ToString("D")),
-            new Claim("businessId", user.UserType.ToString()),
+            new Claim("userId", userClaim.Id.ToString()),
+            new Claim(ClaimTypes.Email, userClaim.Email!),
+            new Claim(ClaimTypes.Role, userClaim.UserType.ToString()),
+            new Claim("businessId", userClaim.BusinessId.ToString()),
         };
 
         var credentials = new SigningCredentials(new SymmetricSecurityKey(key),

@@ -46,11 +46,23 @@ namespace Product.DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("Email");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -73,9 +85,15 @@ namespace Product.DAL.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("CreatedAt");
 
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("ExpiresAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("ExpiresAt");
+
+                    b.Property<int?>("InvitedUserId")
+                        .HasColumnType("int");
 
                     b.Property<int>("SenderId")
                         .HasColumnType("int");
@@ -83,16 +101,19 @@ namespace Product.DAL.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UserId")
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SenderId");
-
-                    b.HasIndex("UserId")
+                    b.HasIndex("InvitedUserId")
                         .IsUnique()
-                        .HasFilter("[UserId] IS NOT NULL");
+                        .HasFilter("[InvitedUserId] IS NOT NULL");
+
+                    b.HasIndex("SenderId");
 
                     b.ToTable("Invites", (string)null);
                 });
@@ -110,6 +131,12 @@ namespace Product.DAL.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("Address");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
                     b.Property<double>("Latitude")
                         .HasPrecision(10, 8)
@@ -130,6 +157,12 @@ namespace Product.DAL.Migrations
                     b.Property<int>("OperatorId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OperatorId");
@@ -144,6 +177,15 @@ namespace Product.DAL.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -165,17 +207,27 @@ namespace Product.DAL.Migrations
                         .HasColumnType("varbinary(max)")
                         .HasColumnName("Password");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
                     b.Property<string>("UserName")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("Username");
 
-                    b.Property<int>("UserType")
-                        .HasColumnType("int");
+                    b.Property<string>("UserType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("User");
+                    b.HasIndex("BusinessId");
+
+                    b.ToTable("User", (string)null);
 
                     b.UseTptMappingStrategy();
                 });
@@ -187,6 +239,12 @@ namespace Product.DAL.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
                     b.Property<double>("Latitude")
                         .HasPrecision(10, 8)
@@ -209,6 +267,12 @@ namespace Product.DAL.Migrations
                     b.Property<double>("RadiusOfWork")
                         .HasColumnType("float");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
                     b.Property<int>("VendorId")
                         .HasColumnType("int");
 
@@ -227,10 +291,22 @@ namespace Product.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
 
                     b.Property<int>("VendorFacilityId")
                         .HasColumnType("int");
@@ -299,16 +375,16 @@ namespace Product.DAL.Migrations
 
             modelBuilder.Entity("Product.Domain.Entity.Invite", b =>
                 {
+                    b.HasOne("Product.Domain.Entity.User", "InvitedUser")
+                        .WithOne("ReceivedInvite")
+                        .HasForeignKey("Product.Domain.Entity.Invite", "InvitedUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Product.Domain.Entity.User", "Sender")
                         .WithMany("SentInvites")
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Product.Domain.Entity.User", "InvitedUser")
-                        .WithOne("ReceivedInvite")
-                        .HasForeignKey("Product.Domain.Entity.Invite", "UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("InvitedUser");
 
@@ -324,6 +400,13 @@ namespace Product.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("Operator");
+                });
+
+            modelBuilder.Entity("Product.Domain.Entity.User", b =>
+                {
+                    b.HasOne("Product.Domain.Entity.Business", null)
+                        .WithMany("Users")
+                        .HasForeignKey("BusinessId");
                 });
 
             modelBuilder.Entity("Product.Domain.Entity.VendorFacility", b =>
@@ -387,6 +470,11 @@ namespace Product.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Vendor");
+                });
+
+            modelBuilder.Entity("Product.Domain.Entity.Business", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Product.Domain.Entity.User", b =>

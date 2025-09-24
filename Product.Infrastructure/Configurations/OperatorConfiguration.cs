@@ -33,7 +33,7 @@ internal class OperatorConfiguration : IEntityTypeConfiguration<Operator>
 		builder.HasMany(op => op.Industries)
 			.WithOne(industry => industry.Operator)
 			.HasForeignKey(industry => industry.OperatorId);
-
+		
 		builder.HasMany(op => op.OperatorUsers)
 			.WithOne(ou => ou.Operator)
 			.HasForeignKey(ou => ou.OperatorId)

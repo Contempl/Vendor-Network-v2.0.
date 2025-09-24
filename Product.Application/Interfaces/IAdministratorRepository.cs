@@ -4,5 +4,6 @@ namespace Product.Application.Interfaces;
 
 public interface IAdministratorRepository : IRepository<Administrator>
 {
-    Task<Administrator> GetByIdAsync(int adminId);
+    Task<Administrator> GetByIdAsync(int adminId, CancellationToken cancellationToken);
+    Task<Administrator?> GetByEmailAsync (string email, CancellationToken cancellationToken);
 }

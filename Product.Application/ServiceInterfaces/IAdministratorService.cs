@@ -7,7 +7,10 @@ namespace Product.Application.ServiceInterfaces;
 
 public interface IAdministratorService
 {
-    Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData);
-    Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(int adminId, DataForInviteDto inviteData);
-    Task<Response<UserDtoToFrontEnd>> InviteBusiness(int adminId, BusinessInvitationData invitationData);
+    Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken);
+    Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData, CancellationToken cancellationToken);
+    Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(int adminId, DataForInviteDto inviteData, CancellationToken cancellationToken);
+    Task<Response<UserDtoToFrontEnd>> InviteBusiness(int adminId, BusinessInvitationData invitationData, CancellationToken cancellationToken);
+    Task<Response<int>> RemoveOperatorAsync(int operatorId, CancellationToken cancellationToken);
+    Task<Response<int>> RemoveVendorAsync(int vendorId, CancellationToken cancellationToken);
 }

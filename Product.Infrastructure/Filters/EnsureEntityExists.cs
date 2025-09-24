@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Product.Application.Interfaces;
+using Product.Domain.Common;
 using Product.Domain.Entity;
 using Product.Infrastructure.Exceptions;
 
@@ -8,7 +9,7 @@ namespace Product.Infrastructure.Filters;
 
 public class EnsureEntityExists<T, TRepository> : ActionFilterAttribute 
 	where TRepository : IRepository<T> 
-	where T : IEntity
+	where T : IEntityId<int>
 {
 	public virtual string ExpectedParameterId => throw new NotImplementedException();
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)

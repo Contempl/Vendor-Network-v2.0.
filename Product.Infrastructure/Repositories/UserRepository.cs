@@ -19,19 +19,19 @@ public class UserRepository : IUserRepository
 		_users = _context.Set<User>();
 	}
 
-	public async Task CreateAsync(User entity)
+	public async Task CreateAsync(User entity, CancellationToken cancellationToken)
 	{
-		await _users.AddAsync(entity);
-		await SaveAsync();
+		await _users.AddAsync(entity, cancellationToken);
+		await SaveAsync(cancellationToken);
 		
 		await _redisCacheService.SetAsync(CachePrefix + entity.Id, entity);
 	}
-	public async Task DeleteAsync(User user)
+	public Task DeleteAsync(User user, CancellationToken cancellationToken)
 	{
 		try
 		{
 			_users.Remove(user);
-			await SaveAsync();
+			return SaveAsync(cancellationToken);
 		}
 		catch (Exception ex)
 		{
@@ -39,53 +39,54 @@ public class UserRepository : IUserRepository
 		}
 	}
 	public IQueryable<User> GetAll() => _users;
-	public async Task<User?> GetByIdOrDefaultAsync(int id) => await _users.SingleOrDefaultAsync(u => u.Id == id);
+	public Task<User?> GetByIdOrDefaultAsync(int id) => _users.SingleOrDefaultAsync(u => u.Id == id);
 
-	public async Task<User> GetByIdAsync(int userId)
+	public Task<User> GetByIdAsync(int userId, CancellationToken cancellationToken)
 	{
 		var cacheKey = $"{CachePrefix}{userId}";
-		
-		var cached = await _redisCacheService.GetAsync<User>(cacheKey);
+		var cached =  _redisCacheService.GetAsync<User>(cacheKey).Result;
 		if (cached != null)
 		{
-			return cached;
+			return Task.FromResult(cached);
 		}
 		
-		var user = await _users.FindAsync(userId);
+		var user = _users.FindAsync(userId, cancellationToken).Result;
 		if (user == null)
 			throw new KeyNotFoundException($"User with id: {userId} could not be found.");
 		
-		await _redisCacheService.SetAsync(cacheKey, user);
-		return user;
+		_redisCacheService.SetAsync(cacheKey, user);
+		return Task.FromResult(user);
 	}
 
-	public async Task UpdateAsync(User entity)
+	public Task UpdateAsync(User entity, CancellationToken cancellationToken)
 	{
 		var cacheKey = $"{CachePrefix}{entity.Id}";
-		await _redisCacheService.RemoveAsync(cacheKey);
+		_redisCacheService.RemoveAsync(cacheKey);
 		
 		_users.Update(entity);
-		await SaveAsync();
 		
-		await _redisCacheService.SetAsync(cacheKey, entity.MapToFrontEndDto());
+		_redisCacheService.SetAsync(cacheKey, entity.MapToFrontEndDto());
+		
+		return SaveAsync(cancellationToken);
 	}
 
-	private async Task SaveAsync() => await _context.SaveChangesAsync();
-	public async Task<User?> GetByEmailAsync(string email)
+	private Task SaveAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
+	public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
 	{
-		var user = await _users.Where(u => u.Email.Trim() == email.Trim())
-			.SingleOrDefaultAsync();
+		var user = _users.Where(u => u.Email.Trim() == email.Trim())
+			.SingleOrDefaultAsync(cancellationToken).Result;
+		
 		if (user == null)
 			return null;
 		
 		var cacheKey = $"{CachePrefix}{user.Id}";
-		await _redisCacheService.SetAsync(cacheKey, user);
+		_redisCacheService.SetAsync(cacheKey, user);
 		
-		return user; 
+		return Task.FromResult(user)!; 
 	}
 			
-	public async Task<User> GetByIdWithInvitesAsync(int userId)
+	public Task<User> GetByIdWithInvitesAsync(int userId, CancellationToken cancellationToken)
 	{
-		return await _users.Include(u => u.SentInvites).FirstAsync(u => u.Id == userId);
+		return _users.Include(u => u.SentInvites).FirstAsync(u => u.Id == userId, cancellationToken: cancellationToken);
 	}
 }

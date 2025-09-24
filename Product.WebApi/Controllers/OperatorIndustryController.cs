@@ -4,6 +4,7 @@ using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Enum;
 using Product.Domain.Result;
 using Product.Infrastructure.Filters;
 
@@ -11,6 +12,7 @@ namespace Product.WebApi.Controllers;
 
 [Route("operator")]
 [ApiController]
+[EnsureBusinessAccess(UserType.OperatorUser)]
 public class OperatorIndustryController : ControllerBase
 {
 	private readonly IOperatorIndustryService _operatorIndustryService;
@@ -23,11 +25,10 @@ public class OperatorIndustryController : ControllerBase
 
 	[HttpGet("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> GetOperatorIndustry(int industryId)
+	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> GetOperatorIndustry(int industryId, CancellationToken cancellationToken)
 	{
-		var response = await _operatorIndustryService.GetOpIndustryByIdAsync(industryId);
+		var response = await _operatorIndustryService.GetOpIndustryByIdAsync(industryId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -36,11 +37,10 @@ public class OperatorIndustryController : ControllerBase
 	}
 
 	[HttpGet("industries")]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<List<OperatorIndustry>>>> GetOperatorIndustries()
+	public async Task<ActionResult<Response<List<OperatorIndustry>>>> GetOperatorIndustries(CancellationToken cancellationToken)
 	{
-		var response = await _operatorIndustryService.GetOperatorsIndustriesAsync();
+		var response = await _operatorIndustryService.GetOperatorsIndustriesAsync(cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -48,13 +48,13 @@ public class OperatorIndustryController : ControllerBase
 		return BadRequest(response);
 	}
 
-	[HttpPost("industry")]
-	[EnsureOperatorExists]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
+	[HttpPost("{operatorId}/industry")]
+
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> AddOperatorIndustry([FromBody] OperatorIndustryCreationDto industryData)
+	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> AddOperatorIndustry([FromBody] OperatorIndustryCreationDto industryData,
+		CancellationToken cancellationToken)
 	{
-		var response = await _operatorIndustryService.CreateOperatorIndustryAsync(industryData);
+		var response = await _operatorIndustryService.CreateOperatorIndustryAsync(industryData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -64,12 +64,11 @@ public class OperatorIndustryController : ControllerBase
 
 	[HttpPut("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> UpdateOperatorIndustry(int industryId,
-		UpdateOperatorIndustryDto industryData)
+		UpdateOperatorIndustryDto industryData, CancellationToken cancellationToken)
 	{
-		var response = await _operatorIndustryService.UpdateOperatorIndustryAsync(industryId, industryData);
+		var response = await _operatorIndustryService.UpdateOperatorIndustryAsync(industryId, industryData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -77,13 +76,12 @@ public class OperatorIndustryController : ControllerBase
 		return BadRequest(response);
 	}
 
-	[HttpDelete("{operatorId}/industry/{industryId}")]
+	[HttpDelete("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
-	[EnsureBusinessAccess(nameof(OperatorUser))]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<int>>> RemoveOperatorIndustry(int industryId)
+	public async Task<ActionResult<Response<int>>> RemoveOperatorIndustry(int industryId, CancellationToken cancellationToken)
 	{
-		var response = await _operatorIndustryService.RemoveOperatorIndustryAsync(industryId);
+		var response = await _operatorIndustryService.RemoveOperatorIndustryAsync(industryId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);

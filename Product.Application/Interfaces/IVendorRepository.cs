@@ -6,8 +6,8 @@ namespace Product.Application.Interfaces;
 
 public interface IVendorRepository : IRepository<Vendor>
 {
-	Task<Vendor> GetByIdAsync(int id);
-	Task<List<Vendor>> GetVendorsWithService(string serviceType);
+	Task<Vendor> GetByIdAsync(int id, CancellationToken cancellationToken);
+	Task<List<Vendor>> GetVendorsWithService(string serviceType, CancellationToken cancellationToken);
 	Task<PagedResult<Vendor>> GetVendorsQuery(string searchName, SortOrder sortOrder,
-	int pageSize, int pageNumber);
+	int pageSize, int pageNumber, CancellationToken cancellationToken);
 }

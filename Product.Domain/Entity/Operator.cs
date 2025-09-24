@@ -1,6 +1,6 @@
 ﻿namespace Product.Domain.Entity;
 
-public class Operator : Business, IEntity
+public class Operator : Business
 {
 	public string? LogoUrl { get; set; }
 	public string Occupation { get; set; }

@@ -15,27 +15,28 @@ public class OperatorIndustryRepository : IOperatorIndustryRepository
 		_operatorIndustries = _context.OperatorIndustries;
 	}
 
-	public async Task CreateAsync(OperatorIndustry entity)
+	public async Task CreateAsync(OperatorIndustry entity, CancellationToken cancellationToken)
 	{
-		await _operatorIndustries.AddAsync(entity);
-		await SaveAsync();
+		await _operatorIndustries.AddAsync(entity, cancellationToken);
+		await SaveAsync(cancellationToken);
 	}
-	public async Task DeleteAsync(OperatorIndustry industry)
+	public Task DeleteAsync(OperatorIndustry industry, CancellationToken cancellationToken)
 	{
 		_operatorIndustries.Remove(industry);
-		await SaveAsync();
+		return SaveAsync(cancellationToken);
 	}
 	public IQueryable<OperatorIndustry> GetAll() => _operatorIndustries;
-	public async Task<OperatorIndustry?> GetByIdOrDefaultAsync(int industryId) => await _operatorIndustries.SingleOrDefaultAsync(oper => oper.Id == industryId);
-	public async Task<OperatorIndustry> GetByIdAsync(int operatorId, int industryId) => await _operatorIndustries.SingleAsync(oper => oper.Id == industryId && oper.OperatorId == operatorId);
+	public Task<OperatorIndustry?> GetByIdOrDefaultAsync(int industryId) => _operatorIndustries.SingleOrDefaultAsync(oper => oper.Id == industryId);
+	public Task<OperatorIndustry> GetByIdAsync(int operatorId, int industryId, CancellationToken cancellationToken) => _operatorIndustries.SingleAsync(oper => 
+		oper.Id == industryId && oper.OperatorId == operatorId, cancellationToken: cancellationToken);
 
-	public async Task<List<OperatorIndustry>> GetOperatorsIndustriesAsync(int operatorId) => await GetAll()
-		.Where(i => i.OperatorId == operatorId).ToListAsync();
+	public Task<List<OperatorIndustry>> GetOperatorsIndustriesAsync(int operatorId, CancellationToken cancellationToken) => GetAll()
+		.Where(i => i.OperatorId == operatorId).ToListAsync(cancellationToken: cancellationToken);
 
-	private async Task SaveAsync() => await _context.SaveChangesAsync();
-	public async Task UpdateAsync(OperatorIndustry entity)
+	private Task SaveAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
+	public Task UpdateAsync(OperatorIndustry entity, CancellationToken cancellationToken)
 	{
 		_operatorIndustries.Update(entity);
-		await SaveAsync();
+		return SaveAsync(cancellationToken);
 	}
 }

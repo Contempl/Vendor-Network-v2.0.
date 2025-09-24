@@ -1,6 +1,8 @@
-﻿namespace Product.Domain.Entity;
+﻿using Product.Domain.Common;
 
-public class VendorFacility : IEntity
+namespace Product.Domain.Entity;
+
+public class VendorFacility : IEntityId<int>, IAuditable
 {
     public int Id { get; set; }
     public string? Name { get; set; }
@@ -11,4 +13,12 @@ public class VendorFacility : IEntity
     public Vendor Vendor { get; set; }
     public double RadiusOfWork { get; set; }
     public List<VendorFacilityService> Services { get; set; }
+    
+    public DateTime CreatedAt { get; set; }
+    
+    public int CreatedBy { get; set; }
+    
+    public DateTime? UpdatedAt { get; set; }
+    
+    public int? UpdatedBy { get; set; }
 }

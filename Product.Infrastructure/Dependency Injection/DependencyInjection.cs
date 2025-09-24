@@ -10,6 +10,7 @@ using Product.Application.ServiceInterfaces;
 using Product.Domain.Settings;
 using Product.Infrastructure.Implementations;
 using Product.Infrastructure.Implementations.Account;
+using Product.Infrastructure.Interceptors;
 using Product.Infrastructure.Repositories;
 
 namespace Product.Infrastructure.Dependency_Injection;
@@ -17,11 +18,12 @@ namespace Product.Infrastructure.Dependency_Injection;
 public static class DependencyInjection
 {
     public static void AddDataAccessLayer(this IServiceCollection services, IConfiguration configuration)
-    {
+    { 
         var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        services.AddSingleton<DateInterceptor>();
         
-        
-       services.AddDbContext<AppDbContext>(options =>
+        services.AddDbContext<AppDbContext>(options =>
         {
             options.UseSqlServer(connectionString);
         });
@@ -44,6 +46,7 @@ public static class DependencyInjection
     
     private static void InitRepoistories(this IServiceCollection services)
     {
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IAdministratorRepository, AdministratorRepository>();
         services.AddScoped<IUserRepository, UserRepository>();

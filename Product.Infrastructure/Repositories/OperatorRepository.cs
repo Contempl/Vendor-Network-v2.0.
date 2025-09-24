@@ -15,32 +15,33 @@ public class OperatorRepository : IOperatorRepository
 		_operators = _context.Operators;
 	}
 	public IQueryable<Operator> GetAll() => _operators;
-	public async Task CreateAsync(Operator @operator)
+	public async Task CreateAsync(Operator @operator, CancellationToken cancellationToken)
 	{
-		await _operators.AddAsync(@operator);
-		await SaveAsync();
+		await _operators.AddAsync(@operator, cancellationToken);
+		await SaveAsync(cancellationToken);
 	}
-	public async Task DeleteAsync(Operator @operator)
+	public Task DeleteAsync(Operator @operator, CancellationToken cancellationToken)
 	{
 		_operators.Remove(@operator);
-		await SaveAsync();
+		return SaveAsync(cancellationToken);
 	}
-	public async Task<Operator?> GetByIdOrDefaultAsync(int operatorId) => await _operators.SingleOrDefaultAsync(oper => oper.Id == operatorId);
-	public async Task<Operator> GetByIdAsync(int operatorId) => await _operators.SingleAsync(oper => oper.Id == operatorId);
-	public async Task UpdateAsync(Operator @operator)
+
+	public Task<Operator?> GetByIdOrDefaultAsync(int operatorId) => _operators.SingleOrDefaultAsync(oper => oper.Id == operatorId);
+	public Task<Operator> GetByIdAsync(int operatorId, CancellationToken cancellationToken) => _operators.SingleAsync(oper => oper.Id == operatorId, cancellationToken: cancellationToken);
+	public Task UpdateAsync(Operator @operator, CancellationToken cancellationToken)
 	{
 		_operators.Update(@operator);
-		await SaveAsync();
+		return SaveAsync(cancellationToken);
 	}
-	public async Task<List<Operator>> GetOperatorsByNameAsync(string operatorName)
+	public Task<List<Operator>> GetOperatorsByNameAsync(string operatorName, CancellationToken cancellationToken)
 	{
-		var operators = await _operators
+		var operators = _operators
 			.Where(op => op.BusinessName.Contains(operatorName))
 			.Include(op => op.Industries)
-			.ToListAsync();
+			.ToListAsync(cancellationToken);
 
 		return operators;
 	}
 
-	private async Task SaveAsync() => await _context.SaveChangesAsync();
+	private Task SaveAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
 }

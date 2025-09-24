@@ -4,6 +4,7 @@ using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Enum;
 using Product.Domain.Result;
 using Product.Infrastructure.Filters;
 
@@ -20,24 +21,12 @@ namespace Product.WebApi.Controllers
 			_vendorService = vendorService;
 		}
 
-		[HttpPost("register/{vendorUserId}")] //Remove
-		[EnsureVendorUserExists]
+		[HttpPost("Search/Operators/")]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Response<BusinessFrontEndDto>>> RegisterVendor(int vendorUserId, [FromBody] VendorRegistrationDto registrationData)
+		public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> GetOperators([FromBody]OperatorSearchDto operatorData,
+			CancellationToken cancellationToken)
 		{
-			var response = await _vendorService.RegisterVendorAsync(vendorUserId, registrationData);
-			if (response.IsSuccess)
-			{
-				return Ok(response);
-			}
-			return BadRequest(response);
-		}
-
-		[HttpGet("Search/Operators/{operatorName}")]
-		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> GetOperators([FromBody]OperatorSearchDto operatorData)
-		{
-			var response = await _vendorService.SearchOperatorsAsync(operatorData);
+			var response = await _vendorService.SearchOperatorsAsync(operatorData, cancellationToken);
 			if (response.IsSuccess)
 			{
 				return Ok(response);
@@ -46,11 +35,11 @@ namespace Product.WebApi.Controllers
 		}
 
 		[HttpGet("{vendorId}")]
-		[EnsureBusinessAccess(nameof(VendorUser))]
+		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Vendor>> GetVendor(int vendorId)
+		public async Task<ActionResult<Vendor>> GetVendor(int vendorId, CancellationToken cancellationToken)
 		{
-			var response = await _vendorService.GetVendorByIdAsync(vendorId);
+			var response = await _vendorService.GetVendorByIdAsync(vendorId, cancellationToken);
 			if (response.IsSuccess)
 			{
 				return Ok(response);
@@ -59,24 +48,12 @@ namespace Product.WebApi.Controllers
 		}
 
 		[HttpPut]
-		[EnsureBusinessAccess(nameof(VendorUser))]
+		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateVendor([FromBody] UpdateVendorDto vendorData)
+		public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateVendor([FromBody] UpdateVendorDto vendorData,
+			CancellationToken cancellationToken)
 		{
-			var response = await _vendorService.UpdateVendorAsync(vendorData);
-			if (response.IsSuccess)
-			{
-				return Ok(response);
-			}
-			return BadRequest(response);
-		}
-
-		[HttpDelete("{vendorId}")]
-		[EnsureVendorExists]
-		[Authorize(policy: "AdminOnly")]
-		public async Task<ActionResult<Response<int>>> DeleteVendor(int vendorId)
-		{
-			var response = await _vendorService.RemoveVendorAsync(vendorId);
+			var response = await _vendorService.UpdateVendorAsync(vendorData, cancellationToken);
 			if (response.IsSuccess)
 			{
 				return Ok(response);
@@ -85,11 +62,12 @@ namespace Product.WebApi.Controllers
 		}
 		
 		[HttpPost("invite")]
-		[EnsureBusinessAccess(nameof(VendorUser))]
+		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteVendorUser([FromBody] EmailForInviteDto email)
+		public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteVendorUser([FromBody] EmailForInviteDto email,
+			CancellationToken cancellationToken)
 		{
-			var response = await _vendorService.InviteVendorUserAsync(email);
+			var response = await _vendorService.InviteVendorUserAsync(email, cancellationToken);
 			if (response.IsSuccess)
 			{
 				return Ok(response);

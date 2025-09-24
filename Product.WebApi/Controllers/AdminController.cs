@@ -10,7 +10,7 @@ namespace Product.WebApi.Controllers;
 
 [Route("[controller]")]
 [ApiController]
-[Authorize(policy: "AdminOnly")]
+[Authorize(policy: "Admin")]
 public class AdminController : ControllerBase
 {
 	private readonly IAdministratorService _adminService;
@@ -21,13 +21,26 @@ public class AdminController : ControllerBase
 		_adminService = adminService;
 		_userPrincipalService = userPrincipalService;
 	}
+	
+	[AllowAnonymous]
+	[HttpPost("Login")]
+	public async Task<ActionResult<Response<TokenDto>>> Login (UserLoginDto userData, CancellationToken cancellationToken)
+	{
+		var response = await _adminService.Login(userData, cancellationToken);
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
+	}
 
 	[HttpPost("inviteBusiness")]
 	[EnsureAdministratorExists]
-	public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteBusiness([FromBody] BusinessInvitationData invitationData)
+	public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteBusiness([FromBody] BusinessInvitationData invitationData,
+		CancellationToken cancellationToken)
 	{
 		var adminId = _userPrincipalService.UserId!.Value;
-		var response = await _adminService.InviteBusiness(adminId, invitationData);
+		var response = await _adminService.InviteBusiness(adminId, invitationData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -37,10 +50,11 @@ public class AdminController : ControllerBase
 
 	[HttpPost("/inviteVendorUser")]
 	[EnsureAdministratorExists]
-	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> InviteVendorUser([FromBody] DataForInviteDto inviteData)
+	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> InviteVendorUser([FromBody] DataForInviteDto inviteData,
+		CancellationToken cancellationToken)
 	{
 		var adminId = _userPrincipalService.UserId!.Value;
-		var response = await _adminService.InviteVendorUser(adminId, inviteData);
+		var response = await _adminService.InviteVendorUser(adminId, inviteData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -48,12 +62,39 @@ public class AdminController : ControllerBase
 		return BadRequest(response);
 	}
 
-	[HttpPost("{adminId}/inviteOperatorUser")]
+	[HttpPost("/inviteOperatorUser")]
 	[EnsureAdministratorExists]
-	public async Task<IActionResult> InviteOperatorUser([FromBody] DataForInviteDto inviteData)
+	public async Task<IActionResult> InviteOperatorUser([FromBody] DataForInviteDto inviteData, CancellationToken cancellationToken)
 	{
 		var adminId = _userPrincipalService.UserId!.Value;
-		var response = await _adminService.InviteOperatorUser(adminId, inviteData);
+		var response = await _adminService.InviteOperatorUser(adminId, inviteData, cancellationToken);
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
+	}
+	
+	
+	[HttpDelete("Vendor/{vendorId}")]
+	[EnsureVendorExists]
+	[Authorize(policy: "Admin")]
+	public async Task<ActionResult<Response<int>>> RemoveVendor(int vendorId, CancellationToken cancellationToken)
+	{
+		var response = await _adminService.RemoveVendorAsync(vendorId, cancellationToken);
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
+	} 
+	
+	[HttpDelete("Operator/{operatorId}")]
+	[EnsureOperatorExists]
+	[Authorize(policy: "Admin")]
+	public async Task<ActionResult<Response<int>>> RemoveOperator(int operatorId, CancellationToken cancellationToken)
+	{
+		var response = await _adminService.RemoveOperatorAsync(operatorId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
