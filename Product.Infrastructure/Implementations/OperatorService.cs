@@ -173,16 +173,17 @@ public class OperatorService : IOperatorService
         };
     }
 
-    public async Task<Response<MailMsg>> InviteOperatorUserAsync(int operatorUserId, EmailForInviteDto dto, 
+    public async Task<Response<MailMsg>> InviteOperatorUserAsync(EmailForInviteDto dto, 
         CancellationToken cancellationToken = default)
     {
         await using var transaction = await _unitOfWork.BeginTransactionAsync();
-
         try
         {
+            var operatorUserId = _userPrincipalService.UserId!.Value;
+            var operatorId = _userPrincipalService.BusinessId;
+            
             var operatorUser = await _userRepository.GetByIdAsync(operatorUserId, cancellationToken);
 
-            var operatorId = _userPrincipalService.BusinessId;
             var newOperatorUser = new OperatorUser
                 { Email = dto.Email, OperatorId = operatorId, UserType = UserType.OperatorUser };
 
@@ -215,8 +216,9 @@ public class OperatorService : IOperatorService
             };
         }
     }
-    public Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(int operatorId, UpdateOperatorDto operatorUpdateData, CancellationToken cancellationToken = default)
+    public Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(UpdateOperatorDto operatorUpdateData, CancellationToken cancellationToken = default)
     {
+        var operatorId = _userPrincipalService.BusinessId!.Value;
         var @operator = _operatorRepository.GetByIdAsync(operatorId, cancellationToken).Result;
         MapOperatorFromDtoToUpdate(@operator, operatorUpdateData);
 

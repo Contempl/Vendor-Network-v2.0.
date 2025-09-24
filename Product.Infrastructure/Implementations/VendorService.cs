@@ -108,7 +108,7 @@ public class VendorService : IVendorService
     public async Task<Response<MailMsg>> InviteVendorUserAsync(EmailForInviteDto emailDto, 
         CancellationToken cancellationToken = default)
     {
-        var transaction = await _unitOfWork.BeginTransactionAsync();
+        await using var transaction = await _unitOfWork.BeginTransactionAsync();
         try
         {
             var vendorUserId = _userPrincipalService.UserId!.Value;
