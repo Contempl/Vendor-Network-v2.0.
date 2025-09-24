@@ -25,10 +25,6 @@ public class UnitOfWork : IUnitOfWork
         return await _context.Database.BeginTransactionAsync();
     }
 
-    public async Task<int> SaveChangesAsync()
-    {
-        return await _context.SaveChangesAsync();
-    }
     public IRepository<OperatorUser> OperatorUsers { get; set; }
     
     public IRepository<VendorUser> VendorUsers { get; set; }
@@ -38,9 +34,9 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Vendor> Vendors { get; set; }
     
     public IRepository<Operator> Operators { get; set; }
-    
+
     public void Dispose()
     {
-        GC.SuppressFinalize(this);
+        _context.Dispose();
     }
 }
