@@ -69,8 +69,7 @@ public class OperatorController : Controller
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateOperator([FromBody] UpdateOperatorDto operatorData, CancellationToken cancellationToken)
 	{
-		var operatorId = _userPrincipalService.BusinessId!.Value;
-		var response = await _operatorService.UpdateOperatorAsync(operatorId, operatorData, cancellationToken);
+		var response = await _operatorService.UpdateOperatorAsync(operatorData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -83,8 +82,7 @@ public class OperatorController : Controller
 	[Authorize(policy: "OperatorUser")]
 	public async Task<ActionResult<Response<MailMsg>>> InviteOperatorUser([FromBody] EmailForInviteDto dto, CancellationToken cancellationToken)
 	{
-		var operatorUserId = _userPrincipalService.UserId!.Value;
-		var response = await _operatorService.InviteOperatorUserAsync(operatorUserId, dto, cancellationToken);
+		var response = await _operatorService.InviteOperatorUserAsync(dto, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
