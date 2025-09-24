@@ -85,15 +85,6 @@ public class OperatorIndustryService : IOperatorIndustryService
 	    var operatorId = _userPrincipalService.BusinessId!.Value;
 	    var existingOperator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
 
-	    if (existingOperator == null)
-	    {
-		    return new Response<OpIndustryFrontEndDto>
-		    {
-			    ErrorMessage = "Operator User Not Found",
-			    ErrorCode = (int)ErrorCodes.UserNotFound,
-		    };
-	    }
-
 	    var newIndustry = MapIndustryToCreateOperator(existingOperator, industryCreationData);
 
 	    await _operatorIndustryRepository.CreateAsync(newIndustry, cancellationToken);
