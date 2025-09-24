@@ -22,31 +22,31 @@ public class AdministratorRepository : IAdministratorRepository
 		await _administrators.AddAsync(admin, cancellationToken);
 		await SaveAsync(cancellationToken);
 	}
-	public async Task DeleteAsync(Administrator admin, CancellationToken cancellationToken = default)
+	public Task DeleteAsync(Administrator admin, CancellationToken cancellationToken = default)
 	{
 		_administrators.Remove(admin);
-		await SaveAsync(cancellationToken);
+		return SaveAsync(cancellationToken);
 	}
 	public IQueryable<Administrator> GetAll() => _administrators;
 	public async Task<Administrator?> GetByIdOrDefaultAsync(int adminId) => await _administrators.SingleOrDefaultAsync(admin => admin.Id == adminId);
-	public async Task<Administrator> GetByIdAsync(int adminId, CancellationToken cancellationToken = default) => await _administrators.SingleAsync(admin => admin.Id == adminId, cancellationToken);
-	public async Task<Administrator?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+	public Task<Administrator> GetByIdAsync(int adminId, CancellationToken cancellationToken = default) =>  _administrators.SingleAsync(admin => admin.Id == adminId, cancellationToken);
+	public Task<Administrator?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
 	{
-		var admin = await _administrators.Where(u => u.Email.Trim() == email.Trim())
+		var admin =  _administrators.Where(u => u.Email.Trim() == email.Trim())
 			.SingleOrDefaultAsync(cancellationToken);
 		if (admin == null)
 			return null;
 		
 		var cacheKey = $"{CachePrefix}{admin.Id}";
-		await _redisCacheService.SetAsync(cacheKey, admin);
+		_redisCacheService.SetAsync(cacheKey, admin);
 		
 		return admin; 
 	}
 
 	private Task SaveAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
-	public async Task UpdateAsync(Administrator admin, CancellationToken cancellationToken = default)
+	public Task UpdateAsync(Administrator admin, CancellationToken cancellationToken = default)
 	{
 		_administrators.Update(admin);
-		await SaveAsync(cancellationToken);
+		return SaveAsync(cancellationToken);
 	}
 }

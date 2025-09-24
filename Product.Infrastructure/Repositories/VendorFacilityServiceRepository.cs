@@ -21,31 +21,31 @@ public class VendorFacilityServiceRepository : IVendorFacilityServiceRepository
 		await _facilityServices.AddAsync(facilityService, cancellationToken);
 		await SaveAsync(cancellationToken);
 	}
-	public async Task DeleteAsync(VendorFacilityService facilityService, CancellationToken cancellationToken = default)
+	public Task DeleteAsync(VendorFacilityService facilityService, CancellationToken cancellationToken = default)
 	{
 		_facilityServices.Remove(facilityService);
-		await SaveAsync(cancellationToken);
+		return SaveAsync(cancellationToken);
 	}
 	public IQueryable<VendorFacilityService> GetAll() => _facilityServices;
-	public async Task<List<VendorFacilityService>> GetServicesByFacilityIdAsync(int vendorId, int facilityId, 
-		CancellationToken cancellationToken = default)
+	public Task<List<VendorFacilityService>> GetServicesByFacilityIdAsync(int vendorId, int facilityId, CancellationToken cancellationToken = default)
 	{
-		var facilityServices = await _facilityServices
+		var facilityServices =  _facilityServices
 			.Where(f => f.VendorFacilityId == facilityId && f.VendorFacility.VendorId == vendorId)
 			.ToListAsync(cancellationToken: cancellationToken);
 		return facilityServices;
 	}
-	public async Task<VendorFacilityService?> GetByIdOrDefaultAsync(int facilityServiceId) => await _facilityServices
+	public Task<VendorFacilityService?> GetByIdOrDefaultAsync(int facilityServiceId) => _facilityServices
 		.SingleOrDefaultAsync(facilityService => facilityService.Id == facilityServiceId);
-	public async Task<VendorFacilityService> GetByIdAsync(int vendorId, int facilityId, int vendorFacilityServiceId, 
-		CancellationToken cancellationToken = default) => await _facilityServices.SingleAsync(vfs => vfs.Id == vendorFacilityServiceId
-		&& vfs.VendorFacilityId == facilityId && vfs.VendorFacility.VendorId == vendorId, cancellationToken);
+	public Task<VendorFacilityService> GetByIdAsync(int vendorId, int facilityId, int vendorFacilityServiceId,
+		CancellationToken cancellationToken = default) 
+		=> _facilityServices.SingleAsync(vfs => vfs.Id == vendorFacilityServiceId
+		                                        && vfs.VendorFacilityId == facilityId 
+		                                        && vfs.VendorFacility.VendorId == vendorId, cancellationToken);
 
-	private async Task SaveAsync(CancellationToken cancellationToken = default) => 
-		await _context.SaveChangesAsync(cancellationToken);
-	public async Task UpdateAsync(VendorFacilityService facilityService, CancellationToken cancellationToken = default)
+	private Task SaveAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
+	public Task UpdateAsync(VendorFacilityService facilityService, CancellationToken cancellationToken = default)
 	{
 		_facilityServices.Update(facilityService);
-		await SaveAsync(cancellationToken);
+		return SaveAsync(cancellationToken);
 	}
 }

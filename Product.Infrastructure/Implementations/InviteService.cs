@@ -103,7 +103,7 @@ public class InviteService : IInviteService
 	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite, int inviteId, 
 		CancellationToken cancellationToken = default)
 	{
-		var inviteUserId = invite.InvitedUserId.Value;
+		var inviteUserId = invite.InvitedUserId!.Value;
 		var user = await _userRepository.GetByIdAsync(inviteUserId, cancellationToken);
 
 		_userService.MapUserToUpdateByInvite(dto, user);
@@ -120,8 +120,9 @@ public class InviteService : IInviteService
 		{
 			throw new InvalidOperationException("Unknown user type");
 		}
+		
 		invite.Id = inviteId;
 		invite.Status = InvitationStatus.Accepted;
-		 await _inviteRepository.UpdateAsync(invite, cancellationToken);
+		await _inviteRepository.UpdateAsync(invite, cancellationToken);
 	}
 }

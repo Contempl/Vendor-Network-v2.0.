@@ -20,19 +20,17 @@ public class VendorFacilityRepository : IVendorFacilityRepository
 		await _vendorFacilities.AddAsync(entity, cancellationToken);
 		await SaveAsync(cancellationToken);
 	}
-	public async Task DeleteAsync(VendorFacility vendorFacility, CancellationToken cancellationToken = default)
+	public Task DeleteAsync(VendorFacility vendorFacility, CancellationToken cancellationToken = default)
 	{
 		_vendorFacilities.Remove(vendorFacility);
-		await SaveAsync(cancellationToken);
+		return SaveAsync(cancellationToken);
 	}
 	public IQueryable<VendorFacility> GetAll() => _vendorFacilities;
-	public async Task<VendorFacility?> GetByIdOrDefaultAsync(int facilityId) => await _vendorFacilities.SingleOrDefaultAsync(vf => vf.Id == facilityId);
-	public async Task<VendorFacility> GetByIdAsync(int vendorId, int facilityId, CancellationToken cancellationToken = default) => 
-		await _vendorFacilities.SingleAsync(vf => vf.Id == facilityId && vf.VendorId == vendorId, cancellationToken: cancellationToken);
-	public async Task<VendorFacility> GetFacilityWithServicesByIdAsync(int facilityId, int vendorId, 
-		CancellationToken cancellationToken = default)
+	public Task<VendorFacility?> GetByIdOrDefaultAsync(int facilityId) => _vendorFacilities.SingleOrDefaultAsync(vf => vf.Id == facilityId);
+	public Task<VendorFacility> GetByIdAsync(int vendorId, int facilityId, CancellationToken cancellationToken = default) => _vendorFacilities.SingleAsync(vf => vf.Id == facilityId && vf.VendorId == vendorId, cancellationToken: cancellationToken);
+	public Task<VendorFacility> GetFacilityWithServicesByIdAsync(int facilityId, int vendorId, CancellationToken cancellationToken = default)
 	{
-		var vendorFacility = await _vendorFacilities
+		var vendorFacility = _vendorFacilities
 			.Where(vf => vf.Id == facilityId)
 			.Include(vf => vf.Services)
 			.FirstAsync(cancellationToken: cancellationToken);
@@ -40,12 +38,11 @@ public class VendorFacilityRepository : IVendorFacilityRepository
 		return vendorFacility;
 	}
 
-	private async Task SaveAsync(CancellationToken cancellationToken = default) => 
-		await _context.SaveChangesAsync(cancellationToken);
+	private Task SaveAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
 	
-	public async Task UpdateAsync(VendorFacility vendorFacility, CancellationToken cancellationToken = default)
+	public Task UpdateAsync(VendorFacility vendorFacility, CancellationToken cancellationToken = default)
 	{
 		_vendorFacilities.Update(vendorFacility);
-		await SaveAsync(cancellationToken);
+		return SaveAsync(cancellationToken);
 	}
 }

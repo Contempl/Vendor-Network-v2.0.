@@ -67,8 +67,7 @@ public class OperatorService : IOperatorService
 		@operator.Occupation = operatorData.Occupation ?? @operator.Occupation;
 	}
 
-    private async Task<List<Vendor>> SearchVendorsAsync(string serviceType, List<OperatorIndustry> operatorFacilities, 
-        CancellationToken cancellationToken = default)
+    private async Task<List<Vendor>> SearchVendorsAsync(string serviceType, List<OperatorIndustry> operatorFacilities, CancellationToken cancellationToken)
     {
         if (operatorFacilities == null || !operatorFacilities.Any())
         {
@@ -100,7 +99,7 @@ public class OperatorService : IOperatorService
 
         var operatorFacilities = GetAllOperatorIndustries(industriesData.IndustriesLocationIds);
 
-        var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities, cancellationToken: cancellationToken);
+        var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities, cancellationToken);
         
         var vendorDtos = vendors.Select(v => v.ToFrontEndDto()).ToList();
 
@@ -216,16 +215,15 @@ public class OperatorService : IOperatorService
             };
         }
     }
-    public async Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(int operatorId, 
-        UpdateOperatorDto operatorUpdateData, CancellationToken cancellationToken = default)
+    public Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(int operatorId, UpdateOperatorDto operatorUpdateData, CancellationToken cancellationToken = default)
     {
-        var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
+        var @operator = _operatorRepository.GetByIdAsync(operatorId, cancellationToken).Result;
         MapOperatorFromDtoToUpdate(@operator, operatorUpdateData);
 
-        await _operatorRepository.UpdateAsync(@operator, cancellationToken);
-        return new Response<BusinessFrontEndDto>
+        _operatorRepository.UpdateAsync(@operator, cancellationToken);
+        return Task.FromResult(new Response<BusinessFrontEndDto>
         {
             Data = @operator.ToFrontEndDto()
-        };
+        });
     }
 }   

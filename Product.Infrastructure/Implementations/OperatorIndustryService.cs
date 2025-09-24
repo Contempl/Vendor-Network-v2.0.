@@ -36,7 +36,7 @@ public class OperatorIndustryService : IOperatorIndustryService
 		    Data = industryId,
 	    };
     }
-    public async Task<Response<List<OpIndustryFrontEndDto>>>? GetOperatorsIndustriesAsync(CancellationToken cancellationToken = default)
+    public async Task<Response<List<OpIndustryFrontEndDto>>> GetOperatorsIndustriesAsync(CancellationToken cancellationToken = default)
     {
 	    var operatorId = _userPrincipalService.BusinessId!.Value;
 	    var industries = await _operatorIndustryRepository.GetOperatorsIndustriesAsync(operatorId, cancellationToken);
@@ -80,9 +80,7 @@ public class OperatorIndustryService : IOperatorIndustryService
 	}
 
     public async Task<Response<OpIndustryFrontEndDto>> CreateOperatorIndustryAsync
-    (
-	    OperatorIndustryCreationDto industryCreationData, 
-	    CancellationToken cancellationToken)
+    (OperatorIndustryCreationDto industryCreationData, CancellationToken cancellationToken = default)
     {
 	    var operatorId = _userPrincipalService.BusinessId!.Value;
 	    var existingOperator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
