@@ -85,6 +85,9 @@ public class OperatorServiceTests
             .ReturnsAsync(transactionMock.Object);
         
         _userPrincipalServiceMock
+            .SetupProperty(r => r.UserId, operatorUserId);
+        
+        _userPrincipalServiceMock
             .SetupProperty(p => p.BusinessId, businessId);
         
         _operatorUserRepositoryMock
@@ -117,10 +120,9 @@ public class OperatorServiceTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _operatorService.InviteOperatorUserAsync(operatorUserId, emailDto, It.IsAny<CancellationToken>());
+        var result = await _operatorService.InviteOperatorUserAsync(emailDto, It.IsAny<CancellationToken>());
         
         // Assert
-        Assert.NotNull(result.Data);
         Assert.Equal("Operator Email Body", result.Data.Body);
         Assert.Equal(_testOperatorUser.Email, result.Data.Sender);
     }
@@ -143,6 +145,9 @@ public class OperatorServiceTests
             Occupation = "Old Address"
         };
 
+        _userPrincipalServiceMock
+            .SetupProperty(p => p.BusinessId, operatorId);
+        
         _operatorRepositoryMock.Setup(r => r.GetByIdAsync(operatorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingOperator);
 
@@ -150,10 +155,9 @@ public class OperatorServiceTests
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _operatorService.UpdateOperatorAsync(operatorId, updateDto, It.IsAny<CancellationToken>());
+        var result = await _operatorService.UpdateOperatorAsync(updateDto, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result.Data);
         Assert.Equal(updateDto.BusinessName, result.Data.BusinessName);
         Assert.Equal(updateDto.Address, result.Data.Address);
     }

@@ -21,23 +21,20 @@ public class OperatorUserRepository : IOperatorUserRepository
 		await SaveAsync(cancellationToken);
 	}
 	public IQueryable<OperatorUser> GetAll() => _operatorUsers;
-	public async Task DeleteAsync(OperatorUser operatorUser, CancellationToken cancellationToken)
+	public Task DeleteAsync(OperatorUser operatorUser, CancellationToken cancellationToken)
 	{
 		_operatorUsers.Remove(operatorUser);
-		await SaveAsync(cancellationToken);
+		return SaveAsync(cancellationToken);
 	}
-	public async Task<OperatorUser?> GetByIdOrDefaultAsync(int operatorId) => await _operatorUsers.SingleOrDefaultAsync(w => w.Id == operatorId);
-	public async Task<OperatorUser> GetByIdAsync(int operatorId) => await _operatorUsers.SingleAsync(w => w.Id == operatorId);
-	public async Task UpdateAsync(OperatorUser operatorUser, CancellationToken cancellationToken)
+	public Task<OperatorUser?> GetByIdOrDefaultAsync(int operatorId) => _operatorUsers.SingleOrDefaultAsync(w => w.Id == operatorId);
+	public Task<OperatorUser> GetByIdAsync(int operatorId) => _operatorUsers.SingleAsync(w => w.Id == operatorId);
+	public Task UpdateAsync(OperatorUser operatorUser, CancellationToken cancellationToken)
 	{
-		var userToUpdate = await _operatorUsers.FindAsync(operatorUser.Id, cancellationToken);
+		var userToUpdate = _operatorUsers.FindAsync(operatorUser.Id, cancellationToken).Result!;
 
-		if (userToUpdate != null)
-		{
-			_context.Entry(userToUpdate).CurrentValues.SetValues(operatorUser);
-			await SaveAsync(cancellationToken);
-		}
+		_context.Entry(userToUpdate).CurrentValues.SetValues(operatorUser);
+		return SaveAsync(cancellationToken);
 	}
 
-	private async Task SaveAsync(CancellationToken cancellationToken) => await _context.SaveChangesAsync(cancellationToken);
+	private Task SaveAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
 }

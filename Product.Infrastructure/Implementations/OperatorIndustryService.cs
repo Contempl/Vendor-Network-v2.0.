@@ -34,7 +34,7 @@ public class OperatorIndustryService : IOperatorIndustryService
 		    Data = industryId,
 	    };
     }
-    public async Task<Response<List<OpIndustryFrontEndDto>>>? GetOperatorsIndustriesAsync(CancellationToken cancellationToken)
+    public async Task<Response<List<OpIndustryFrontEndDto>>> GetOperatorsIndustriesAsync(CancellationToken cancellationToken)
     {
 	    var operatorId = _userPrincipalService.BusinessId!.Value;
 	    var industries = await _operatorIndustryRepository.GetOperatorsIndustriesAsync(operatorId, cancellationToken);
@@ -78,21 +78,10 @@ public class OperatorIndustryService : IOperatorIndustryService
 	}
 
     public async Task<Response<OpIndustryFrontEndDto>> CreateOperatorIndustryAsync
-    (
-	    OperatorIndustryCreationDto industryCreationData, 
-	    CancellationToken cancellationToken)
+    (OperatorIndustryCreationDto industryCreationData, CancellationToken cancellationToken)
     {
 	    var operatorId = _userPrincipalService.BusinessId!.Value;
 	    var existingOperator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
-
-	    if (existingOperator == null)
-	    {
-		    return new Response<OpIndustryFrontEndDto>
-		    {
-			    ErrorMessage = "Operator User Not Found",
-			    ErrorCode = (int)ErrorCodes.UserNotFound,
-		    };
-	    }
 
 	    var newIndustry = MapIndustryToCreateOperator(existingOperator, industryCreationData);
 

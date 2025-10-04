@@ -19,23 +19,24 @@ public class RedisCacheService : IRedisCacheService
         var value = await _distributedCache.GetStringAsync(key);
         if (value is null)
             return default;
+        
         return JsonSerializer.Deserialize<T>(value, CacheJsonSerializerSettings.Options);
     }
 
-    public async Task SetAsync<T>(string key, T? value, DistributedCacheEntryOptions? options = null)
+    public Task SetAsync<T>(string key, T? value, DistributedCacheEntryOptions? options = null)
     {
         var serializedValue = JsonSerializer.Serialize<T>(value, CacheJsonSerializerSettings.Options);
-        await SetInCache(key, serializedValue, options);
+        return SetInCache(key, serializedValue, options);
     }
 
-    public async Task RemoveAsync(string key)
+    public Task RemoveAsync(string key)
     {
-        await _distributedCache.RemoveAsync(key);
+        return _distributedCache.RemoveAsync(key);
     }
     
-    private async Task SetInCache(string key, string serializedValue, DistributedCacheEntryOptions? options = null)
+    private Task SetInCache(string key, string serializedValue, DistributedCacheEntryOptions? options = null)
     {
-         await _distributedCache.SetStringAsync(key, 
+         return _distributedCache.SetStringAsync(key, 
              serializedValue,
              options ?? new DistributedCacheEntryOptions 
              { 
