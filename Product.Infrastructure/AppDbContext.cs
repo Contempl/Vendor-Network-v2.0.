@@ -27,6 +27,7 @@ public class AppDbContext : DbContext
 		modelBuilder.ApplyConfiguration(new VendorFacilityConfiguration());
 		modelBuilder.ApplyConfiguration(new VendorFacilityServiceConfiguration());
 		modelBuilder.ApplyConfiguration(new VendorUserConfiguration());
+		modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
 	}
 
 	public DbSet<Administrator> Administrators { get; set; }
@@ -40,6 +41,7 @@ public class AppDbContext : DbContext
     public DbSet<Invite> Invites { get; set; }
     
     public DbSet<Business> Businesses { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 }
 
 

@@ -6,4 +6,8 @@ namespace Product.Application.ServiceInterfaces;
 public interface IJwtTokenService
 {
 	TokenDto GenerateToken(UserClaimDto userClaim);
+
+	string GenerateRefreshToken();
+	
+	bool Validate(RefreshToken refreshToken);
 }

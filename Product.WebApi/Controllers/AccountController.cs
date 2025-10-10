@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Product.Application.Dto;
+using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Result;
@@ -104,6 +105,19 @@ public class AccountController : ControllerBase
 		CancellationToken cancellationToken)
 	{
 		var response = await _userService.UpdateUserAsync(userUpdateData, userId, cancellationToken);
+		if (response.IsSuccess)
+		{
+			return Ok(response);
+		}
+		return BadRequest(response);
+	}
+
+	[HttpPost("/refresh")]
+	[Authorize(policy: "All")]
+	public async Task<ActionResult<Response<TokenDto>>> RefreshToken([FromBody] RefreshTokenRequestDto tokenRequestDto,
+		CancellationToken cancellationToken)
+	{
+		var response = await _userService.Refresh(tokenRequestDto, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);

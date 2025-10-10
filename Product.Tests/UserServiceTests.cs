@@ -22,8 +22,8 @@ public class UserServiceTests
     private readonly Mock<IJwtTokenService> _jwtTokenServiceMock = new();
     private readonly Mock<IVendorUserRepository> _vendorUserRepositoryMock = new();
     private readonly Mock<IOperatorUserRepository> _operatorUserRepositoryMock = new();
-    private readonly Mock<IRedisCacheService> _redisCacheServiceMock = new();
     private readonly Mock<IUserPrincipalService> _userPrincipalServiceMock = new();
+    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock = new();
 
     private readonly UserService _userService;
 
@@ -35,8 +35,8 @@ public class UserServiceTests
             _jwtTokenServiceMock.Object,
             _vendorUserRepositoryMock.Object,
             _operatorUserRepositoryMock.Object,
-            _redisCacheServiceMock.Object,
-            _userPrincipalServiceMock.Object
+            _userPrincipalServiceMock.Object,
+            _refreshTokenRepositoryMock.Object
         );
     }
 

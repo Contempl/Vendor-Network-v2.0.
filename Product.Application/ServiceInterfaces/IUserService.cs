@@ -13,4 +13,5 @@ public interface IUserService
 	Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken);
 	Task<Response<int>> RemoveUserAsync(int userId, CancellationToken cancellationToken);
 	Task<Response<UserDtoToFrontEnd>> UpdateUserAsync(UserToUpdateDto userUpdateData, int userId, CancellationToken cancellationToken);
+	Task<Response<TokenDto>> Refresh(RefreshTokenRequestDto refreshDto, CancellationToken cancellationToken);
 }

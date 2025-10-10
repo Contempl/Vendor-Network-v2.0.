@@ -7,6 +7,7 @@ public enum ErrorCodes
     // 21 - 30 - Business
     // 31 - 40 - Operator Industries
     // 41 - 50 - Vendor Facilities
+    // 51 - 60 - Tokens
     
     InvalidInvitation = 1,
     
@@ -25,4 +26,6 @@ public enum ErrorCodes
     
     InvalidVendorFacilityData = 41,
     InvalidVendorFacilityServiceData = 42,
+    
+    InvalidRefreshToken = 51,
 }
