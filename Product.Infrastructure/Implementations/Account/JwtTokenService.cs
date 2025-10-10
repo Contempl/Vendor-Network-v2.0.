@@ -1,14 +1,12 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
-using Product.Domain.Enum;
 using Product.Domain.Settings;
 
 namespace Product.Infrastructure.Implementations.Account;
@@ -16,7 +14,6 @@ namespace Product.Infrastructure.Implementations.Account;
 public class JwtTokenService : IJwtTokenService  
 {
     private readonly JwtOptions _options;
-
     public JwtTokenService( IOptions<JwtOptions> options)
     {
         _options = options.Value;
@@ -44,9 +41,18 @@ public class JwtTokenService : IJwtTokenService
             signingCredentials: credentials);
         
         var token =  new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+        var refreshToken = GenerateRefreshToken();
+        
         return new TokenDto
         {
             AccessToken = token,
+            RefreshToken = refreshToken, 
         };
     }
+
+    public string GenerateRefreshToken() 
+        => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+    
+    public bool Validate(RefreshToken token)
+        => token.ExpiresAt > DateTime.UtcNow && !token.Revoked;
 }
