@@ -15,11 +15,12 @@ public class AccountController : ControllerBase
 {
 	private readonly IUserService _userService;
 	private readonly IInviteService _inviteService;
-
-	public AccountController(IInviteService inviteService, IUserService userService, IAdministratorService adminService)
+	private readonly IAuthService _authService;
+	public AccountController(IInviteService inviteService, IUserService userService, IAdministratorService adminService, IAuthService authService)
 	{
 		_inviteService = inviteService;
 		_userService = userService;
+		_authService = authService;
 	}
 
 	[HttpGet("Register/User/{inviteId}")]
@@ -52,7 +53,7 @@ public class AccountController : ControllerBase
 	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> RegisterUser([FromBody] UserRegistrationDto registrationData,
 		CancellationToken cancellationToken)
 	{
-		var response = await _userService.RegisterUser(registrationData, cancellationToken);
+		var response = await _authService.RegisterUser(registrationData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -77,7 +78,7 @@ public class AccountController : ControllerBase
 	[HttpPost("Login")]
 	public async Task<ActionResult<Response<TokenDto>>> Login (UserLoginDto userData, CancellationToken cancellationToken)
 	{
-		var response = await _userService.Login(userData, cancellationToken);
+		var response = await _authService.Login(userData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
