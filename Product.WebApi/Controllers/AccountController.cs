@@ -27,7 +27,7 @@ public class AccountController : ControllerBase
 	[EnsureInviteExists]
 	public async Task<ActionResult<Response<InviteIdToFrontEnd>>> RegisterUser (int inviteId, CancellationToken cancellationToken)
 	{
-		var response = await _inviteService.Register(inviteId, cancellationToken);
+		var response = await _inviteService.RegisterUser(inviteId, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);

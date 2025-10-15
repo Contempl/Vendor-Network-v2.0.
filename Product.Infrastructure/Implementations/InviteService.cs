@@ -51,7 +51,7 @@ public class InviteService : IInviteService
 	};
 
 
-	public async Task<Response<InviteIdToFrontEnd>> Register(int inviteId, 
+	public async Task<Response<InviteIdToFrontEnd>> RegisterUser(int inviteId, 
 		CancellationToken cancellationToken = default)
 	{
 		var invite = await _inviteRepository.GetByIdAsync(inviteId, cancellationToken);

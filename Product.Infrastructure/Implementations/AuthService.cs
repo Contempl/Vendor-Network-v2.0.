@@ -18,16 +18,53 @@ public class AuthService : IAuthService
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IVendorUserRepository _vendorUserRepository;
     private readonly IOperatorUserRepository _operatorUserRepository;
+    private readonly IAdministratorRepository _adminRepository;
 
-    public AuthService(IUserRepository userRepository, IPasswordHasher passwordHasher, IJwtTokenService jwtTokenService, IRefreshTokenRepository refreshTokenRepository, IVendorUserRepository vendorUserRepository, IOperatorUserRepository operatorUserRepository, IInviteRepository inviteRepository)
+    public AuthService(IUserRepository userRepository, IPasswordHasher passwordHasher, IJwtTokenService jwtTokenService,
+        IRefreshTokenRepository refreshTokenRepository, IVendorUserRepository vendorUserRepository, 
+        IOperatorUserRepository operatorUserRepository, IInviteRepository inviteRepository, IAdministratorRepository administratorRepository)
     {
         _userRepository = userRepository;
         _inviteRepository = inviteRepository;
+        _adminRepository = administratorRepository;
         _passwordHasher = passwordHasher;
         _jwtTokenService = jwtTokenService;
         _refreshTokenRepository = refreshTokenRepository;
         _vendorUserRepository = vendorUserRepository;
         _operatorUserRepository = operatorUserRepository;
+    }
+    
+    public async Task<Response<TokenDto>> LoginAdministrator(UserLoginDto userData, CancellationToken cancellationToken = default)
+    {
+        var admin = await _adminRepository.GetByEmailAsync(userData.Email, cancellationToken);
+
+        if (admin == null)
+        {
+            return new Response<TokenDto>
+            {
+                ErrorMessage = "Admin not found",
+                ErrorCode = (int)ErrorCodes.UserNotFound
+            };
+        }
+
+        var passwordsAreEqual = _passwordHasher.ValidatePassword(userData.Password, admin.PasswordHash!);
+
+        if (!passwordsAreEqual)
+        {
+            return new Response<TokenDto>
+            {
+                ErrorMessage = "Invalid password",
+                ErrorCode = (int)ErrorCodes.InvalidPassword
+            };
+        }
+
+        var userClaims = admin.MapAdminToClaimDto();
+        var token = _jwtTokenService.GenerateToken(userClaims);
+
+        return new Response<TokenDto>
+        {
+            Data = token,
+        };
     }
 
     public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken)

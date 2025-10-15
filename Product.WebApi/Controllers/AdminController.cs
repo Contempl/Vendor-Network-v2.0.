@@ -15,18 +15,20 @@ public class AdminController : ControllerBase
 {
 	private readonly IAdministratorService _adminService;
 	private readonly IUserPrincipalService _userPrincipalService;
+	private readonly IAuthService _authService;
 
-	public AdminController(IAdministratorService adminService, IUserPrincipalService userPrincipalService)
+	public AdminController(IAdministratorService adminService, IUserPrincipalService userPrincipalService, IAuthService authService)
 	{
 		_adminService = adminService;
 		_userPrincipalService = userPrincipalService;
+		_authService = authService;
 	}
 	
 	[AllowAnonymous]
 	[HttpPost("Login")]
 	public async Task<ActionResult<Response<TokenDto>>> Login (UserLoginDto userData, CancellationToken cancellationToken)
 	{
-		var response = await _adminService.Login(userData, cancellationToken);
+		var response = await _authService.LoginAdministrator(userData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
