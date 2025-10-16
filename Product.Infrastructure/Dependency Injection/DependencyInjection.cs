@@ -58,6 +58,7 @@ public static class DependencyInjection
         services.AddScoped<IOperatorRepository, OperatorRepository>();
         services.AddScoped<IOperatorIndustryRepository, OperatorIndustryRepository>();
         services.AddScoped<IOperatorUserRepository, OperatorUserRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
     }
 
     private static void InitServices(this IServiceCollection services, IConfiguration configuration)

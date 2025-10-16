@@ -1,7 +1,4 @@
-﻿using System.Diagnostics;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
-using Product.Application.Dto;
+﻿using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
@@ -21,20 +18,20 @@ public class UserService : IUserService
 	private readonly IJwtTokenService _jwtTokenService;
 	private readonly IVendorUserRepository _vendorUserRepository;
 	private readonly IOperatorUserRepository _operatorUserRepository;
-	private readonly IRedisCacheService _redisCacheService;
+	private readonly IRefreshTokenRepository _refreshTokenRepository;
 
 	public UserService(IUserRepository userRepository, IPasswordHasher userPrincipalService, 
 		IJwtTokenService jwtTokenService, IVendorUserRepository vendorUserRepository, 
-		IOperatorUserRepository operatorUserRepository, IRedisCacheService redisCacheService, 
-		IUserPrincipalService userPrincipalService1)
+		IOperatorUserRepository operatorUserRepository, 
+		IUserPrincipalService userPrincipalService1, IRefreshTokenRepository refreshTokenRepository)
 	{
 		_userRepository = userRepository;
 		_passwordHasher = userPrincipalService;
 		_jwtTokenService = jwtTokenService;
 		_vendorUserRepository = vendorUserRepository;
 		_operatorUserRepository = operatorUserRepository;
-		_redisCacheService = redisCacheService;
 		_userPrincipalService = userPrincipalService1;
+		_refreshTokenRepository = refreshTokenRepository;
 	}
 	public void MapUserToUpdateByInvite(UserRegistrationByInviteDto dto, User user)
 	{
@@ -44,7 +41,8 @@ public class UserService : IUserService
 		user.PasswordHash = _passwordHasher.HashThePassword(dto.Password);
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData, CancellationToken cancellationToken)
+	public async Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData, 
+		CancellationToken cancellationToken = default)
 	{
 		var userByEmail = await _userRepository.GetByEmailAsync(registrationData.Email, cancellationToken);
 		if (userByEmail != null)
@@ -79,7 +77,7 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken)
+	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken = default)
 	{
 		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 
@@ -91,7 +89,7 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken)
+	public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken = default)
 	{
 		var user = await _userRepository.GetByEmailAsync(userData.Email, cancellationToken);
 
@@ -116,17 +114,30 @@ public class UserService : IUserService
 		}
 
 		var userClaims = user.MapUserToClaimDto();
+		
 		var token = _jwtTokenService.GenerateToken(userClaims);
-
+		
+		var refreshToken = new RefreshToken
+		{
+			Token = _jwtTokenService.GenerateRefreshToken(),
+			UserId = user.Id,
+			ExpiresAt = DateTime.UtcNow.AddDays(7)
+		};
+		
+		await _refreshTokenRepository.CreateAsync(refreshToken, cancellationToken);
+		
+		token.RefreshToken = refreshToken.Token;
+		
 		return new Response<TokenDto>
 		{
 			Data = token,
 		};
 	}
 
-	public async Task<Response<int>> RemoveUserAsync(int userId, CancellationToken cancellationToken)
+	public async Task<Response<int>> RemoveUserAsync(int userId, CancellationToken cancellationToken = default)
 	{
 		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+		
 		await _userRepository.DeleteAsync(user, cancellationToken);
 		
 		return new Response<int>
@@ -135,7 +146,8 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> UpdateUserAsync(UserToUpdateDto userUpdateData, int userId, CancellationToken cancellationToken)
+	public async Task<Response<UserDtoToFrontEnd>> UpdateUserAsync(UserToUpdateDto userUpdateData, int userId, 
+		CancellationToken cancellationToken = default)
 	{
 		var thisUserId = _userPrincipalService.UserId!.Value;
 		if (thisUserId != userId)
@@ -156,8 +168,44 @@ public class UserService : IUserService
 			Data = user.MapToFrontEndDto()
 		};
 	}
-	
-	
+
+	public async Task<Response<TokenDto>> Refresh(RefreshTokenRequestDto refreshDto, CancellationToken cancellationToken)
+	{
+		var existingToken = await _refreshTokenRepository.GetByTokenAsync(refreshDto.RefreshToken, cancellationToken);
+
+		if (existingToken == null || !_jwtTokenService.Validate(existingToken))
+			return new Response<TokenDto>
+			{
+				ErrorMessage = "Refresh token expired",
+				ErrorCode = (int)ErrorCodes.InvalidRefreshToken
+			};
+		
+		await _refreshTokenRepository.RevokeAsync(existingToken, cancellationToken);
+		
+		var userId = existingToken.UserId;
+		
+		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+		
+		var userClaims = user.MapUserToClaimDto();
+
+		var newToken = _jwtTokenService.GenerateToken(userClaims);
+		
+		var refreshToken = new RefreshToken
+		{
+			Token = newToken.RefreshToken,
+			UserId = userId,
+			ExpiresAt = DateTime.UtcNow.AddDays(7)
+		};
+		
+		await _refreshTokenRepository.CreateAsync(refreshToken, cancellationToken);
+
+		return new Response<TokenDto>
+		{
+			Data = newToken
+		};
+	}
+
+
 	private VendorUser MapVendorUserFromDto(UserRegistrationDto registrationData) => new VendorUser
 	{
 		UserName = registrationData.UserName,

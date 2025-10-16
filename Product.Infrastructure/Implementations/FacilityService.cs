@@ -14,7 +14,8 @@ public class FacilityService : IFacilityService
 	private readonly IVendorFacilityRepository _vendorFacilityRepository;
 	
 
-	public FacilityService(IVendorFacilityServiceRepository facilityRepository, IUserPrincipalService userPrincipalService, IVendorFacilityRepository vendorFacilityRepository)
+	public FacilityService(IVendorFacilityServiceRepository facilityRepository, 
+		IUserPrincipalService userPrincipalService, IVendorFacilityRepository vendorFacilityRepository)
 	{
 		_userPrincipalService = userPrincipalService;
 		_vendorFacilityRepository = vendorFacilityRepository;
@@ -35,7 +36,8 @@ public class FacilityService : IFacilityService
 		facilityService.Name = serviceName;
 	}
 
-	public async Task<Response<VendorFacilityService>> AddFacilityServiceAsync(int facilityId, string facilityServiceName, CancellationToken cancellationToken)
+	public async Task<Response<VendorFacilityService>> AddFacilityServiceAsync(int facilityId, string facilityServiceName, 
+		CancellationToken cancellationToken = default)
 	{
 		var vendorId = _userPrincipalService.BusinessId!.Value;
 		var vendorFacility = await _vendorFacilityRepository.GetByIdAsync(vendorId, facilityId, cancellationToken);
@@ -60,10 +62,11 @@ public class FacilityService : IFacilityService
 	}
 
 	public async Task<Response<VendorFacilityService>> UpdateFacilityServiceAsync(int facilityId, int facilityServiceId, 
-		VendorFacilityServiceDto facilityServiceDto, CancellationToken cancellationToken)
+		VendorFacilityServiceDto facilityServiceDto, CancellationToken cancellationToken = default)
 	{
 		var vendorId = _userPrincipalService.BusinessId!.Value;
-		var vendorFacilityService = await _facilityRepository.GetByIdAsync(vendorId, facilityId, facilityServiceId, cancellationToken);
+		var vendorFacilityService = await _facilityRepository.GetByIdAsync(vendorId, facilityId, 
+			facilityServiceId, cancellationToken);
 
 		var serviceNameIsValid = ValidateServiceName(facilityServiceDto.Name);
 
@@ -95,10 +98,12 @@ public class FacilityService : IFacilityService
 		};
 	}
 
-	public async Task<Response<int>> RemoveFacilityServiceAsync(int facilityId, int facilityServiceId, CancellationToken cancellationToken)
+	public async Task<Response<int>> RemoveFacilityServiceAsync(int facilityId, int facilityServiceId, 
+		CancellationToken cancellationToken = default)
 	{
 		var vendorId = _userPrincipalService.BusinessId!.Value;
-		var vendorFacilityService = await _facilityRepository.GetByIdAsync(vendorId, facilityId, facilityServiceId, cancellationToken);
+		var vendorFacilityService = await _facilityRepository.GetByIdAsync(vendorId, facilityId, 
+			facilityServiceId, cancellationToken);
 
 		if (vendorFacilityService == null)
 		{

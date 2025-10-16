@@ -66,15 +66,15 @@ public class InviteServiceTests
 			InvitedUserId = user.Id
 		};
 		
-		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id)).ReturnsAsync(invite);
+		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, It.IsAny<CancellationToken>())).ReturnsAsync(invite);
 		
 		// Act
-		var result = await _inviteService.Register(invite.Id);
+		var result = await _inviteService.RegisterUser(invite.Id, It.IsAny<CancellationToken>());
 		
 		// Assert
 		Assert.NotNull(result.Data);
 		Assert.Equal(invite.Id, result.Data.InviteId);
-		_inviteRepositoryMock.Verify(r => r.GetByIdAsync(invite.Id), Times.Once);	
+		_inviteRepositoryMock.Verify(r => r.GetByIdAsync(invite.Id, It.IsAny<CancellationToken>()), Times.Once);	
 	}
 	
 	[Fact]
@@ -94,10 +94,10 @@ public class InviteServiceTests
 			InvitedUserId = user.Id
 		};
 		
-		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id)).ReturnsAsync(invite);
+		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, It.IsAny<CancellationToken>())).ReturnsAsync(invite);
 		
 		// Act
-		var result = await _inviteService.Register(invite.Id);
+		var result = await _inviteService.RegisterUser(invite.Id, It.IsAny<CancellationToken>());
 		
 		// Assert
 		Assert.Equal((int)ErrorCodes.InvalidInvitation, result.ErrorCode);
@@ -128,14 +128,14 @@ public class InviteServiceTests
 			LastName = "Test",
 			Password = "password",
 		};
-		_userRepositoryMock.Setup(r => r.GetByIdAsync(invite.InvitedUserId.Value)).ReturnsAsync(user);
-		_inviteRepositoryMock.Setup(r => r.GetInviteWithUserAsync(invite.Id))
+		_userRepositoryMock.Setup(r => r.GetByIdAsync(invite.InvitedUserId.Value, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+		_inviteRepositoryMock.Setup(r => r.GetInviteWithUserAsync(invite.Id, It.IsAny<CancellationToken>()))
 			.ReturnsAsync(invite);
-		_vendorUserRepositoryMock.Setup(r => r.UpdateAsync(user));
+		_vendorUserRepositoryMock.Setup(r => r.UpdateAsync(user, It.IsAny<CancellationToken>()));
 		
 		
 		// Act
-		var result = await _inviteService.RegisterByInvite(invite.Id, registrationData);
+		var result = await _inviteService.RegisterByInvite(invite.Id, registrationData, It.IsAny<CancellationToken>());
 		
 		// Assert
 		Assert.NotNull(result);

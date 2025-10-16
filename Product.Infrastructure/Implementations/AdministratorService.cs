@@ -38,7 +38,7 @@ public class AdministratorService : IAdministratorService
     }
 
 
-    public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken)
+    public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken = default)
     {
 	    var admin = await _adminRepository.GetByEmailAsync(userData.Email, cancellationToken);
 
@@ -71,7 +71,8 @@ public class AdministratorService : IAdministratorService
 	    };
     }
 
-    public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData, CancellationToken cancellationToken)
+    public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData, 
+	    CancellationToken cancellationToken = default)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -115,7 +116,8 @@ public class AdministratorService : IAdministratorService
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(int adminId, DataForInviteDto inviteData, CancellationToken cancellationToken)
+	public async Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(int adminId, DataForInviteDto inviteData, 
+		CancellationToken cancellationToken = default)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -136,6 +138,7 @@ public class AdministratorService : IAdministratorService
 				ErrorCode = (int)ErrorCodes.InvalidInvitationData
 			};
 		}
+		
 		var operatorUser = new OperatorUser { Email = inviteData.Email, OperatorId = inviteData.BusinessId };
 
 		await _userRepository.CreateAsync(operatorUser, cancellationToken);
@@ -152,14 +155,15 @@ public class AdministratorService : IAdministratorService
 		await _emailService.SendInvitationEmailAsync(mailMessage);
 
 		var responseDto = operatorUser.MapToFrontEndDto();
-		
+
 		return new Response<UserDtoToFrontEnd>
 		{
 			Data = responseDto,
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> InviteBusiness(int adminId, BusinessInvitationData invitationData, CancellationToken cancellationToken)
+	public async Task<Response<UserDtoToFrontEnd>> InviteBusiness(int adminId, BusinessInvitationData invitationData, 
+		CancellationToken cancellationToken = default)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -174,11 +178,13 @@ public class AdministratorService : IAdministratorService
 		
 		if (invitationData.BusinessIsVendor)
 		{
-			var vendor = new Vendor();
-			vendor.BusinessName = invitationData.BusinessName;
-			vendor.Address = invitationData.BusinessAddress;
-			vendor.Email = invitationData.BusinessEmail;
-			
+			var vendor = new Vendor
+			{
+				BusinessName = invitationData.BusinessName,
+				Address = invitationData.BusinessAddress,
+				Email = invitationData.BusinessEmail
+			};
+
 			await _vendorRepository.CreateAsync(vendor, cancellationToken);
 
 			var vendorUser = new VendorUser
@@ -187,15 +193,18 @@ public class AdministratorService : IAdministratorService
 				FirstName = invitationData.FirstName,
 				LastName = invitationData.LastName,
 			};
+			
 			await _userRepository.CreateAsync(vendorUser, cancellationToken);
 		}
 		else if (!invitationData.BusinessIsVendor)
 		{
-			var @operator = new Operator();
-			@operator.BusinessName = invitationData.BusinessName;
-			@operator.Address = invitationData.BusinessAddress;
-			@operator.Email = invitationData.BusinessEmail;
-			
+			var @operator = new Operator
+			{
+				BusinessName = invitationData.BusinessName,
+				Address = invitationData.BusinessAddress,
+				Email = invitationData.BusinessEmail
+			};
+
 			await _operatorRepository.CreateAsync(@operator, cancellationToken);
 
 			var operatorUser = new OperatorUser
@@ -226,20 +235,22 @@ public class AdministratorService : IAdministratorService
 		};
 	}
 	
-	public async Task<Response<int>> RemoveOperatorAsync(int operatorId, CancellationToken cancellationToken)
+	public async Task<Response<int>> RemoveOperatorAsync(int operatorId, CancellationToken cancellationToken = default)
 	{
-		var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
+		var @operator =  await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
 		await _operatorRepository.DeleteAsync(@operator, cancellationToken);
+		 
 		return new Response<int>
 		{
 			Data = @operator.Id
 		};
 	}
 
-	public async Task<Response<int>> RemoveVendorAsync(int vendorId, CancellationToken cancellationToken)
+	public async Task<Response<int>> RemoveVendorAsync(int vendorId, CancellationToken cancellationToken = default)
 	{
 		var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
 		await _vendorRepository.DeleteAsync(vendor, cancellationToken);
+		 
 		return new Response<int>
 		{
 			Data = vendor.Id

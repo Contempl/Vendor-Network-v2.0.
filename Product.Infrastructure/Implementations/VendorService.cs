@@ -54,7 +54,8 @@ public class VendorService : IVendorService
         vendor.Email = vendorData.Email ?? vendor.Email;
     }
 
-    public async Task<Response<List<BusinessFrontEndDto>>> SearchOperatorsAsync(OperatorSearchDto operatorSearchDto, CancellationToken cancellationToken)
+    public async Task<Response<List<BusinessFrontEndDto>>> SearchOperatorsAsync(OperatorSearchDto operatorSearchDto, 
+        CancellationToken cancellationToken = default)
     {
         var operatorIsValid = ValidateString(operatorSearchDto.Name);
         if (!operatorIsValid)
@@ -75,7 +76,8 @@ public class VendorService : IVendorService
         };
     }
 
-    public async Task<Response<BusinessFrontEndDto>> GetVendorByIdAsync(int vendorId, CancellationToken cancellationToken)
+    public async Task<Response<BusinessFrontEndDto>> GetVendorByIdAsync(int vendorId, 
+        CancellationToken cancellationToken = default)
     {
         var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
         var result = vendor.ToFrontEndDto();
@@ -86,7 +88,8 @@ public class VendorService : IVendorService
         };
     }
 
-    public async Task<Response<BusinessFrontEndDto>> UpdateVendorAsync(UpdateVendorDto vendorData, CancellationToken cancellationToken)
+    public async Task<Response<BusinessFrontEndDto>> UpdateVendorAsync(UpdateVendorDto vendorData, 
+        CancellationToken cancellationToken = default)
     {
         var vendorId = _userPrincipalService.BusinessId!.Value;
         var existingVendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
@@ -102,9 +105,10 @@ public class VendorService : IVendorService
         };
     }
 
-    public async Task<Response<MailMsg>> InviteVendorUserAsync(EmailForInviteDto emailDto, CancellationToken cancellationToken)
+    public async Task<Response<MailMsg>> InviteVendorUserAsync(EmailForInviteDto emailDto, 
+        CancellationToken cancellationToken = default)
     {
-        var transaction = await _unitOfWork.BeginTransactionAsync();
+        await using var transaction = await _unitOfWork.BeginTransactionAsync();
         try
         {
             var vendorUserId = _userPrincipalService.UserId!.Value;

@@ -51,7 +51,8 @@ public class InviteService : IInviteService
 	};
 
 
-	public async Task<Response<InviteIdToFrontEnd>> Register(int inviteId, CancellationToken cancellationToken)
+	public async Task<Response<InviteIdToFrontEnd>> RegisterUser(int inviteId, 
+		CancellationToken cancellationToken = default)
 	{
 		var invite = await _inviteRepository.GetByIdAsync(inviteId, cancellationToken);
 		
@@ -73,7 +74,8 @@ public class InviteService : IInviteService
 		};
 	}
 	
-	public async Task<Response<UserDtoToFrontEnd>> RegisterByInvite(int inviteId, UserRegistrationByInviteDto registrationData, CancellationToken cancellationToken)
+	public async Task<Response<UserDtoToFrontEnd>> RegisterByInvite(int inviteId, 
+		UserRegistrationByInviteDto registrationData, CancellationToken cancellationToken = default)
 	{
 		var invite = await _inviteRepository.GetInviteWithUserAsync(inviteId, cancellationToken);
 		
@@ -98,9 +100,10 @@ public class InviteService : IInviteService
 		};
 	}
 	
-	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite, int inviteId, CancellationToken cancellationToken)
+	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite, int inviteId, 
+		CancellationToken cancellationToken = default)
 	{
-		var inviteUserId = invite.InvitedUserId.Value;
+		var inviteUserId = invite.InvitedUserId!.Value;
 		var user = await _userRepository.GetByIdAsync(inviteUserId, cancellationToken);
 
 		_userService.MapUserToUpdateByInvite(dto, user);
@@ -117,8 +120,9 @@ public class InviteService : IInviteService
 		{
 			throw new InvalidOperationException("Unknown user type");
 		}
+		
 		invite.Id = inviteId;
 		invite.Status = InvitationStatus.Accepted;
-		 await _inviteRepository.UpdateAsync(invite, cancellationToken);
+		await _inviteRepository.UpdateAsync(invite, cancellationToken);
 	}
 }

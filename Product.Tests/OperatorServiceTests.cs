@@ -54,16 +54,16 @@ public class OperatorServiceTests
             BusinessName = "Test Operator"
         };
 
-        _operatorRepositoryMock.Setup(r => r.GetByIdAsync(operatorId))
+        _operatorRepositoryMock.Setup(r => r.GetByIdAsync(operatorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(operatorEntity);
 
         // Act
-        var result = await _operatorService.GetOperatorAsync(operatorId);
+        var result = await _operatorService.GetOperatorAsync(operatorId, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.NotNull(result.Data);
         Assert.Equal("Test Operator", result.Data.BusinessName);
-        _operatorRepositoryMock.Verify(r => r.GetByIdAsync(operatorId), Times.Once);
+        _operatorRepositoryMock.Verify(r => r.GetByIdAsync(operatorId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -78,20 +78,23 @@ public class OperatorServiceTests
         var invite = new Invite { Id = 33 };
         
         _userRepositoryMock
-            .Setup(r => r.GetByIdAsync(operatorUserId)).ReturnsAsync(_testOperatorUser);
+            .Setup(r => r.GetByIdAsync(operatorUserId, It.IsAny<CancellationToken>())).ReturnsAsync(_testOperatorUser);
 
         _unitOfWorkMock
             .Setup(u => u.BeginTransactionAsync())
             .ReturnsAsync(transactionMock.Object);
         
         _userPrincipalServiceMock
+            .SetupProperty(r => r.UserId, operatorUserId);
+        
+        _userPrincipalServiceMock
             .SetupProperty(p => p.BusinessId, businessId);
         
         _operatorUserRepositoryMock
-            .Setup(r => r.CreateAsync(It.IsAny<OperatorUser>()));
+            .Setup(r => r.CreateAsync(It.IsAny<OperatorUser>(), It.IsAny<CancellationToken>()));
 
         _userRepositoryMock
-            .Setup(r => r.GetByEmailAsync(emailDto.Email))
+            .Setup(r => r.GetByEmailAsync(emailDto.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(newOperatorUser);
         
         _inviteServiceMock
@@ -103,7 +106,7 @@ public class OperatorServiceTests
             .Returns("https://invite.url/operator-token");
         
         _inviteRepositoryMock
-            .Setup(r => r.CreateAsync(invite));
+            .Setup(r => r.CreateAsync(invite, It.IsAny<CancellationToken>()));
         
         _emailServiceMock
             .Setup(s => s.GenerateEmailTemplate(It.IsAny<string>(), It.IsAny<User>(), It.IsAny<string>()))
@@ -117,10 +120,9 @@ public class OperatorServiceTests
             .Returns(Task.CompletedTask);
         
         // Act
-        var result = await _operatorService.InviteOperatorUserAsync(operatorUserId, emailDto);
+        var result = await _operatorService.InviteOperatorUserAsync(emailDto, It.IsAny<CancellationToken>());
         
         // Assert
-        Assert.NotNull(result.Data);
         Assert.Equal("Operator Email Body", result.Data.Body);
         Assert.Equal(_testOperatorUser.Email, result.Data.Sender);
     }
@@ -143,17 +145,19 @@ public class OperatorServiceTests
             Occupation = "Old Address"
         };
 
-        _operatorRepositoryMock.Setup(r => r.GetByIdAsync(operatorId))
+        _userPrincipalServiceMock
+            .SetupProperty(p => p.BusinessId, operatorId);
+        
+        _operatorRepositoryMock.Setup(r => r.GetByIdAsync(operatorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingOperator);
 
-        _operatorRepositoryMock.Setup(r => r.UpdateAsync(existingOperator))
+        _operatorRepositoryMock.Setup(r => r.UpdateAsync(existingOperator, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _operatorService.UpdateOperatorAsync(operatorId, updateDto);
+        var result = await _operatorService.UpdateOperatorAsync(updateDto, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result.Data);
         Assert.Equal(updateDto.BusinessName, result.Data.BusinessName);
         Assert.Equal(updateDto.Address, result.Data.Address);
     }
@@ -169,11 +173,11 @@ public class OperatorServiceTests
             BusinessName = "Test Operator"
         };
 
-        _operatorRepositoryMock.Setup(r => r.GetByIdAsync(operatorId))
+        _operatorRepositoryMock.Setup(r => r.GetByIdAsync(operatorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingOperator);
 
         // Act
-        var result = await _operatorService.GetOperatorAsync(operatorId);
+        var result = await _operatorService.GetOperatorAsync(operatorId, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.NotNull(result.Data);
@@ -217,7 +221,7 @@ public class OperatorServiceTests
         }.AsQueryable();
 
         _vendorRepositoryMock
-            .Setup(r => r.GetVendorsWithService("SomeService"))
+            .Setup(r => r.GetVendorsWithService("SomeService", It.IsAny<CancellationToken>()))
             .ReturnsAsync(vendors);
         _operatorFacilityRepositoryMock
             .Setup(r => r.GetAll())
@@ -225,10 +229,11 @@ public class OperatorServiceTests
     
 
 
-        _vendorRepositoryMock.Setup(r => r.GetVendorsWithService("CleanCo")).ReturnsAsync(vendors);
+        _vendorRepositoryMock.Setup(r => 
+            r.GetVendorsWithService("CleanCo", It.IsAny<CancellationToken>())).ReturnsAsync(vendors);
     
         // Act
-        var result = await _operatorService.SearchForVendorsAsync(industriesData);
+        var result = await _operatorService.SearchForVendorsAsync(industriesData, It.IsAny<CancellationToken>());
     
         // Assert
         Assert.NotNull(result.Data);
@@ -258,11 +263,12 @@ public class OperatorServiceTests
             TotalCount = 2
         };
 
-        _vendorRepositoryMock.Setup(r => r.GetVendorsQuery(searchDto.VendorName, SortOrder.Ascending,  searchDto.PageSize, searchDto.PageNumber ))
-            .ReturnsAsync(pagedResult);
+        _vendorRepositoryMock.Setup(r => 
+                r.GetVendorsQuery(searchDto.VendorName, SortOrder.Ascending,  searchDto.PageSize, searchDto.PageNumber, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(pagedResult);
 
         // Act
-        var result = await _operatorService.GetVendorsByNameAsync(searchDto);
+        var result = await _operatorService.GetVendorsByNameAsync(searchDto, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.NotNull(result.Data);
@@ -284,7 +290,7 @@ public class OperatorServiceTests
         };
 
         // Act
-        var result = await _operatorService.SearchForVendorsAsync(industriesData);
+        var result = await _operatorService.SearchForVendorsAsync(industriesData, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.Null(result.Data);

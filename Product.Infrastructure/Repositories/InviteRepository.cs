@@ -15,27 +15,27 @@ public class InviteRepository : IInviteRepository
 		_invites = _context.Invites;
 	}
 
-	public async Task CreateAsync(Invite invite, CancellationToken cancellationToken)
+	public async Task CreateAsync(Invite invite, CancellationToken cancellationToken = default)
 	{
 		await _invites.AddAsync(invite, cancellationToken);
 		await SaveAsync(cancellationToken);
 	}
-	public async Task DeleteAsync(Invite invite, CancellationToken cancellationToken)
+	public Task DeleteAsync(Invite invite, CancellationToken cancellationToken = default)
 	{
-		_invites.Remove(invite);
-		await SaveAsync(cancellationToken);
+		_invites.Remove(invite = default);
+		return SaveAsync(cancellationToken);
 	}
 	public IQueryable<Invite> GetAll() => _invites;
 	public async Task<Invite?> GetByIdOrDefaultAsync(int inviteId) => await _invites.SingleOrDefaultAsync(w => w.Id == inviteId);
-	public async Task<Invite> GetByIdAsync(int inviteId, CancellationToken cancellationToken) => await _invites.SingleAsync(w => w.Id == inviteId, cancellationToken);
-	public async Task UpdateAsync(Invite invite, CancellationToken cancellationToken)
+	public Task<Invite> GetByIdAsync(int inviteId, CancellationToken cancellationToken = default) => _invites.SingleAsync(w => w.Id == inviteId, cancellationToken);
+	public Task UpdateAsync(Invite invite, CancellationToken cancellationToken = default)
 	{
 		_invites.Update(invite);
-		await SaveAsync(cancellationToken);
+		return SaveAsync(cancellationToken);
 	}
-	public async Task<Invite> GetInviteWithUserAsync(int inviteId, CancellationToken cancellationToken)
+	public Task<Invite> GetInviteWithUserAsync(int inviteId, CancellationToken cancellationToken = default)
 	{
-		var invite = await GetAll()
+		var invite =  GetAll()
 			.Where(i => i.Id == inviteId)
 			.Include(i => i.InvitedUser)
 			.FirstAsync(cancellationToken: cancellationToken);
@@ -43,5 +43,5 @@ public class InviteRepository : IInviteRepository
 		return invite;
 	}
 
-	private async Task SaveAsync(CancellationToken cancellationToken) => await _context.SaveChangesAsync(cancellationToken);
+	private Task SaveAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
 }
