@@ -41,42 +41,6 @@ public class UserService : IUserService
 		user.PasswordHash = _passwordHasher.HashThePassword(dto.Password);
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData, 
-		CancellationToken cancellationToken = default)
-	{
-		var userByEmail = await _userRepository.GetByEmailAsync(registrationData.Email, cancellationToken);
-		if (userByEmail != null)
-		{
-			return new Response<UserDtoToFrontEnd>
-			{
-				ErrorMessage = "User with this email already exists!",
-				ErrorCode = (int)ErrorCodes.UserWithThisEmailAlreadyExists
-			};
-		}
-		
-		if (!registrationData.IsOperator)
-		{
-			var newVendor = MapVendorUserFromDto(registrationData);
-
-			await _vendorUserRepository.CreateAsync(newVendor, cancellationToken);
-			var vendorUserDto = newVendor.MapToFrontEndDto();
-			return new Response<UserDtoToFrontEnd>
-			{
-				Data = vendorUserDto
-			};
-		}
-		
-		var newOperator = MapOperatorUserFromDto(registrationData);
-		await _operatorUserRepository.CreateAsync(newOperator, cancellationToken);
-		
-		var operatorUserDto = newOperator.MapToFrontEndDto();
-
-		return new Response<UserDtoToFrontEnd>
-		{
-			Data = operatorUserDto
-		};
-	}
-
 	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken = default)
 	{
 		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
@@ -86,51 +50,6 @@ public class UserService : IUserService
 		return new Response<UserDtoToFrontEnd>
 		{
 			Data = userDto,
-		};
-	}
-
-	public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken = default)
-	{
-		var user = await _userRepository.GetByEmailAsync(userData.Email, cancellationToken);
-
-		if (user == null)
-		{
-			return new Response<TokenDto>
-			{
-				ErrorMessage = "User not found",
-				ErrorCode = (int)ErrorCodes.UserNotFound
-			};
-		}
-
-		var passwordsAreEqual = _passwordHasher.ValidatePassword(userData.Password, user.PasswordHash!);
-
-		if (!passwordsAreEqual)
-		{
-			return new Response<TokenDto>
-			{
-				ErrorMessage = "Invalid password",
-				ErrorCode = (int)ErrorCodes.InvalidPassword
-			};
-		}
-
-		var userClaims = user.MapUserToClaimDto();
-		
-		var token = _jwtTokenService.GenerateToken(userClaims);
-		
-		var refreshToken = new RefreshToken
-		{
-			Token = _jwtTokenService.GenerateRefreshToken(),
-			UserId = user.Id,
-			ExpiresAt = DateTime.UtcNow.AddDays(7)
-		};
-		
-		await _refreshTokenRepository.CreateAsync(refreshToken, cancellationToken);
-		
-		token.RefreshToken = refreshToken.Token;
-		
-		return new Response<TokenDto>
-		{
-			Data = token,
 		};
 	}
 

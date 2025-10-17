@@ -18,13 +18,11 @@ public class AdministratorService : IAdministratorService
     private readonly IInviteRepository _inviteRepository;
     private readonly IVendorRepository _vendorRepository;
     private readonly IOperatorRepository _operatorRepository;
-    private readonly IPasswordHasher _passwordHasher;
-    private readonly IJwtTokenService _jwtTokenService;
     
 
     public AdministratorService(IAdministratorRepository administratorRepository, IUserRepository userRepository, 
 	    IEmailService emailService, IInviteService inviteService, IInviteRepository inviteRepository, IVendorRepository vendorRepository, 
-	    IOperatorRepository operatorRepository, IPasswordHasher passwordHasher, IJwtTokenService jwtTokenService)
+	    IOperatorRepository operatorRepository)
     {
 	    _adminRepository = administratorRepository;
 	    _userRepository = userRepository;
@@ -33,46 +31,11 @@ public class AdministratorService : IAdministratorService
 	    _inviteRepository = inviteRepository;
 	    _vendorRepository = vendorRepository;
 	    _operatorRepository = operatorRepository;
-	    _passwordHasher = passwordHasher;
-	    _jwtTokenService = jwtTokenService;
     }
-
-
-    public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken = default)
-    {
-	    var admin = await _adminRepository.GetByEmailAsync(userData.Email, cancellationToken);
-
-	    if (admin == null)
-	    {
-		    return new Response<TokenDto>
-		    {
-			    ErrorMessage = "Admin not found",
-			    ErrorCode = (int)ErrorCodes.UserNotFound
-		    };
-	    }
-
-	    var passwordsAreEqual = _passwordHasher.ValidatePassword(userData.Password, admin.PasswordHash!);
-
-	    if (!passwordsAreEqual)
-	    {
-		    return new Response<TokenDto>
-		    {
-			    ErrorMessage = "Invalid password",
-			    ErrorCode = (int)ErrorCodes.InvalidPassword
-		    };
-	    }
-
-	    var userClaims = admin.MapAdminToClaimDto();
-	    var token = _jwtTokenService.GenerateToken(userClaims);
-
-	    return new Response<TokenDto>
-	    {
-		    Data = token,
-	    };
-    }
+    
 
     public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData, 
-	    CancellationToken cancellationToken = default)
+	    CancellationToken cancellationToken)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -117,7 +80,7 @@ public class AdministratorService : IAdministratorService
 	}
 
 	public async Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(int adminId, DataForInviteDto inviteData, 
-		CancellationToken cancellationToken = default)
+		CancellationToken cancellationToken)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -163,7 +126,7 @@ public class AdministratorService : IAdministratorService
 	}
 
 	public async Task<Response<UserDtoToFrontEnd>> InviteBusiness(int adminId, BusinessInvitationData invitationData, 
-		CancellationToken cancellationToken = default)
+		CancellationToken cancellationToken)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -235,7 +198,7 @@ public class AdministratorService : IAdministratorService
 		};
 	}
 	
-	public async Task<Response<int>> RemoveOperatorAsync(int operatorId, CancellationToken cancellationToken = default)
+	public async Task<Response<int>> RemoveOperatorAsync(int operatorId, CancellationToken cancellationToken)
 	{
 		var @operator =  await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
 		await _operatorRepository.DeleteAsync(@operator, cancellationToken);
@@ -246,7 +209,7 @@ public class AdministratorService : IAdministratorService
 		};
 	}
 
-	public async Task<Response<int>> RemoveVendorAsync(int vendorId, CancellationToken cancellationToken = default)
+	public async Task<Response<int>> RemoveVendorAsync(int vendorId, CancellationToken cancellationToken)
 	{
 		var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
 		await _vendorRepository.DeleteAsync(vendor, cancellationToken);

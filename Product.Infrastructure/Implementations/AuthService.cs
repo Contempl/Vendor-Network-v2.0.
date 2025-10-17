@@ -12,7 +12,6 @@ namespace Product.Infrastructure.Implementations;
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IInviteRepository _inviteRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
@@ -22,10 +21,9 @@ public class AuthService : IAuthService
 
     public AuthService(IUserRepository userRepository, IPasswordHasher passwordHasher, IJwtTokenService jwtTokenService,
         IRefreshTokenRepository refreshTokenRepository, IVendorUserRepository vendorUserRepository, 
-        IOperatorUserRepository operatorUserRepository, IInviteRepository inviteRepository, IAdministratorRepository administratorRepository)
+        IOperatorUserRepository operatorUserRepository, IAdministratorRepository administratorRepository)
     {
         _userRepository = userRepository;
-        _inviteRepository = inviteRepository;
         _adminRepository = administratorRepository;
         _passwordHasher = passwordHasher;
         _jwtTokenService = jwtTokenService;
@@ -34,7 +32,7 @@ public class AuthService : IAuthService
         _operatorUserRepository = operatorUserRepository;
     }
     
-    public async Task<Response<TokenDto>> LoginAdministrator(UserLoginDto userData, CancellationToken cancellationToken = default)
+    public async Task<Response<TokenDto>> LoginAdministrator(UserLoginDto userData, CancellationToken cancellationToken)
     {
         var admin = await _adminRepository.GetByEmailAsync(userData.Email, cancellationToken);
 

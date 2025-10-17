@@ -19,8 +19,6 @@ public class AdministratorServiceTests
     private readonly Mock<IInviteService> _inviteServiceMock = new();
     private readonly Mock<IVendorRepository> _vendorRepositoryMock = new();
     private readonly Mock<IOperatorRepository> _operatorRepositoryMock = new();
-    private readonly Mock<IJwtTokenService> _jwtTokenServiceMock = new();
-    private readonly Mock<IPasswordHasher> _passhwordHasherMock = new();
     
 
     private readonly AdministratorService _adminService;
@@ -34,9 +32,7 @@ public class AdministratorServiceTests
             _inviteServiceMock.Object,
             _inviteRepositoryMock.Object,
             _vendorRepositoryMock.Object,
-            _operatorRepositoryMock.Object,
-            _passhwordHasherMock.Object,
-            _jwtTokenServiceMock.Object
+            _operatorRepositoryMock.Object
         );
     }
 
