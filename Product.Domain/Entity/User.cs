@@ -21,6 +21,8 @@ public abstract class User : IEntityId<int>, IAuditable
 	public string Email { get; set; }
 
 	public UserType UserType { get; set; }
+
+	public List<RefreshToken> RefreshTokens { get; set; } = new();
 	
 	public List<Invite> SentInvites { get; set; } = new();
 	

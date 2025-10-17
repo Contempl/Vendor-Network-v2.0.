@@ -15,25 +15,25 @@ public class InviteRepository : IInviteRepository
 		_invites = _context.Invites;
 	}
 
-	public async Task CreateAsync(Invite invite, CancellationToken cancellationToken)
+	public async Task CreateAsync(Invite invite, CancellationToken cancellationToken = default)
 	{
 		await _invites.AddAsync(invite, cancellationToken);
 		await SaveAsync(cancellationToken);
 	}
-	public Task DeleteAsync(Invite invite, CancellationToken cancellationToken)
+	public Task DeleteAsync(Invite invite, CancellationToken cancellationToken = default)
 	{
-		_invites.Remove(invite);
+		_invites.Remove(invite = default);
 		return SaveAsync(cancellationToken);
 	}
 	public IQueryable<Invite> GetAll() => _invites;
-	public Task<Invite?> GetByIdOrDefaultAsync(int inviteId) => _invites.SingleOrDefaultAsync(w => w.Id == inviteId);
-	public Task<Invite> GetByIdAsync(int inviteId, CancellationToken cancellationToken) => _invites.SingleAsync(w => w.Id == inviteId, cancellationToken);
-	public Task UpdateAsync(Invite invite, CancellationToken cancellationToken)
+	public async Task<Invite?> GetByIdOrDefaultAsync(int inviteId) => await _invites.SingleOrDefaultAsync(w => w.Id == inviteId);
+	public Task<Invite> GetByIdAsync(int inviteId, CancellationToken cancellationToken = default) => _invites.SingleAsync(w => w.Id == inviteId, cancellationToken);
+	public Task UpdateAsync(Invite invite, CancellationToken cancellationToken = default)
 	{
 		_invites.Update(invite);
 		return SaveAsync(cancellationToken);
 	}
-	public Task<Invite> GetInviteWithUserAsync(int inviteId, CancellationToken cancellationToken)
+	public Task<Invite> GetInviteWithUserAsync(int inviteId, CancellationToken cancellationToken = default)
 	{
 		var invite =  GetAll()
 			.Where(i => i.Id == inviteId)
@@ -43,5 +43,5 @@ public class InviteRepository : IInviteRepository
 		return invite;
 	}
 
-	private Task SaveAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
+	private Task SaveAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
 }

@@ -69,7 +69,7 @@ public class InviteServiceTests
 		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, It.IsAny<CancellationToken>())).ReturnsAsync(invite);
 		
 		// Act
-		var result = await _inviteService.Register(invite.Id, It.IsAny<CancellationToken>());
+		var result = await _inviteService.RegisterUser(invite.Id, It.IsAny<CancellationToken>());
 		
 		// Assert
 		Assert.NotNull(result.Data);
@@ -97,7 +97,7 @@ public class InviteServiceTests
 		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, It.IsAny<CancellationToken>())).ReturnsAsync(invite);
 		
 		// Act
-		var result = await _inviteService.Register(invite.Id, It.IsAny<CancellationToken>());
+		var result = await _inviteService.RegisterUser(invite.Id, It.IsAny<CancellationToken>());
 		
 		// Assert
 		Assert.Equal((int)ErrorCodes.InvalidInvitation, result.ErrorCode);

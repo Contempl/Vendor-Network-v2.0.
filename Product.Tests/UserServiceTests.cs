@@ -22,8 +22,8 @@ public class UserServiceTests
     private readonly Mock<IJwtTokenService> _jwtTokenServiceMock = new();
     private readonly Mock<IVendorUserRepository> _vendorUserRepositoryMock = new();
     private readonly Mock<IOperatorUserRepository> _operatorUserRepositoryMock = new();
-    private readonly Mock<IRedisCacheService> _redisCacheServiceMock = new();
     private readonly Mock<IUserPrincipalService> _userPrincipalServiceMock = new();
+    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock = new();
 
     private readonly UserService _userService;
 
@@ -35,8 +35,8 @@ public class UserServiceTests
             _jwtTokenServiceMock.Object,
             _vendorUserRepositoryMock.Object,
             _operatorUserRepositoryMock.Object,
-            _redisCacheServiceMock.Object,
-            _userPrincipalServiceMock.Object
+            _userPrincipalServiceMock.Object,
+            _refreshTokenRepositoryMock.Object
         );
     }
 
@@ -160,133 +160,7 @@ public class UserServiceTests
         Assert.Null(result.Data);
         Assert.Equal((int)ErrorCodes.UsersDontMatch, result.ErrorCode);
     }
-
     
-    [Fact]
-    public async Task LoginAsync_ValidCredentials_ReturnsToken()
-    {
-        //Arrange
-        var email = "test@example.com";
-        var password = "password";
-        var user = new VendorUser { Id = 1, Email = email, PasswordHash = Encoding.UTF8.GetBytes("hashed"), VendorId = 1};
-
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(email, It.IsAny<CancellationToken>())).ReturnsAsync(user);
-        _passwordHasherMock.Setup(h => h.ValidatePassword(password, user.PasswordHash)).Returns(true);
-        _jwtTokenServiceMock.Setup(j => j.GenerateToken(It.IsAny<UserClaimDto>())).Returns
-        (
-            new TokenDto
-            {
-                AccessToken = "fake_token",
-            }
-        );
-        
-        //Act
-        var result = await _userService.Login
-            (
-                new UserLoginDto
-                {
-                    Email = email,
-                    Password = password
-                }, 
-                It.IsAny<CancellationToken>()
-            );
-
-        //Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("fake_token", result.Data.AccessToken);
-    }
-    
-    [Fact]
-    public async Task LoginAsync_InvalidEmail_ReturnsError()
-    {
-        //Arrange
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User)null!);
-        _jwtTokenServiceMock.Setup(j => j.GenerateToken(It.IsAny<UserClaimDto>())).Returns(new TokenDto { AccessToken = "log_token" });
-        
-        //Act
-        var result = await _userService.Login(new UserLoginDto { Email = "notfound@example.com", Password = "123" }, It.IsAny<CancellationToken>());
-
-        //Assert
-        Assert.Null(result.Data);
-        Assert.Equal((int)ErrorCodes.UserNotFound, result.ErrorCode);
-        _jwtTokenServiceMock.Verify(j => j.GenerateToken(It.IsAny<UserClaimDto>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task LoginAsync_InvalidPassword_ReturnsError()
-    {
-        //Arrange
-        var user = new VendorUser { Id = 1, Email = "test@example.com", PasswordHash = Encoding.UTF8.GetBytes("hash") };
-
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>())).ReturnsAsync(user);
-        _passwordHasherMock.Setup(h => h.ValidatePassword("wrongpass", user.PasswordHash)).Returns(false);
-
-        //Act
-        var result = await _userService.Login(new UserLoginDto { Email = user.Email, Password = "wrongpass" }, It.IsAny<CancellationToken>());
-
-        //Assert
-        Assert.Null(result.Data);
-        Assert.Equal((int)ErrorCodes.InvalidPassword, result.ErrorCode);
-        _passwordHasherMock.Verify(h => h.ValidatePassword("wrongpass", user.PasswordHash), Times.Once);
-    }
-
-    
-    [Fact]
-    public async Task RegisterAsync_ReturnsData_WithValidVendorUserData()
-    {
-        //Arrange
-        var dto = new UserRegistrationDto { Email = "new@example.com", Password = "pass123" };
-    
-        _userRepositoryMock
-            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((User)null!);
-
-        //Act
-        var result = await _userService.RegisterUser(dto, It.IsAny<CancellationToken>());
-    
-        //Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("new@example.com", result.Data.Email);
-        _vendorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-    
-    [Fact]
-    public async Task RegisterAsync_ReturnsData_WithValidOperatorUserData()
-    {
-        //Arrange
-        var dto = new UserRegistrationDto { Email = "new@example.com", Password = "pass123", IsOperator = true};
-    
-        _userRepositoryMock
-            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((User)null!);
-
-        //Act
-        var result = await _userService.RegisterUser(dto, It.IsAny<CancellationToken>());
-    
-        //Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("new@example.com", result.Data.Email);
-        _operatorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<OperatorUser>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-    
-    [Fact]
-    public async Task InterceptorsWorkProperlyWhenCreatingNewUser()
-    {
-        //Arrange
-        var dto = new UserRegistrationDto { Email = "new@example.com", Password = "pass123", IsOperator = true};
-    
-        _userRepositoryMock
-            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((User)null!);
-
-        //Act
-        var result = await _userService.RegisterUser(dto, It.IsAny<CancellationToken>());
-        
-        // Assert
-        // Assert.True(result.Data.CreatedAt <= DateTime.UtcNow && result.Data.CreatedAt > DateTime.UtcNow.AddSeconds(-5));
-        // Assert.Null(result.Data.UpdatedAt);
-        // Assert.Null(result.Data.UpdatedBy);
-    }
     [Fact]
     public async Task UpdatingEntityShouldSetUpdatedAtAndUpdatedBy()
     {

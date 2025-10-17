@@ -21,13 +21,13 @@ public class VendorRepository : IVendorRepository
 		_vendors = _context.Vendors;
 	}
 
-	public async Task CreateAsync(Vendor entity, CancellationToken cancellationToken)
+	public async Task CreateAsync(Vendor entity, CancellationToken cancellationToken = default)
 	{
 		await _vendors.AddAsync(entity, cancellationToken);
 		await SaveAsync(cancellationToken);
 		await _reddisCacheService.SetAsync(CachePrefix + entity.Id, entity);
 	}
-	public Task DeleteAsync(Vendor vendor, CancellationToken cancellationToken)
+	public Task DeleteAsync(Vendor vendor, CancellationToken cancellationToken = default)
 	{
 		_vendors.Remove(vendor);
 		return SaveAsync(cancellationToken);
@@ -47,7 +47,7 @@ public class VendorRepository : IVendorRepository
 		return business;
 	}
 
-	public Task<Vendor> GetByIdAsync(int businessId, CancellationToken cancellationToken)
+	public Task<Vendor> GetByIdAsync(int businessId, CancellationToken cancellationToken = default)
 	{
 		var cacheKey = CachePrefix + businessId;
 		
@@ -62,7 +62,7 @@ public class VendorRepository : IVendorRepository
 		return business;
 	}
 
-	public Task UpdateAsync(Vendor vendor, CancellationToken cancellationToken)
+	public Task UpdateAsync(Vendor vendor, CancellationToken cancellationToken = default)
 	{
 		_reddisCacheService.RemoveAsync(CachePrefix + vendor.Id);
 		
@@ -73,7 +73,7 @@ public class VendorRepository : IVendorRepository
 		return SaveAsync(cancellationToken);
 	}
 
-	public Task<List<Vendor>> GetVendorsWithService(string serviceType, CancellationToken cancellationToken)
+	public Task<List<Vendor>> GetVendorsWithService(string serviceType, CancellationToken cancellationToken = default)
 	{
 		return GetAll()
 			.Include(v => v.VendorFacilities)
@@ -82,7 +82,7 @@ public class VendorRepository : IVendorRepository
 			.ToListAsync(cancellationToken: cancellationToken);
 	}
 	public Task<PagedResult<Vendor>> GetVendorsQuery(string searchName, SortOrder sortOrder,
-		int pageSize, int pageNumber, CancellationToken cancellationToken)
+		int pageSize, int pageNumber, CancellationToken cancellationToken = default)
 	{
 		var query = _vendors.AsQueryable();
 
@@ -101,5 +101,6 @@ public class VendorRepository : IVendorRepository
 			TotalCount = totalCount
 		});
 	}
-	private async Task SaveAsync(CancellationToken cancellationToken) => await _context.SaveChangesAsync(cancellationToken);
+	private Task SaveAsync(CancellationToken cancellationToken = default) => 
+		_context.SaveChangesAsync(cancellationToken);
 }
