@@ -26,7 +26,7 @@ public class InviteRepository : IInviteRepository
 		return SaveAsync(cancellationToken);
 	}
 	public IQueryable<Invite> GetAll() => _invites;
-	public Task<Invite?> GetByIdOrDefaultAsync(int inviteId) => await _invites.SingleOrDefaultAsync(w => w.Id == inviteId);
+	public Task<Invite?> GetByIdOrDefaultAsync(int inviteId) =>  _invites.SingleOrDefaultAsync(w => w.Id == inviteId);
 	public Task<Invite> GetByIdAsync(int inviteId, CancellationToken cancellationToken = default) => _invites.SingleAsync(w => w.Id == inviteId, cancellationToken);
 	public Task UpdateAsync(Invite invite, CancellationToken cancellationToken = default)
 	{
