@@ -21,14 +21,14 @@ public class OperatorUserRepository : IOperatorUserRepository
 		await SaveAsync(cancellationToken);
 	}
 	public IQueryable<OperatorUser> GetAll() => _operatorUsers;
-	public Task DeleteAsync(OperatorUser operatorUser, CancellationToken cancellationToken)
+	public Task DeleteAsync(OperatorUser operatorUser, CancellationToken cancellationToken = default)
 	{
 		_operatorUsers.Remove(operatorUser);
 		return SaveAsync(cancellationToken);
 	}
 	public Task<OperatorUser?> GetByIdOrDefaultAsync(int operatorId) => _operatorUsers.SingleOrDefaultAsync(w => w.Id == operatorId);
-	public Task<OperatorUser> GetByIdAsync(int operatorId) => _operatorUsers.SingleAsync(w => w.Id == operatorId);
-	public Task UpdateAsync(OperatorUser operatorUser, CancellationToken cancellationToken)
+	public Task<OperatorUser> GetByIdAsync(int operatorId, CancellationToken cancellationToken = default) => _operatorUsers.SingleAsync(w => w.Id == operatorId);
+	public Task UpdateAsync(OperatorUser operatorUser, CancellationToken cancellationToken = default)
 	{
 		var userToUpdate = _operatorUsers.FindAsync(operatorUser.Id, cancellationToken).Result!;
 

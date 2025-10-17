@@ -13,13 +13,15 @@ public class VendFacilityService : IVendFacilityService
 	private readonly IUserPrincipalService _userPrincipalService;
 	private readonly IVendorRepository _vendorRepository;
 
-	public VendFacilityService(IVendorFacilityRepository vendorFacilityRepository, IUserPrincipalService userPrincipalService, IVendorRepository vendorRepository)
+	public VendFacilityService(IVendorFacilityRepository vendorFacilityRepository, 
+		IUserPrincipalService userPrincipalService, IVendorRepository vendorRepository)
 	{
 		_vendorFacilityRepository = vendorFacilityRepository;
 		_userPrincipalService = userPrincipalService;
 		_vendorRepository = vendorRepository;
 	}
-	public async Task<Response<VendorFacility>> GetFacilityWithServicesByIdAsync(int vendorFacilityId, CancellationToken cancellationToken)
+	public async Task<Response<VendorFacility>> GetFacilityWithServicesByIdAsync(int vendorFacilityId, 
+		CancellationToken cancellationToken = default)
 	{
 		var vendorId = _userPrincipalService.BusinessId!.Value;
 		var result = await _vendorFacilityRepository.GetFacilityWithServicesByIdAsync(vendorFacilityId, vendorId, cancellationToken);
@@ -50,7 +52,9 @@ public class VendFacilityService : IVendFacilityService
 		
 		if (facilityData.Services?.Any() == true)
 		{
-			var existingServices = facility.Services.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
+			var existingServices = facility.Services
+				.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
+			
 			var updatedServices = new List<VendorFacilityService>();
 
 			foreach (var serviceName in facilityData.Services.Distinct(StringComparer.OrdinalIgnoreCase))
@@ -75,7 +79,8 @@ public class VendFacilityService : IVendFacilityService
 	}
 	
 
-	public async Task<Response<VendorFacility>> AddFacilityAsync(VendorFacilityDto facilityData, CancellationToken cancellationToken)
+	public async Task<Response<VendorFacility>> AddFacilityAsync(VendorFacilityDto facilityData, 
+		CancellationToken cancellationToken = default)
 	{
 		if (facilityData.Services is null || facilityData.Services.Any() == false)
 		{
@@ -98,7 +103,8 @@ public class VendFacilityService : IVendFacilityService
 		};
 	}
 
-	public async Task<Response<VendorFacility>> UpdateFacilityAsync(int facilityId, UpdateVendorFacilityDto facilityData, CancellationToken cancellationToken)
+	public async Task<Response<VendorFacility>> UpdateFacilityAsync(int facilityId, UpdateVendorFacilityDto facilityData, 
+		CancellationToken cancellationToken = default)
 	{
 		var vendorId = _userPrincipalService.BusinessId!.Value;
 		var facility = await _vendorFacilityRepository.GetFacilityWithServicesByIdAsync(facilityId, vendorId, cancellationToken);
@@ -113,7 +119,8 @@ public class VendFacilityService : IVendFacilityService
 		};
 	}
 
-	public async Task<Response<int>> RemoveFacilityAsync(int vendorId, int facilityId, CancellationToken cancellationToken)
+	public async Task<Response<int>> RemoveFacilityAsync(int vendorId, int facilityId, 
+		CancellationToken cancellationToken = default)
 	{
 		var vendorFacility = await _vendorFacilityRepository.GetByIdAsync(vendorId, facilityId, cancellationToken);
 
@@ -125,7 +132,8 @@ public class VendFacilityService : IVendFacilityService
 		};
 	}
 
-	public async Task<Response<VendorFacilityService>> GetVendorFacilityServiceAsync(int facilityId, int facilityServiceId, CancellationToken cancellationToken)
+	public async Task<Response<VendorFacilityService>> GetVendorFacilityServiceAsync(int facilityId, int facilityServiceId, 
+		CancellationToken cancellationToken = default)
 	{
 		var vendorId = _userPrincipalService.BusinessId!.Value;
 		var vendorFacility = await _vendorFacilityRepository.GetFacilityWithServicesByIdAsync(facilityId, vendorId, cancellationToken);

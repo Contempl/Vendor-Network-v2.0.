@@ -19,14 +19,14 @@ public class UserRepository : IUserRepository
 		_users = _context.Set<User>();
 	}
 
-	public async Task CreateAsync(User entity, CancellationToken cancellationToken)
+	public async Task CreateAsync(User entity, CancellationToken cancellationToken = default)
 	{
 		await _users.AddAsync(entity, cancellationToken);
 		await SaveAsync(cancellationToken);
 		
 		await _redisCacheService.SetAsync(CachePrefix + entity.Id, entity);
 	}
-	public Task DeleteAsync(User user, CancellationToken cancellationToken)
+	public Task DeleteAsync(User user, CancellationToken cancellationToken = default)
 	{
 		try
 		{
@@ -41,24 +41,24 @@ public class UserRepository : IUserRepository
 	public IQueryable<User> GetAll() => _users;
 	public Task<User?> GetByIdOrDefaultAsync(int id) => _users.SingleOrDefaultAsync(u => u.Id == id);
 
-	public Task<User> GetByIdAsync(int userId, CancellationToken cancellationToken)
+	public async Task<User> GetByIdAsync(int userId, CancellationToken cancellationToken = default)
 	{
 		var cacheKey = $"{CachePrefix}{userId}";
-		var cached =  _redisCacheService.GetAsync<User>(cacheKey).Result;
+		var cached =  await _redisCacheService.GetAsync<User>(cacheKey);
 		if (cached != null)
 		{
-			return Task.FromResult(cached);
+			return cached;
 		}
 		
-		var user = _users.FindAsync(userId, cancellationToken).Result;
+		var user = await _users.FindAsync(userId, cancellationToken);
 		if (user == null)
 			throw new KeyNotFoundException($"User with id: {userId} could not be found.");
 		
-		_redisCacheService.SetAsync(cacheKey, user);
-		return Task.FromResult(user);
+		await _redisCacheService.SetAsync(cacheKey, user);
+		return user;
 	}
 
-	public Task UpdateAsync(User entity, CancellationToken cancellationToken)
+	public Task UpdateAsync(User entity, CancellationToken cancellationToken = default)
 	{
 		var cacheKey = $"{CachePrefix}{entity.Id}";
 		_redisCacheService.RemoveAsync(cacheKey);
@@ -70,8 +70,8 @@ public class UserRepository : IUserRepository
 		return SaveAsync(cancellationToken);
 	}
 
-	private Task SaveAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
-	public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
+	private Task SaveAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
+	public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
 	{
 		var user = _users.Where(u => u.Email.Trim() == email.Trim())
 			.SingleOrDefaultAsync(cancellationToken).Result;
@@ -85,7 +85,7 @@ public class UserRepository : IUserRepository
 		return Task.FromResult(user)!; 
 	}
 			
-	public Task<User> GetByIdWithInvitesAsync(int userId, CancellationToken cancellationToken)
+	public Task<User> GetByIdWithInvitesAsync(int userId, CancellationToken cancellationToken = default)
 	{
 		return _users.Include(u => u.SentInvites).FirstAsync(u => u.Id == userId, cancellationToken: cancellationToken);
 	}
