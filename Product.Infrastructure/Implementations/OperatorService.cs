@@ -85,7 +85,7 @@ public class OperatorService : IOperatorService
     }
 
     public async Task<Response<List<BusinessFrontEndDto>>> SearchForVendorsAsync(SearchVendorsForIndustriesDto industriesData, 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var serviceIsValid = ValidateStringInput(industriesData.ServiceType);
         if (!serviceIsValid)
@@ -137,7 +137,7 @@ public class OperatorService : IOperatorService
     }
 
     public async Task<Response<PagedList<Vendor>>> GetVendorsByNameAsync(VendorSearchDto vendorSearchDto,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var isValidVendor = ValidateStringInput(vendorSearchDto.VendorName);
         if (!isValidVendor)
@@ -162,7 +162,7 @@ public class OperatorService : IOperatorService
     }
 
     public async Task<Response<BusinessFrontEndDto>> GetOperatorAsync(int operatorId, 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
         var operatorDto = @operator.ToFrontEndDto();
@@ -174,7 +174,7 @@ public class OperatorService : IOperatorService
     }
 
     public async Task<Response<MailMsg>> InviteOperatorUserAsync(EmailForInviteDto dto, 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         await using var transaction = await _unitOfWork.BeginTransactionAsync();
         try
@@ -216,7 +216,7 @@ public class OperatorService : IOperatorService
             };
         }
     }
-    public Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(UpdateOperatorDto operatorUpdateData, CancellationToken cancellationToken = default)
+    public Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(UpdateOperatorDto operatorUpdateData, CancellationToken cancellationToken)
     {
         var operatorId = _userPrincipalService.BusinessId!.Value;
         var @operator = _operatorRepository.GetByIdAsync(operatorId, cancellationToken).Result;
