@@ -34,31 +34,31 @@ public class VendorRepository : IVendorRepository
 	}
 	public IQueryable<Vendor> GetAll() => _vendors;
 
-	public Task<Vendor?> GetByIdOrDefaultAsync(int businessId)
+	public async Task<Vendor?> GetByIdOrDefaultAsync(int businessId)
 	{
-		var cachedBusiness =  _reddisCacheService.GetAsync<Vendor>(CachePrefix + businessId);
+		var cachedBusiness =  await _reddisCacheService.GetAsync<Vendor>(CachePrefix + businessId);
 		if (cachedBusiness != null)
 		{
 			return cachedBusiness;
 		}
-		var business =  _vendors.SingleOrDefaultAsync(v => v.Id == businessId);
+		var business = await _vendors.SingleOrDefaultAsync(v => v.Id == businessId);
 		
-		_reddisCacheService.SetAsync(CachePrefix + businessId, cachedBusiness);
+		await _reddisCacheService.SetAsync(CachePrefix + businessId, cachedBusiness);
 		return business;
 	}
 
-	public Task<Vendor> GetByIdAsync(int businessId, CancellationToken cancellationToken = default)
+	public async Task<Vendor> GetByIdAsync(int businessId, CancellationToken cancellationToken = default)
 	{
 		var cacheKey = CachePrefix + businessId;
 		
-		var cachedBusiness = _reddisCacheService.GetAsync<Vendor>(cacheKey);
+		var cachedBusiness = await _reddisCacheService.GetAsync<Vendor>(cacheKey);
 		if (cachedBusiness != null)
 		{
 			return cachedBusiness;
 		}
-		var business = _context.Vendors.SingleAsync(v => v.Id == businessId, cancellationToken);
+		var business = await _context.Vendors.SingleAsync(v => v.Id == businessId, cancellationToken);
 		
-		_reddisCacheService.SetAsync(cacheKey, business);
+		await _reddisCacheService.SetAsync(cacheKey, business);
 		return business;
 	}
 
@@ -81,7 +81,7 @@ public class VendorRepository : IVendorRepository
 			.Where(v => v.VendorFacilities.Any(vf => vf.Services.Any(s => s.Name == serviceType)))
 			.ToListAsync(cancellationToken: cancellationToken);
 	}
-	public Task<PagedResult<Vendor>> GetVendorsQuery(string searchName, SortOrder sortOrder,
+	public async Task<PagedResult<Vendor>> GetVendorsQuery(string searchName, SortOrder sortOrder,
 		int pageSize, int pageNumber, CancellationToken cancellationToken = default)
 	{
 		var query = _vendors.AsQueryable();
@@ -93,13 +93,13 @@ public class VendorRepository : IVendorRepository
 			: query.OrderByDescending(v => v.BusinessName);
 
 		var totalCount = query.CountAsync(cancellationToken: cancellationToken).Result;
-		var items = query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken).Result;
+		var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
 
-		return Task.FromResult(new PagedResult<Vendor>()
+		return new PagedResult<Vendor>()
 		{
 			Items = items,
 			TotalCount = totalCount
-		});
+		};
 	}
 	private Task SaveAsync(CancellationToken cancellationToken = default) => 
 		_context.SaveChangesAsync(cancellationToken);

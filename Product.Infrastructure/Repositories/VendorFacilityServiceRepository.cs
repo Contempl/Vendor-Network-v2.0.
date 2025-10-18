@@ -27,7 +27,8 @@ public class VendorFacilityServiceRepository : IVendorFacilityServiceRepository
 		return SaveAsync(cancellationToken);
 	}
 	public IQueryable<VendorFacilityService> GetAll() => _facilityServices;
-	public Task<List<VendorFacilityService>> GetServicesByFacilityIdAsync(int vendorId, int facilityId, CancellationToken cancellationToken = default)
+	public Task<List<VendorFacilityService>> GetServicesByFacilityIdAsync(int vendorId, int facilityId, 
+		CancellationToken cancellationToken = default)
 	{
 		var facilityServices =  _facilityServices
 			.Where(f => f.VendorFacilityId == facilityId && f.VendorFacility.VendorId == vendorId)
@@ -42,7 +43,8 @@ public class VendorFacilityServiceRepository : IVendorFacilityServiceRepository
 		                                        && vfs.VendorFacilityId == facilityId 
 		                                        && vfs.VendorFacility.VendorId == vendorId, cancellationToken);
 
-	private Task SaveAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
+	private Task SaveAsync(CancellationToken cancellationToken = default) => 
+		_context.SaveChangesAsync(cancellationToken);
 	public Task UpdateAsync(VendorFacilityService facilityService, CancellationToken cancellationToken = default)
 	{
 		_facilityServices.Update(facilityService);

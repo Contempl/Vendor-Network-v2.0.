@@ -87,6 +87,7 @@ public class UserRepository : IUserRepository
 			
 	public Task<User> GetByIdWithInvitesAsync(int userId, CancellationToken cancellationToken = default)
 	{
-		return _users.Include(u => u.SentInvites).FirstAsync(u => u.Id == userId, cancellationToken: cancellationToken);
+		return _users.Include(u => u.SentInvites)
+			.FirstAsync(u => u.Id == userId, cancellationToken: cancellationToken);
 	}
 }

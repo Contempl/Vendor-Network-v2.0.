@@ -17,7 +17,10 @@ public class InviteService : IInviteService
 	private readonly IVendorUserRepository _vendorUserRepository;
 	private readonly IUserService _userService;
 
-	public InviteService(IInviteRepository inviteRepository, IUserRepository userRepository, IOperatorUserRepository operatorUserRepository, IVendorUserRepository vendorUserRepository, IUserService userService)
+	public InviteService(
+		IInviteRepository inviteRepository, IUserRepository userRepository, 
+		IOperatorUserRepository operatorUserRepository, IVendorUserRepository vendorUserRepository, 
+		IUserService userService)
 	{
 		_inviteRepository = inviteRepository;
 		_userRepository = userRepository;
@@ -52,7 +55,7 @@ public class InviteService : IInviteService
 
 
 	public async Task<Response<InviteIdToFrontEnd>> RegisterUser(int inviteId, 
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken = default)
 	{
 		var invite = await _inviteRepository.GetByIdAsync(inviteId, cancellationToken);
 		
@@ -75,7 +78,7 @@ public class InviteService : IInviteService
 	}
 	
 	public async Task<Response<UserDtoToFrontEnd>> RegisterByInvite(int inviteId, 
-		UserRegistrationByInviteDto registrationData, CancellationToken cancellationToken)
+		UserRegistrationByInviteDto registrationData, CancellationToken cancellationToken = default)
 	{
 		var invite = await _inviteRepository.GetInviteWithUserAsync(inviteId, cancellationToken);
 		
@@ -100,7 +103,8 @@ public class InviteService : IInviteService
 		};
 	}
 	
-	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite, int inviteId, CancellationToken cancellationToken)
+	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite, int inviteId, 
+		CancellationToken cancellationToken = default)
 	{
 		var inviteUserId = invite.InvitedUserId!.Value;
 		var user = await _userRepository.GetByIdAsync(inviteUserId, cancellationToken);

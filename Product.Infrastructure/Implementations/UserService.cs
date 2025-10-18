@@ -88,7 +88,8 @@ public class UserService : IUserService
 		};
 	}
 
-	public async Task<Response<TokenDto>> Refresh(RefreshTokenRequestDto refreshDto, CancellationToken cancellationToken)
+	public async Task<Response<TokenDto>> Refresh(RefreshTokenRequestDto refreshDto, 
+		CancellationToken cancellationToken = default)
 	{
 		var existingToken = await _refreshTokenRepository.GetByTokenAsync(refreshDto.RefreshToken, cancellationToken);
 

@@ -35,7 +35,7 @@ public class AdministratorService : IAdministratorService
     
 
     public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData, 
-	    CancellationToken cancellationToken)
+	    CancellationToken cancellationToken= default)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -80,7 +80,7 @@ public class AdministratorService : IAdministratorService
 	}
 
 	public async Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(int adminId, DataForInviteDto inviteData, 
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken = default)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -126,7 +126,7 @@ public class AdministratorService : IAdministratorService
 	}
 
 	public async Task<Response<UserDtoToFrontEnd>> InviteBusiness(int adminId, BusinessInvitationData invitationData, 
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken = default)
 	{
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
@@ -198,7 +198,7 @@ public class AdministratorService : IAdministratorService
 		};
 	}
 	
-	public async Task<Response<int>> RemoveOperatorAsync(int operatorId, CancellationToken cancellationToken)
+	public async Task<Response<int>> RemoveOperatorAsync(int operatorId, CancellationToken cancellationToken = default)
 	{
 		var @operator =  await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
 		await _operatorRepository.DeleteAsync(@operator, cancellationToken);
@@ -209,7 +209,7 @@ public class AdministratorService : IAdministratorService
 		};
 	}
 
-	public async Task<Response<int>> RemoveVendorAsync(int vendorId, CancellationToken cancellationToken)
+	public async Task<Response<int>> RemoveVendorAsync(int vendorId, CancellationToken cancellationToken = default)
 	{
 		var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
 		await _vendorRepository.DeleteAsync(vendor, cancellationToken);
