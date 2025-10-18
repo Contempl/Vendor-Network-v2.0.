@@ -32,7 +32,8 @@ public class AuthService : IAuthService
         _operatorUserRepository = operatorUserRepository;
     }
     
-    public async Task<Response<TokenDto>> LoginAdministrator(UserLoginDto userData, CancellationToken cancellationToken)
+    public async Task<Response<TokenDto>> LoginAdministrator(UserLoginDto userData, 
+        CancellationToken cancellationToken = default)
     {
         var admin = await _adminRepository.GetByEmailAsync(userData.Email, cancellationToken);
 
@@ -65,7 +66,7 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken)
+    public async Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByEmailAsync(userData.Email, cancellationToken);
 
@@ -111,7 +112,7 @@ public class AuthService : IAuthService
     }
 
     public async Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData, 
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         var userByEmail = await _userRepository.GetByEmailAsync(registrationData.Email, cancellationToken);
         if (userByEmail != null)

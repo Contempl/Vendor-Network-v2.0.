@@ -15,7 +15,7 @@ public class OperatorUserRepository : IOperatorUserRepository
 		_operatorUsers = _context.OperatorUsers;
 	}
 
-	public async Task CreateAsync(OperatorUser operatorUser, CancellationToken cancellationToken)
+	public async Task CreateAsync(OperatorUser operatorUser, CancellationToken cancellationToken = default)
 	{
 		await _operatorUsers.AddAsync(operatorUser, cancellationToken);
 		await SaveAsync(cancellationToken);
@@ -26,14 +26,16 @@ public class OperatorUserRepository : IOperatorUserRepository
 		_operatorUsers.Remove(operatorUser);
 		return SaveAsync(cancellationToken);
 	}
-	public Task<OperatorUser?> GetByIdOrDefaultAsync(int operatorId) => _operatorUsers.SingleOrDefaultAsync(w => w.Id == operatorId);
-	public Task<OperatorUser> GetByIdAsync(int operatorId, CancellationToken cancellationToken = default) => _operatorUsers.SingleAsync(w => w.Id == operatorId);
-	public Task UpdateAsync(OperatorUser operatorUser, CancellationToken cancellationToken = default)
+	public Task<OperatorUser?> GetByIdOrDefaultAsync(int operatorId) => 
+		_operatorUsers.SingleOrDefaultAsync(w => w.Id == operatorId);
+	public Task<OperatorUser> GetByIdAsync(int operatorId, CancellationToken cancellationToken = default) => 
+		_operatorUsers.SingleAsync(w => w.Id == operatorId);
+	public async Task UpdateAsync(OperatorUser operatorUser, CancellationToken cancellationToken = default)
 	{
-		var userToUpdate = _operatorUsers.FindAsync(operatorUser.Id, cancellationToken).Result!;
+		var userToUpdate = await _operatorUsers.FindAsync(operatorUser.Id, cancellationToken);
 
 		_context.Entry(userToUpdate).CurrentValues.SetValues(operatorUser);
-		return SaveAsync(cancellationToken);
+		await  SaveAsync(cancellationToken);
 	}
 
 	private Task SaveAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);

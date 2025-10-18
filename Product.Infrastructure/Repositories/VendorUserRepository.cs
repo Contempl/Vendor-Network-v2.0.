@@ -27,7 +27,8 @@ public class VendorUserRepository : IVendorUserRepository
 	}
 	public IQueryable<VendorUser> GetAll() => _vendorUsers;
 	public Task<VendorUser?> GetByIdOrDefaultAsync(int id) => _vendorUsers.SingleOrDefaultAsync(vu => vu.Id == id);
-	public Task<VendorUser> GetByIdAsync(int id, CancellationToken cancellationToken = default) => _vendorUsers.SingleAsync(vu => vu.Id == id, cancellationToken: cancellationToken);
+	public Task<VendorUser> GetByIdAsync(int id, CancellationToken cancellationToken = default) => 
+		_vendorUsers.SingleAsync(vu => vu.Id == id, cancellationToken: cancellationToken);
 	public async Task UpdateAsync(VendorUser vendorUser, CancellationToken cancellationToken = default)
 	{
 		var userToUpdate = await _vendorUsers.FindAsync(vendorUser.Id, cancellationToken);
@@ -36,5 +37,6 @@ public class VendorUserRepository : IVendorUserRepository
 		await SaveAsync(cancellationToken);
 	}
 
-	private Task SaveAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
+	private Task SaveAsync(CancellationToken cancellationToken = default) => 
+		_context.SaveChangesAsync(cancellationToken);
 }
