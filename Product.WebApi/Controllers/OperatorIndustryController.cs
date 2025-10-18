@@ -51,8 +51,8 @@ public class OperatorIndustryController : ControllerBase
 	[HttpPost("{operatorId}/industry")]
 
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> AddOperatorIndustry([FromBody] OperatorIndustryCreationDto industryData,
-		CancellationToken cancellationToken)
+	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> AddOperatorIndustry(
+		[FromBody] OperatorIndustryCreationDto industryData, CancellationToken cancellationToken)
 	{
 		var response = await _operatorIndustryService.CreateOperatorIndustryAsync(industryData, cancellationToken);
 		if (response.IsSuccess)
@@ -79,7 +79,8 @@ public class OperatorIndustryController : ControllerBase
 	[HttpDelete("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<int>>> RemoveOperatorIndustry(int industryId, CancellationToken cancellationToken)
+	public async Task<ActionResult<Response<int>>> RemoveOperatorIndustry(int industryId, 
+		CancellationToken cancellationToken)
 	{
 		var response = await _operatorIndustryService.RemoveOperatorIndustryAsync(industryId, cancellationToken);
 		if (response.IsSuccess)

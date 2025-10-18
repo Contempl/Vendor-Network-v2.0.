@@ -28,7 +28,7 @@ public class AdministratorRepository : IAdministratorRepository
 		return SaveAsync(cancellationToken);
 	}
 	public IQueryable<Administrator> GetAll() => _administrators;
-	public async Task<Administrator?> GetByIdOrDefaultAsync(int adminId) => await _administrators.SingleOrDefaultAsync(admin => admin.Id == adminId);
+	public Task<Administrator?> GetByIdOrDefaultAsync(int adminId) =>  _administrators.SingleOrDefaultAsync(admin => admin.Id == adminId);
 	public Task<Administrator> GetByIdAsync(int adminId, CancellationToken cancellationToken = default) =>  _administrators.SingleAsync(admin => admin.Id == adminId, cancellationToken);
 	public Task<Administrator?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
 	{

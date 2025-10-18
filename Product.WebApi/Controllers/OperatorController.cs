@@ -27,7 +27,8 @@ public class OperatorController : Controller
 	[HttpPost("search/vendors")]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> SearchVendorsToServeFacilities([FromBody] SearchVendorsForIndustriesDto industriesData, CancellationToken cancellationToken)
+	public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> SearchVendorsToServeFacilities(
+		[FromBody] SearchVendorsForIndustriesDto industriesData, CancellationToken cancellationToken)
 	{
 		var response = await _operatorService.SearchForVendorsAsync(industriesData, cancellationToken);
 		if (response.IsSuccess)
@@ -39,7 +40,8 @@ public class OperatorController : Controller
 
 	[HttpPost("search/vendor")]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<PagedList<Vendor>>>> GetVendors([FromBody] VendorSearchDto vendorSearchDto, CancellationToken cancellationToken)
+	public async Task<ActionResult<Response<PagedList<Vendor>>>> GetVendors(
+		[FromBody] VendorSearchDto vendorSearchDto, CancellationToken cancellationToken)
 	{
 		var response =  await _operatorService.GetVendorsByNameAsync(vendorSearchDto, cancellationToken);
 		if (response.IsSuccess)
@@ -67,7 +69,8 @@ public class OperatorController : Controller
 	[HttpPut]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateOperator([FromBody] UpdateOperatorDto operatorData, CancellationToken cancellationToken)
+	public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateOperator(
+		[FromBody] UpdateOperatorDto operatorData, CancellationToken cancellationToken)
 	{
 		var response = await _operatorService.UpdateOperatorAsync(operatorData, cancellationToken);
 		if (response.IsSuccess)
@@ -80,7 +83,8 @@ public class OperatorController : Controller
 	[HttpPost("invite")]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<MailMsg>>> InviteOperatorUser([FromBody] EmailForInviteDto dto, CancellationToken cancellationToken)
+	public async Task<ActionResult<Response<MailMsg>>> InviteOperatorUser(
+		[FromBody] EmailForInviteDto dto, CancellationToken cancellationToken)
 	{
 		var response = await _operatorService.InviteOperatorUserAsync(dto, cancellationToken);
 		if (response.IsSuccess)

@@ -27,7 +27,8 @@ public class VendorFacilityController : ControllerBase
 	[EnsureVendorFacilityExists]
 	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult<Response<VendorFacility>>> GetVendorFacility(int facilityId, CancellationToken cancellationToken)
+	public async Task<ActionResult<Response<VendorFacility>>> GetVendorFacility(int facilityId, 
+		CancellationToken cancellationToken)
 	{
 		var response = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, cancellationToken);
 		if (response.IsSuccess)
@@ -40,7 +41,8 @@ public class VendorFacilityController : ControllerBase
 	[HttpPost("/facility")]
 	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")]
-	public async Task<ActionResult<Response<VendorFacility>>> AddFacility(VendorFacilityDto facilityData, CancellationToken cancellationToken)
+	public async Task<ActionResult<Response<VendorFacility>>> AddFacility(VendorFacilityDto facilityData, 
+		CancellationToken cancellationToken)
 	{
 		var response = await _vendorFacilityService.AddFacilityAsync(facilityData, cancellationToken);
 		if (response.IsSuccess)
