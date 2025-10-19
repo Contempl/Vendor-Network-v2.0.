@@ -72,15 +72,6 @@ public class OperatorIndustryService : IOperatorIndustryService
         return newIndustry;
 	}
 
-    private void MapIndustryToUpdate(OperatorIndustry industry, 
-        UpdateOperatorIndustryDto industryData)
-    {
-		industry.Name = industryData.Name ?? industry.Name;
-		industry.Address = industryData.Address ?? industry.Address;
-		industry.Latitude = industryData.Latitude ?? industry.Latitude;
-		industry.Longitude = industryData.Longitude ?? industry.Longitude;
-	}
-
     public async Task<Response<OpIndustryFrontEndDto>> CreateOperatorIndustryAsync
     (OperatorIndustryCreationDto industryCreationData, CancellationToken cancellationToken = default)
     {
@@ -126,7 +117,7 @@ public class OperatorIndustryService : IOperatorIndustryService
 		    };
 	    }
 
-	    MapIndustryToUpdate(existingIndustry, industryData);
+	    existingIndustry.MapIndustryToUpdate(industryData);
 	    await _operatorIndustryRepository.UpdateAsync(existingIndustry, cancellationToken);
 	    
 	    var result = existingIndustry.ToFrontEndDto();

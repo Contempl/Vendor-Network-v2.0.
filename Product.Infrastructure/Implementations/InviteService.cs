@@ -15,18 +15,18 @@ public class InviteService : IInviteService
 	private readonly IUserRepository _userRepository;
 	private readonly IOperatorUserRepository _operatorUserRepository;
 	private readonly IVendorUserRepository _vendorUserRepository;
-	private readonly IUserService _userService;
+	private readonly IPasswordHasher _passwordHasher;
 
 	public InviteService(
 		IInviteRepository inviteRepository, IUserRepository userRepository, 
 		IOperatorUserRepository operatorUserRepository, IVendorUserRepository vendorUserRepository, 
-		IUserService userService)
+		IPasswordHasher passwordHasher)
 	{
 		_inviteRepository = inviteRepository;
 		_userRepository = userRepository;
 		_operatorUserRepository = operatorUserRepository;
 		_vendorUserRepository = vendorUserRepository;
-		_userService = userService;
+		_passwordHasher = passwordHasher;
 	}
 	
 	private bool ValidateInvite(Invite invite)
@@ -109,7 +109,8 @@ public class InviteService : IInviteService
 		var inviteUserId = invite.InvitedUserId!.Value;
 		var user = await _userRepository.GetByIdAsync(inviteUserId, cancellationToken);
 
-		_userService.MapUserToUpdateByInvite(dto, user);
+		user.MapUserToUpdateByInvite(dto);
+		user.PasswordHash = _passwordHasher.HashThePassword(dto.Password);
 
 		if (user is VendorUser vendorUser)
 		{

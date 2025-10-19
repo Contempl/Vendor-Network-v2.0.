@@ -1,23 +1,13 @@
+using Product.Application.Dto;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
+using Product.Domain.Enum;
 
 namespace Product.Application.Mapping;
 
 public static class UserMappingExtensions
 {
-    public static UserDto MapToDto(this User user)
-    {
-        return new UserDto
-        {
-            Login = user.UserName
-        };
-    }
-
-    public static List<UserDto> ToDtoList(this IEnumerable<User> users)
-    {
-        return users.Select(u => u.MapToDto()).ToList();
-    }
-
+    
     public static UserDtoToFrontEnd MapToFrontEndDto(this User user)
     {
         return new UserDtoToFrontEnd
@@ -62,4 +52,29 @@ public static class UserMappingExtensions
 		
         return dto;
     }
+
+    public static void MapUserToUpdateByInvite(this User user, UserRegistrationByInviteDto dto)
+    {
+        user.UserName = dto.UserName;
+        user.FirstName = dto.FirstName;
+        user.LastName = dto.LastName;
+    }
+    
+    public static VendorUser MapVendorUserFromDto(this UserRegistrationDto registrationData) => new VendorUser
+    {
+        UserName = registrationData.UserName,
+        FirstName = registrationData.FirstName,
+        LastName = registrationData.LastName,
+        Email = registrationData.Email,
+        UserType = UserType.VendorUser,
+    };
+
+    public static OperatorUser MapOperatorUserFromDto(this UserRegistrationDto registrationData) => new OperatorUser
+    {
+        UserName = registrationData.UserName,
+        FirstName = registrationData.FirstName,
+        LastName = registrationData.LastName,
+        Email = registrationData.Email,
+        UserType = UserType.OperatorUser,
+    };
 }

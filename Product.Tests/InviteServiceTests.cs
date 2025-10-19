@@ -16,7 +16,7 @@ public class InviteServiceTests
 	private readonly Mock<IUserRepository> _userRepositoryMock = new();
 	private readonly Mock<IOperatorUserRepository> _operatorUserRepositoryMock = new();
 	private readonly Mock<IVendorUserRepository> _vendorUserRepositoryMock = new();
-	private readonly Mock<IUserService> _userServiceMock = new();
+	private readonly Mock<IPasswordHasher> _passwordHasherMock = new();
 	
 	private readonly IInviteService _inviteService;
 
@@ -27,7 +27,7 @@ public class InviteServiceTests
 			_userRepositoryMock.Object,
 			_operatorUserRepositoryMock.Object,
 			_vendorUserRepositoryMock.Object,
-			_userServiceMock.Object
+			_passwordHasherMock.Object
 		);
 	}
 

@@ -1,3 +1,4 @@
+using Product.Application.Dto;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
 
@@ -13,5 +14,12 @@ public static class BusinessMappingExtension
             BusinessName = business.BusinessName,
             Address = business.Address
         };
+    }
+
+    public static void MapVendorToUpdate(this Business vendor, UpdateVendorDto vendorData)
+    {
+        vendor.BusinessName = vendorData.BusinessName ?? vendor.BusinessName;
+        vendor.Address = vendorData.Address ?? vendor.Address;
+        vendor.Email = vendorData.Email ?? vendor.Email;
     }
 }

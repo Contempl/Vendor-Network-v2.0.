@@ -1,3 +1,4 @@
+using Product.Application.Dto;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
 
@@ -13,5 +14,14 @@ public static class OperatorIndustryMappingExtension
             Name = operatorIndustry.Name,
             Address = operatorIndustry.Address
         };
+    }
+    
+    public static void MapIndustryToUpdate(this OperatorIndustry industry, 
+        UpdateOperatorIndustryDto industryData)
+    {
+        industry.Name = industryData.Name ?? industry.Name;
+        industry.Address = industryData.Address ?? industry.Address;
+        industry.Latitude = industryData.Latitude ?? industry.Latitude;
+        industry.Longitude = industryData.Longitude ?? industry.Longitude;
     }
 }

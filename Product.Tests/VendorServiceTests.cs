@@ -36,7 +36,6 @@ public class VendorServiceTests
             _emailServiceMock.Object,
             _inviteServiceMock.Object,
             _inviteRepositoryMock.Object,
-            _userRepositoryMock.Object,
             _unitOfWorkMock.Object
             );
     }
