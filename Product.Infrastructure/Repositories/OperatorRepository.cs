@@ -27,7 +27,8 @@ public class OperatorRepository : IOperatorRepository
 	}
 
 	public Task<Operator?> GetByIdOrDefaultAsync(int operatorId) => _operators.SingleOrDefaultAsync(oper => oper.Id == operatorId);
-	public Task<Operator> GetByIdAsync(int operatorId, CancellationToken cancellationToken = default) => _operators.SingleAsync(oper => oper.Id == operatorId, cancellationToken: cancellationToken);
+	public Task<Operator> GetByIdAsync(int operatorId, CancellationToken cancellationToken = default) => 
+		_operators.SingleAsync(oper => oper.Id == operatorId, cancellationToken: cancellationToken);
 	public Task UpdateAsync(Operator @operator, CancellationToken cancellationToken = default)
 	{
 		_operators.Update(@operator);

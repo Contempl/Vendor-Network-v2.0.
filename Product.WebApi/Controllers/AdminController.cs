@@ -37,7 +37,6 @@ public class AdminController : ControllerBase
 	}
 
 	[HttpPost("inviteBusiness")]
-	[EnsureAdministratorExists]
 	public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteBusiness([FromBody] BusinessInvitationData invitationData,
 		CancellationToken cancellationToken)
 	{
@@ -51,7 +50,6 @@ public class AdminController : ControllerBase
 	}
 
 	[HttpPost("/inviteVendorUser")]
-	[EnsureAdministratorExists]
 	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> InviteVendorUser([FromBody] DataForInviteDto inviteData,
 		CancellationToken cancellationToken)
 	{
@@ -65,7 +63,6 @@ public class AdminController : ControllerBase
 	}
 
 	[HttpPost("/inviteOperatorUser")]
-	[EnsureAdministratorExists]
 	public async Task<IActionResult> InviteOperatorUser([FromBody] DataForInviteDto inviteData, CancellationToken cancellationToken)
 	{
 		var adminId = _userPrincipalService.UserId!.Value;

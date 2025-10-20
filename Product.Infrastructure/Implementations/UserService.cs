@@ -36,7 +36,7 @@ public class UserService : IUserService
 		user.PasswordHash = _passwordHasher.HashThePassword(dto.Password);
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken = default)
+	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken)
 	{
 		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 
