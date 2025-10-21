@@ -92,7 +92,7 @@ public class VendorRepository : IVendorRepository
 			? query.OrderBy(v => v.BusinessName)
 			: query.OrderByDescending(v => v.BusinessName);
 
-		var totalCount = query.CountAsync(cancellationToken: cancellationToken).Result;
+		var totalCount = await query.CountAsync(cancellationToken: cancellationToken);
 		var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
 
 		return new PagedResult<Vendor>()

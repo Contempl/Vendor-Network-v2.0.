@@ -208,17 +208,17 @@ public class OperatorService : IOperatorService
             };
         }
     }
-    public Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(UpdateOperatorDto operatorUpdateData, 
+    public async Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(UpdateOperatorDto operatorUpdateData, 
         CancellationToken cancellationToken = default)
     {
         var operatorId = _userPrincipalService.BusinessId!.Value;
-        var @operator = _operatorRepository.GetByIdAsync(operatorId, cancellationToken).Result;
+        var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
         @operator.MapOperatorFromDtoToUpdate(operatorUpdateData);
 
-        _operatorRepository.UpdateAsync(@operator, cancellationToken);
-        return Task.FromResult(new Response<BusinessFrontEndDto>
+        await _operatorRepository.UpdateAsync(@operator, cancellationToken);
+        return new Response<BusinessFrontEndDto>
         {
             Data = @operator.ToFrontEndDto()
-        });
+        };
     }
 }   
