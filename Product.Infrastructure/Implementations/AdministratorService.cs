@@ -102,7 +102,12 @@ public class AdministratorService : IAdministratorService
 			};
 		}
 		
-		var operatorUser = new OperatorUser { Email = inviteData.Email, OperatorId = inviteData.BusinessId };
+		var operatorUser = new OperatorUser
+		{
+			Email = inviteData.Email, 
+			OperatorId = inviteData.BusinessId, 
+			UserType = UserType.OperatorUser
+		};
 
 		await _userRepository.CreateAsync(operatorUser, cancellationToken);
 

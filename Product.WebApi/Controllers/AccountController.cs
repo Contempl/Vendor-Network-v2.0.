@@ -16,7 +16,7 @@ public class AccountController : ControllerBase
 	private readonly IUserService _userService;
 	private readonly IInviteService _inviteService;
 	private readonly IAuthService _authService;
-	public AccountController(IInviteService inviteService, IUserService userService, IAdministratorService adminService, IAuthService authService)
+	public AccountController(IInviteService inviteService, IUserService userService, IAuthService authService)
 	{
 		_inviteService = inviteService;
 		_userService = userService;

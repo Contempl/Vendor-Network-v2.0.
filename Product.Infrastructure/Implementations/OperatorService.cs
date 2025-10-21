@@ -57,15 +57,6 @@ public class OperatorService : IOperatorService
     {
         return !string.IsNullOrWhiteSpace(input);
     }
-    
-    private void MapOperatorFromDtoToUpdate(Operator @operator, UpdateOperatorDto operatorData)
-    {
-		@operator.BusinessName = operatorData.BusinessName ?? @operator.BusinessName;
-		@operator.Address = operatorData.Address ?? @operator.Address;
-		@operator.Email = operatorData.Email ?? @operator.Email;
-		@operator.LogoUrl = operatorData.LogoUrl ?? @operator.LogoUrl;
-		@operator.Occupation = operatorData.Occupation ?? @operator.Occupation;
-	}
 
     private async Task<List<Vendor>> SearchVendorsAsync(string serviceType, List<OperatorIndustry> operatorFacilities, 
         CancellationToken cancellationToken = default)
@@ -222,7 +213,7 @@ public class OperatorService : IOperatorService
     {
         var operatorId = _userPrincipalService.BusinessId!.Value;
         var @operator = _operatorRepository.GetByIdAsync(operatorId, cancellationToken).Result;
-        MapOperatorFromDtoToUpdate(@operator, operatorUpdateData);
+        @operator.MapOperatorFromDtoToUpdate(operatorUpdateData);
 
         _operatorRepository.UpdateAsync(@operator, cancellationToken);
         return Task.FromResult(new Response<BusinessFrontEndDto>

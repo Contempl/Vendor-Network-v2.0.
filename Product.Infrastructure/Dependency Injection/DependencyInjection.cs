@@ -71,6 +71,7 @@ public static class DependencyInjection
         services.AddScoped<IOperatorService, OperatorService>();
         services.AddScoped<IOperatorIndustryService, OperatorIndustryService>();
         services.AddScoped<IInviteService, InviteService>();
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IRedisCacheService, RedisCacheService>();
         services.AddScoped<IEmailService, EmailService>(provider =>
         {

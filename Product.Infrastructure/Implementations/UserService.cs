@@ -16,20 +16,15 @@ public class UserService : IUserService
 	private readonly IUserPrincipalService _userPrincipalService;
 	private readonly IPasswordHasher _passwordHasher;
 	private readonly IJwtTokenService _jwtTokenService;
-	private readonly IVendorUserRepository _vendorUserRepository;
-	private readonly IOperatorUserRepository _operatorUserRepository;
 	private readonly IRefreshTokenRepository _refreshTokenRepository;
 
 	public UserService(IUserRepository userRepository, IPasswordHasher userPrincipalService, 
-		IJwtTokenService jwtTokenService, IVendorUserRepository vendorUserRepository, 
-		IOperatorUserRepository operatorUserRepository, 
-		IUserPrincipalService userPrincipalService1, IRefreshTokenRepository refreshTokenRepository)
+		IJwtTokenService jwtTokenService, IUserPrincipalService userPrincipalService1, 
+		IRefreshTokenRepository refreshTokenRepository)
 	{
 		_userRepository = userRepository;
 		_passwordHasher = userPrincipalService;
 		_jwtTokenService = jwtTokenService;
-		_vendorUserRepository = vendorUserRepository;
-		_operatorUserRepository = operatorUserRepository;
 		_userPrincipalService = userPrincipalService1;
 		_refreshTokenRepository = refreshTokenRepository;
 	}
@@ -41,7 +36,7 @@ public class UserService : IUserService
 		user.PasswordHash = _passwordHasher.HashThePassword(dto.Password);
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken = default)
+	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken)
 	{
 		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 
@@ -124,25 +119,4 @@ public class UserService : IUserService
 			Data = newToken
 		};
 	}
-
-
-	private VendorUser MapVendorUserFromDto(UserRegistrationDto registrationData) => new VendorUser
-	{
-		UserName = registrationData.UserName,
-		FirstName = registrationData.FirstName,
-		LastName = registrationData.LastName,
-		Email = registrationData.Email,
-		PasswordHash = _passwordHasher.HashThePassword(registrationData.Password),
-		UserType = UserType.VendorUser,
-	};
-
-	private OperatorUser MapOperatorUserFromDto(UserRegistrationDto registrationData) => new OperatorUser
-	{
-		UserName = registrationData.UserName,
-		FirstName = registrationData.FirstName,
-		LastName = registrationData.LastName,
-		Email = registrationData.Email,
-		PasswordHash = _passwordHasher.HashThePassword(registrationData.Password),
-		UserType = UserType.OperatorUser,
-	};
 }

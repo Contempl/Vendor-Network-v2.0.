@@ -8,7 +8,6 @@ namespace Product.Application.ServiceInterfaces;
 public interface IUserService
 {
 	Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken);
-	void MapUserToUpdateByInvite(UserRegistrationByInviteDto dto, User user);
 	Task<Response<int>> RemoveUserAsync(int userId, CancellationToken cancellationToken);
 	Task<Response<UserDtoToFrontEnd>> UpdateUserAsync(UserToUpdateDto userUpdateData, int userId, CancellationToken cancellationToken);
 	Task<Response<TokenDto>> Refresh(RefreshTokenRequestDto refreshDto, CancellationToken cancellationToken);

@@ -17,14 +17,12 @@ public class VendorService : IVendorService
     private readonly IUserPrincipalService _userPrincipalService;
     private readonly IEmailService _emailService;
     private readonly IInviteService _inviteService;
-    private readonly IUserRepository _userRepository;
     private readonly IInviteRepository _inviteRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public VendorService(IVendorRepository vendorRepository, IOperatorRepository operatorRepository,
         IVendorUserRepository vendorUserRepository, IUserPrincipalService userPrincipalService,
-        IEmailService emailService, IInviteService inviteService, IInviteRepository inviteRepository,
-        IUserRepository userRepository, IUnitOfWork unitOfWork)
+        IEmailService emailService, IInviteService inviteService, IInviteRepository inviteRepository, IUnitOfWork unitOfWork)
     {
         _vendorRepository = vendorRepository;
         _operatorRepository = operatorRepository;
@@ -33,7 +31,6 @@ public class VendorService : IVendorService
         _emailService = emailService;
         _inviteService = inviteService;
         _inviteRepository = inviteRepository;
-        _userRepository = userRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -45,13 +42,6 @@ public class VendorService : IVendorService
         }
 
         return true;
-    }
-
-    private void MapVendorToUpdate(Vendor vendor, UpdateVendorDto vendorData)
-    {
-        vendor.BusinessName = vendorData.BusinessName ?? vendor.BusinessName;
-        vendor.Address = vendorData.Address ?? vendor.Address;
-        vendor.Email = vendorData.Email ?? vendor.Email;
     }
 
     public async Task<Response<List<BusinessFrontEndDto>>> SearchOperatorsAsync(OperatorSearchDto operatorSearchDto, 
@@ -94,7 +84,7 @@ public class VendorService : IVendorService
         var vendorId = _userPrincipalService.BusinessId!.Value;
         var existingVendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
 
-        MapVendorToUpdate(existingVendor, vendorData);
+        existingVendor.MapVendorToUpdate(vendorData);
 
         await _vendorRepository.UpdateAsync(existingVendor, cancellationToken);
 

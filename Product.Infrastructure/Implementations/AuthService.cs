@@ -126,8 +126,9 @@ public class AuthService : IAuthService
 		
         if (!registrationData.IsOperator)
         {
-            var newVendor = MapVendorUserFromDto(registrationData);
-
+            var newVendor = registrationData.MapVendorUserFromDto();
+            newVendor.PasswordHash = _passwordHasher.HashThePassword(registrationData.Password);
+            
             await _vendorUserRepository.CreateAsync(newVendor, cancellationToken);
             var vendorUserDto = newVendor.MapToFrontEndDto();
             return new Response<UserDtoToFrontEnd>
@@ -136,7 +137,9 @@ public class AuthService : IAuthService
             };
         }
 		
-        var newOperator = MapOperatorUserFromDto(registrationData);
+        var newOperator = registrationData.MapOperatorUserFromDto();
+        newOperator.PasswordHash = _passwordHasher.HashThePassword(registrationData.Password);
+        
         await _operatorUserRepository.CreateAsync(newOperator, cancellationToken);
 		
         var operatorUserDto = newOperator.MapToFrontEndDto();
@@ -146,24 +149,4 @@ public class AuthService : IAuthService
             Data = operatorUserDto
         };
     }
-    
-    private VendorUser MapVendorUserFromDto(UserRegistrationDto registrationData) => new VendorUser
-    {
-        UserName = registrationData.UserName,
-        FirstName = registrationData.FirstName,
-        LastName = registrationData.LastName,
-        Email = registrationData.Email,
-        PasswordHash = _passwordHasher.HashThePassword(registrationData.Password),
-        UserType = UserType.VendorUser,
-    };
-
-    private OperatorUser MapOperatorUserFromDto(UserRegistrationDto registrationData) => new OperatorUser
-    {
-        UserName = registrationData.UserName,
-        FirstName = registrationData.FirstName,
-        LastName = registrationData.LastName,
-        Email = registrationData.Email,
-        PasswordHash = _passwordHasher.HashThePassword(registrationData.Password),
-        UserType = UserType.OperatorUser,
-    };
 }
