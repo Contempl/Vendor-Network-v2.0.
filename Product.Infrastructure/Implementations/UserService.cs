@@ -1,9 +1,7 @@
-﻿using Product.Application.Dto;
-using Product.Application.Interfaces;
+﻿using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
-using Product.Domain.Entity;
 using Product.Domain.Enum;
 using Product.Domain.Result;
 
@@ -14,26 +12,11 @@ public class UserService : IUserService
 {
 	private readonly IUserRepository _userRepository;
 	private readonly IUserPrincipalService _userPrincipalService;
-	private readonly IPasswordHasher _passwordHasher;
-	private readonly IJwtTokenService _jwtTokenService;
-	private readonly IRefreshTokenRepository _refreshTokenRepository;
 
-	public UserService(IUserRepository userRepository, IPasswordHasher userPrincipalService, 
-		IJwtTokenService jwtTokenService, IUserPrincipalService userPrincipalService1, 
-		IRefreshTokenRepository refreshTokenRepository)
+	public UserService(IUserRepository userRepository, IUserPrincipalService userPrincipalService1)
 	{
 		_userRepository = userRepository;
-		_passwordHasher = userPrincipalService;
-		_jwtTokenService = jwtTokenService;
 		_userPrincipalService = userPrincipalService1;
-		_refreshTokenRepository = refreshTokenRepository;
-	}
-	public void MapUserToUpdateByInvite(UserRegistrationByInviteDto dto, User user)
-	{
-		user.UserName = dto.UserName;
-		user.FirstName = dto.FirstName;
-		user.LastName = dto.LastName;
-		user.PasswordHash = _passwordHasher.HashThePassword(dto.Password);
 	}
 
 	public async Task<Response<UserDtoToFrontEnd>> GetUserAsync(int userId, CancellationToken cancellationToken)
@@ -80,43 +63,6 @@ public class UserService : IUserService
 		return new Response<UserDtoToFrontEnd>
 		{
 			Data = user.MapToFrontEndDto()
-		};
-	}
-
-	public async Task<Response<TokenDto>> Refresh(RefreshTokenRequestDto refreshDto, 
-		CancellationToken cancellationToken = default)
-	{
-		var existingToken = await _refreshTokenRepository.GetByTokenAsync(refreshDto.RefreshToken, cancellationToken);
-
-		if (existingToken == null || !_jwtTokenService.Validate(existingToken))
-			return new Response<TokenDto>
-			{
-				ErrorMessage = "Refresh token expired",
-				ErrorCode = (int)ErrorCodes.InvalidRefreshToken
-			};
-		
-		await _refreshTokenRepository.RevokeAsync(existingToken, cancellationToken);
-		
-		var userId = existingToken.UserId;
-		
-		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-		
-		var userClaims = user.MapUserToClaimDto();
-
-		var newToken = _jwtTokenService.GenerateToken(userClaims);
-		
-		var refreshToken = new RefreshToken
-		{
-			Token = newToken.RefreshToken,
-			UserId = userId,
-			ExpiresAt = DateTime.UtcNow.AddDays(7)
-		};
-		
-		await _refreshTokenRepository.CreateAsync(refreshToken, cancellationToken);
-
-		return new Response<TokenDto>
-		{
-			Data = newToken
 		};
 	}
 }
