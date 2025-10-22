@@ -133,7 +133,7 @@ public class AuthService : IAuthService
 
         var refreshToken = new RefreshToken
         {
-            Token = _jwtTokenService.GenerateRefreshToken(),
+            Token = token.RefreshToken,
             UserId = user.Id,
             ExpiresAt = DateTime.UtcNow.AddDays(7)
         };
