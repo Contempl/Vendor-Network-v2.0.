@@ -40,8 +40,7 @@ public class AdminController : ControllerBase
 	public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteBusiness([FromBody] BusinessInvitationData invitationData,
 		CancellationToken cancellationToken)
 	{
-		var adminId = _userPrincipalService.UserId!.Value;
-		var response = await _adminService.InviteBusiness(adminId, invitationData, cancellationToken);
+		var response = await _adminService.InviteBusiness(invitationData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -53,8 +52,7 @@ public class AdminController : ControllerBase
 	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> InviteVendorUser([FromBody] DataForInviteDto inviteData,
 		CancellationToken cancellationToken)
 	{
-		var adminId = _userPrincipalService.UserId!.Value;
-		var response = await _adminService.InviteVendorUser(adminId, inviteData, cancellationToken);
+		var response = await _adminService.InviteVendorUser(inviteData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
@@ -65,8 +63,7 @@ public class AdminController : ControllerBase
 	[HttpPost("/inviteOperatorUser")]
 	public async Task<IActionResult> InviteOperatorUser([FromBody] DataForInviteDto inviteData, CancellationToken cancellationToken)
 	{
-		var adminId = _userPrincipalService.UserId!.Value;
-		var response = await _adminService.InviteOperatorUser(adminId, inviteData, cancellationToken);
+		var response = await _adminService.InviteOperatorUser(inviteData, cancellationToken);
 		if (response.IsSuccess)
 		{
 			return Ok(response);
