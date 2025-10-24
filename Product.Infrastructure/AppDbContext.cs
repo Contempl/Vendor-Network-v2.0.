@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
 using Product.Infrastructure.Configurations;
 using Product.Infrastructure.Interceptors;
@@ -9,9 +10,14 @@ namespace Product.Infrastructure;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+	private readonly IUserPrincipalService _userPrincipalService;
+    public AppDbContext(DbContextOptions<AppDbContext> options, IUserPrincipalService userPrincipalService) : base(options)
+    {
+	    _userPrincipalService = userPrincipalService;
+    }
     
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.AddInterceptors(new DateInterceptor());
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder
+	    .AddInterceptors(new DateInterceptor(_userPrincipalService));
 
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -60,6 +66,6 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 		var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 		optionsBuilder.UseSqlServer(connectionString);
 
-		return new AppDbContext(optionsBuilder.Options);
+		return new AppDbContext(optionsBuilder.Options, null);
 	}
 }
