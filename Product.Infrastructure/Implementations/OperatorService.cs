@@ -177,7 +177,12 @@ public class OperatorService : IOperatorService
             var operatorUser = await _userRepository.GetByIdAsync(operatorUserId, cancellationToken);
 
             var newOperatorUser = new OperatorUser
-                { Email = dto.Email, OperatorId = operatorId, UserType = UserType.OperatorUser };
+            {
+                Email = dto.Email, 
+                OperatorId = operatorId, 
+                UserType = UserType.OperatorUser, 
+                CreatedBy = operatorUserId
+            };
 
             await _operatorUserRepository.CreateAsync(newOperatorUser, cancellationToken);
 
@@ -204,7 +209,7 @@ public class OperatorService : IOperatorService
             return new Response<MailMsg>
             {
                 ErrorCode = (int)ErrorCodes.InvalidInvitationData,
-                ErrorMessage = "Failed to craete an invite in transaction"
+                ErrorMessage = "Failed to create an invite in transaction"
             };
         }
     }
