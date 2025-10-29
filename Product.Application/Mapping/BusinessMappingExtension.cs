@@ -22,4 +22,16 @@ public static class BusinessMappingExtension
         vendor.Address = vendorData.Address ?? vendor.Address;
         vendor.Email = vendorData.Email ?? vendor.Email;
     }
+    
+    public static VendorFacility MapVendorFacilityFromDtoToCreate(this Vendor vendor, VendorFacilityDto facilityData) => new VendorFacility
+    {
+        Name = facilityData.Name,
+        VendorId = vendor.Id,
+        Location = facilityData.Location,
+        Longitude = facilityData.Longitude,
+        Latitude = facilityData.Latitude,
+        RadiusOfWork = facilityData.RadiusOfWork,
+        Services = facilityData.Services.Select(serviceName => new VendorFacilityService { Name = serviceName })
+            .ToList(),
+    };
 }

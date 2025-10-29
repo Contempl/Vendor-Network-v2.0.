@@ -107,7 +107,13 @@ public class VendorService : IVendorService
 
             var email = emailDto.Email;
 
-            var newVendorUser = new VendorUser { Email = email, VendorId = vendorId, UserType = UserType.VendorUser };
+            var newVendorUser = new VendorUser
+            {
+                Email = email, 
+                VendorId = vendorId, 
+                UserType = UserType.VendorUser, 
+                CreatedBy = vendorUserId
+            };
 
             await _vendorUserRepository.CreateAsync(newVendorUser, cancellationToken);
 

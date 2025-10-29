@@ -7,8 +7,7 @@ namespace Product.Application.ServiceInterfaces;
 public interface IAuthService
 {
     Task<Response<TokenDto>> Login(UserLoginDto userData, CancellationToken cancellationToken);
-    
     Task<Response<UserDtoToFrontEnd>> RegisterUser(UserRegistrationDto registrationData, CancellationToken cancellationToken);
-
     Task<Response<TokenDto>> LoginAdministrator(UserLoginDto userData, CancellationToken cancellationToken);
+    Task<Response<TokenDto>> Refresh(RefreshTokenRequestDto refreshDto, CancellationToken cancellationToken);
 }

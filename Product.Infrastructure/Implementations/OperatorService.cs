@@ -177,7 +177,12 @@ public class OperatorService : IOperatorService
             var operatorUser = await _userRepository.GetByIdAsync(operatorUserId, cancellationToken);
 
             var newOperatorUser = new OperatorUser
-                { Email = dto.Email, OperatorId = operatorId, UserType = UserType.OperatorUser };
+            {
+                Email = dto.Email, 
+                OperatorId = operatorId, 
+                UserType = UserType.OperatorUser, 
+                CreatedBy = operatorUserId
+            };
 
             await _operatorUserRepository.CreateAsync(newOperatorUser, cancellationToken);
 
@@ -204,21 +209,21 @@ public class OperatorService : IOperatorService
             return new Response<MailMsg>
             {
                 ErrorCode = (int)ErrorCodes.InvalidInvitationData,
-                ErrorMessage = "Failed to craete an invite in transaction"
+                ErrorMessage = "Failed to create an invite in transaction"
             };
         }
     }
-    public Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(UpdateOperatorDto operatorUpdateData, 
+    public async Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(UpdateOperatorDto operatorUpdateData, 
         CancellationToken cancellationToken = default)
     {
         var operatorId = _userPrincipalService.BusinessId!.Value;
-        var @operator = _operatorRepository.GetByIdAsync(operatorId, cancellationToken).Result;
+        var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
         @operator.MapOperatorFromDtoToUpdate(operatorUpdateData);
 
-        _operatorRepository.UpdateAsync(@operator, cancellationToken);
-        return Task.FromResult(new Response<BusinessFrontEndDto>
+        await _operatorRepository.UpdateAsync(@operator, cancellationToken);
+        return new Response<BusinessFrontEndDto>
         {
             Data = @operator.ToFrontEndDto()
-        });
+        };
     }
 }   

@@ -9,9 +9,14 @@ namespace Product.Infrastructure;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+	private readonly IServiceProvider _serviceProvider;
+	public AppDbContext(DbContextOptions<AppDbContext> options, IServiceProvider serviceProvider) : base(options)
+	{
+		_serviceProvider = serviceProvider;
+	}
     
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.AddInterceptors(new DateInterceptor());
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder
+	    .AddInterceptors(new DateInterceptor(_serviceProvider));
 
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -60,6 +65,6 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 		var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 		optionsBuilder.UseSqlServer(connectionString);
 
-		return new AppDbContext(optionsBuilder.Options);
+		return new AppDbContext(optionsBuilder.Options, null);
 	}
 }

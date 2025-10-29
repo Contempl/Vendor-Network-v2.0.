@@ -71,18 +71,18 @@ public class UserRepository : IUserRepository
 	}
 
 	private Task SaveAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
-	public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+	public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
 	{
-		var user = _users.Where(u => u.Email.Trim() == email.Trim())
-			.SingleOrDefaultAsync(cancellationToken).Result;
+		var user = await _users.Where(u => u.Email.Trim() == email.Trim())
+			.SingleOrDefaultAsync(cancellationToken);
 		
 		if (user == null)
 			return null;
 		
 		var cacheKey = $"{CachePrefix}{user.Id}";
-		_redisCacheService.SetAsync(cacheKey, user);
+		await _redisCacheService.SetAsync(cacheKey, user);
 		
-		return Task.FromResult(user)!; 
+		return user!; 
 	}
 			
 	public Task<User> GetByIdWithInvitesAsync(int userId, CancellationToken cancellationToken = default)

@@ -1,5 +1,6 @@
 ﻿using Product.Application.Dto;
 using Product.Application.Interfaces;
+using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
@@ -31,52 +32,6 @@ public class VendFacilityService : IVendFacilityService
 			Data = result,
 		};
 	}
-	private VendorFacility MapVendorFacilityFromDtoToCreate(Vendor vendor, VendorFacilityDto facilityData) => new VendorFacility
-	{
-		Name = facilityData.Name,
-		VendorId = vendor.Id,
-		Location = facilityData.Location,
-		Longitude = facilityData.Longitude,
-		Latitude = facilityData.Latitude,
-		RadiusOfWork = facilityData.RadiusOfWork,
-		Services = facilityData.Services.Select(serviceName => new VendorFacilityService { Name = serviceName })
-				.ToList(),
-	};
-	private void MapAndUpdateVendorFacility(VendorFacility facility, UpdateVendorFacilityDto facilityData)
-	{
-		facility.Name = facilityData.Name ?? facility.Name;
-		facility.Location = facilityData.Location ?? facility.Location;
-		facility.Latitude = facilityData.Latitude ?? facility.Latitude;
-		facility.Longitude = facilityData.Longitude ?? facility.Longitude;
-		facility.RadiusOfWork = facilityData.RadiusOfWork ?? facility.RadiusOfWork;
-		
-		if (facilityData.Services?.Any() == true)
-		{
-			var existingServices = facility.Services
-				.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
-			
-			var updatedServices = new List<VendorFacilityService>();
-
-			foreach (var serviceName in facilityData.Services.Distinct(StringComparer.OrdinalIgnoreCase))
-			{
-				if (existingServices.TryGetValue(serviceName, out var existingService))
-				{
-					updatedServices.Add(existingService);
-					existingServices.Remove(serviceName);
-				}
-				else
-				{
-					updatedServices.Add(new VendorFacilityService 
-					{ 
-						Name = serviceName,
-						VendorFacilityId = facility.Id
-					});
-				}
-			}
-			facility.Services.Clear();
-			facility.Services.AddRange(updatedServices);
-		}
-	}
 	
 
 	public async Task<Response<VendorFacility>> AddFacilityAsync(VendorFacilityDto facilityData, 
@@ -93,7 +48,7 @@ public class VendFacilityService : IVendFacilityService
 		var vendorId = _userPrincipalService.BusinessId!.Value;
 		var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
 
-		var facility = MapVendorFacilityFromDtoToCreate(vendor, facilityData);
+		var facility = vendor.MapVendorFacilityFromDtoToCreate(facilityData);
 		
 		await _vendorFacilityRepository.CreateAsync(facility, cancellationToken);
 		
@@ -109,7 +64,7 @@ public class VendFacilityService : IVendFacilityService
 		var vendorId = _userPrincipalService.BusinessId!.Value;
 		var facility = await _vendorFacilityRepository.GetFacilityWithServicesByIdAsync(facilityId, vendorId, cancellationToken);
 
-		MapAndUpdateVendorFacility(facility, facilityData);
+		facility.MapAndUpdateVendorFacility(facilityData);
 		
 		await _vendorFacilityRepository.UpdateAsync(facility,cancellationToken);
 	

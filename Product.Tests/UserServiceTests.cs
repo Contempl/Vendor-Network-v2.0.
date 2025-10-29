@@ -29,10 +29,7 @@ public class UserServiceTests
     {
         _userService = new UserService(
             _userRepositoryMock.Object,
-            _passwordHasherMock.Object,
-            _jwtTokenServiceMock.Object,
-            _userPrincipalServiceMock.Object,
-            _refreshTokenRepositoryMock.Object
+            _userPrincipalServiceMock.Object
         );
     }
 

@@ -18,11 +18,12 @@ public class AdministratorService : IAdministratorService
     private readonly IInviteRepository _inviteRepository;
     private readonly IVendorRepository _vendorRepository;
     private readonly IOperatorRepository _operatorRepository;
+    private readonly IUserPrincipalService _userPrincipalService;
     
 
     public AdministratorService(IAdministratorRepository administratorRepository, IUserRepository userRepository, 
 	    IEmailService emailService, IInviteService inviteService, IInviteRepository inviteRepository, IVendorRepository vendorRepository, 
-	    IOperatorRepository operatorRepository)
+	    IOperatorRepository operatorRepository, IUserPrincipalService userPrincipalService)
     {
 	    _adminRepository = administratorRepository;
 	    _userRepository = userRepository;
@@ -31,12 +32,14 @@ public class AdministratorService : IAdministratorService
 	    _inviteRepository = inviteRepository;
 	    _vendorRepository = vendorRepository;
 	    _operatorRepository = operatorRepository;
+	    _userPrincipalService = userPrincipalService;
     }
     
 
-    public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(int adminId, DataForInviteDto inviteData, 
+    public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(DataForInviteDto inviteData, 
 	    CancellationToken cancellationToken= default)
 	{
+		var adminId = _userPrincipalService.UserId!.Value;
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
 		if (admin == null)
@@ -79,9 +82,10 @@ public class AdministratorService : IAdministratorService
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(int adminId, DataForInviteDto inviteData, 
+	public async Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(DataForInviteDto inviteData, 
 		CancellationToken cancellationToken = default)
 	{
+		var adminId = _userPrincipalService.UserId!.Value;
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
 		if (admin == null)
@@ -130,9 +134,10 @@ public class AdministratorService : IAdministratorService
 		};
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> InviteBusiness(int adminId, BusinessInvitationData invitationData, 
+	public async Task<Response<UserDtoToFrontEnd>> InviteBusiness(BusinessInvitationData invitationData, 
 		CancellationToken cancellationToken = default)
 	{
+		var adminId = _userPrincipalService.UserId!.Value;
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
 		if (admin == null)
