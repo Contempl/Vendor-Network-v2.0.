@@ -59,7 +59,13 @@ public class AdministratorService : IAdministratorService
 				ErrorCode = (int)ErrorCodes.InvalidInvitationData
 			};
 		}
-		var vendorUser = new VendorUser { Email = inviteData.Email, VendorId = inviteData.BusinessId, UserType = UserType.VendorUser };
+		var vendorUser = new VendorUser
+		{
+			Email = inviteData.Email, 
+			VendorId = inviteData.BusinessId, 
+			UserType = UserType.VendorUser,
+			CreatedBy = adminId
+		};
 
 		await _userRepository.CreateAsync(vendorUser, cancellationToken);
 
@@ -110,7 +116,8 @@ public class AdministratorService : IAdministratorService
 		{
 			Email = inviteData.Email, 
 			OperatorId = inviteData.BusinessId, 
-			UserType = UserType.OperatorUser
+			UserType = UserType.OperatorUser,
+			CreatedBy = adminId
 		};
 
 		await _userRepository.CreateAsync(operatorUser, cancellationToken);
