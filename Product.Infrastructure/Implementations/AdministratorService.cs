@@ -42,23 +42,14 @@ public class AdministratorService : IAdministratorService
 		var adminId = _userPrincipalService.UserId!.Value;
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
-		if (admin == null)
-		{
-			return new Response<UserDtoToFrontEnd>
-			{
-				ErrorMessage = "Admin not found.",
-				ErrorCode = (int)ErrorCodes.UserNotFound
-			};
-		}
+		var errorResponse = ValidateAdmin(admin);
+		if (errorResponse != null)
+			return errorResponse;
 
-		if (string.IsNullOrWhiteSpace(inviteData.Email) || inviteData.BusinessId == 0)
-		{
-			return new Response<UserDtoToFrontEnd>
-			{
-				ErrorMessage = "Invalid user data in invitation",
-				ErrorCode = (int)ErrorCodes.InvalidInvitationData
-			};
-		}
+		errorResponse = ValidateUserInviteData(inviteData);
+		if (errorResponse != null)
+			return errorResponse;
+		
 		var vendorUser = new VendorUser
 		{
 			Email = inviteData.Email, 
@@ -94,23 +85,13 @@ public class AdministratorService : IAdministratorService
 		var adminId = _userPrincipalService.UserId!.Value;
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
-		if (admin == null)
-		{
-			return new Response<UserDtoToFrontEnd>
-			{
-				ErrorMessage = "Admin not found.",
-				ErrorCode = (int)ErrorCodes.UserNotFound
-			};
-		}
+		var errorResponse = ValidateAdmin(admin);
+		if (errorResponse != null)
+			return errorResponse;
 
-		if (string.IsNullOrWhiteSpace(inviteData.Email) || inviteData.BusinessId == 0)
-		{
-			return new Response<UserDtoToFrontEnd>
-			{
-				ErrorMessage = "Invalid user data in invitation",
-				ErrorCode = (int)ErrorCodes.InvalidInvitationData
-			};
-		}
+		errorResponse = ValidateUserInviteData(inviteData);
+		if (errorResponse != null)
+			return errorResponse;
 		
 		var operatorUser = new OperatorUser
 		{
@@ -147,54 +128,13 @@ public class AdministratorService : IAdministratorService
 		var adminId = _userPrincipalService.UserId!.Value;
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
-		if (admin == null)
-		{
-			return new Response<UserDtoToFrontEnd>
-			{
-				ErrorMessage = "Admin not found.",
-				ErrorCode = (int)ErrorCodes.UserNotFound
-			};
-		};
-		
-		if (invitationData.BusinessIsVendor)
-		{
-			var vendor = new Vendor
-			{
-				BusinessName = invitationData.BusinessName,
-				Address = invitationData.BusinessAddress,
-				Email = invitationData.BusinessEmail
-			};
+		var errorResponse = ValidateAdmin(admin);
+		if (errorResponse != null)
+			return errorResponse;
 
-			await _vendorRepository.CreateAsync(vendor, cancellationToken);
-
-			var vendorUser = new VendorUser
-			{
-				Email = invitationData.UserEmail,
-				FirstName = invitationData.FirstName,
-				LastName = invitationData.LastName,
-			};
-			
-			await _userRepository.CreateAsync(vendorUser, cancellationToken);
-		}
-		else if (!invitationData.BusinessIsVendor)
-		{
-			var @operator = new Operator
-			{
-				BusinessName = invitationData.BusinessName,
-				Address = invitationData.BusinessAddress,
-				Email = invitationData.BusinessEmail
-			};
-
-			await _operatorRepository.CreateAsync(@operator, cancellationToken);
-
-			var operatorUser = new OperatorUser
-			{
-				Email = invitationData.UserEmail,
-				FirstName = invitationData.FirstName,
-				LastName = invitationData.LastName,
-			};
-			await _userRepository.CreateAsync(operatorUser, cancellationToken);
-		}
+		errorResponse = await CreateBusinessWithUser(invitationData, cancellationToken);
+		if (errorResponse != null)
+			return errorResponse;
 
 		var existingUser = await _userRepository.GetByEmailAsync(invitationData.UserEmail, cancellationToken);
 		var invite = _inviteService.CreateInviteByAdmin(existingUser, admin);
@@ -235,5 +175,78 @@ public class AdministratorService : IAdministratorService
 		{
 			Data = vendor.Id
 		};
+	}
+
+	private Response<UserDtoToFrontEnd>? ValidateAdmin(Administrator? admin)
+	{
+		if (admin == null)
+		{
+			return new Response<UserDtoToFrontEnd>
+			{
+				ErrorMessage = "Admin not found.",
+				ErrorCode = (int)ErrorCodes.UserNotFound
+			};
+		}
+		return null;
+	}
+
+	private async Task<Response<UserDtoToFrontEnd>?> CreateBusinessWithUser(BusinessInvitationData invitationData, 
+		CancellationToken cancellationToken = default)
+	{
+		if (invitationData.BusinessIsVendor)
+		{
+			var vendor = new Vendor
+			{
+				BusinessName = invitationData.BusinessName,
+				Address = invitationData.BusinessAddress,
+				Email = invitationData.BusinessEmail
+			};
+
+			await _vendorRepository.CreateAsync(vendor, cancellationToken);
+
+			var vendorUser = new VendorUser
+			{
+				Email = invitationData.UserEmail,
+				FirstName = invitationData.FirstName,
+				LastName = invitationData.LastName,
+			};
+
+			await _userRepository.CreateAsync(vendorUser, cancellationToken);
+		}
+		else 
+		{
+			var @operator = new Operator
+			{
+				BusinessName = invitationData.BusinessName,
+				Address = invitationData.BusinessAddress,
+				Email = invitationData.BusinessEmail
+			};
+
+			await _operatorRepository.CreateAsync(@operator, cancellationToken);
+
+			var operatorUser = new OperatorUser
+			{
+				Email = invitationData.UserEmail,
+				FirstName = invitationData.FirstName,
+				LastName = invitationData.LastName,
+			};
+			await _userRepository.CreateAsync(operatorUser, cancellationToken);
+		}
+
+		return null;
+	}
+
+	private Response<UserDtoToFrontEnd>? ValidateUserInviteData(DataForInviteDto userInvitationData)
+	{
+		if (string.IsNullOrWhiteSpace(userInvitationData.Email) || userInvitationData.BusinessId == 0)
+		{
+			return new Response<UserDtoToFrontEnd>
+			{
+				ErrorMessage = "Invalid user data in invitation",
+				ErrorCode = (int)ErrorCodes.InvalidInvitationData
+			};
+		}
+
+		return null;
 	}
 }
