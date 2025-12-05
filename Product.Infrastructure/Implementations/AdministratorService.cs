@@ -1,11 +1,13 @@
-﻿using Product.Application.Dto;
+﻿using OneOf;
+using OneOf.Types;
+using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
-using Product.Domain.Result;
+using Product.Infrastructure.Dto;
 
 namespace Product.Infrastructure.Implementations;
 
@@ -36,7 +38,7 @@ public class AdministratorService : IAdministratorService
     }
     
 
-    public async Task<Response<UserDtoToFrontEnd>> InviteVendorUser(DataForInviteDto inviteData, 
+    public async Task<OneOf<UserDtoToFrontEnd, Error>> InviteVendorUser(DataForInviteDto inviteData, 
 	    CancellationToken cancellationToken= default)
 	{
 		var adminId = _userPrincipalService.UserId!.Value;
@@ -44,11 +46,11 @@ public class AdministratorService : IAdministratorService
 
 		var errorResponse = ValidateAdmin(admin);
 		if (errorResponse != null)
-			return errorResponse;
+			return new Error();
 
 		errorResponse = ValidateUserInviteData(inviteData);
 		if (errorResponse != null)
-			return errorResponse;
+			return new Error();
 		
 		var vendorUser = new VendorUser
 		{
@@ -72,14 +74,11 @@ public class AdministratorService : IAdministratorService
 		await _emailService.SendInvitationEmailAsync(mailMessage);
 
 		var responseDto = vendorUser.MapToFrontEndDto();
-		
-		return new Response<UserDtoToFrontEnd>
-		{
-			Data = responseDto,
-		};
+
+		return responseDto;
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> InviteOperatorUser(DataForInviteDto inviteData, 
+	public async Task<OneOf<UserDtoToFrontEnd, Error>> InviteOperatorUser(DataForInviteDto inviteData, 
 		CancellationToken cancellationToken = default)
 	{
 		var adminId = _userPrincipalService.UserId!.Value;
@@ -87,13 +86,13 @@ public class AdministratorService : IAdministratorService
 
 		var errorResponse = ValidateAdmin(admin);
 		if (errorResponse != null)
-			return errorResponse;
+			return new Error();
 
 		errorResponse = ValidateUserInviteData(inviteData);
 		if (errorResponse != null)
-			return errorResponse;
-		
-		var operatorUser = new OperatorUser
+			return new Error();
+
+		var operatorUser = new OperatorUser()
 		{
 			Email = inviteData.Email, 
 			OperatorId = inviteData.BusinessId, 
@@ -116,13 +115,10 @@ public class AdministratorService : IAdministratorService
 
 		var responseDto = operatorUser.MapToFrontEndDto();
 
-		return new Response<UserDtoToFrontEnd>
-		{
-			Data = responseDto,
-		};
+		return responseDto;
 	}
 
-	public async Task<Response<UserDtoToFrontEnd>> InviteBusiness(BusinessInvitationData invitationData, 
+	public async Task<OneOf<UserDtoToFrontEnd, Error>> InviteBusiness(BusinessInvitationData invitationData, 
 		CancellationToken cancellationToken = default)
 	{
 		var adminId = _userPrincipalService.UserId!.Value;
@@ -130,11 +126,11 @@ public class AdministratorService : IAdministratorService
 
 		var errorResponse = ValidateAdmin(admin);
 		if (errorResponse != null)
-			return errorResponse;
+			return new Error();
 
-		errorResponse = await CreateBusinessWithUser(invitationData, cancellationToken);
+		errorResponse = await CreateBusinessWithUserResult(invitationData, cancellationToken);
 		if (errorResponse != null)
-			return errorResponse;
+			return new Error();
 
 		var existingUser = await _userRepository.GetByEmailAsync(invitationData.UserEmail, cancellationToken);
 		var invite = _inviteService.CreateInviteByAdmin(existingUser, admin);
@@ -149,48 +145,28 @@ public class AdministratorService : IAdministratorService
 		await _emailService.SendInvitationEmailAsync(mailMessage);
 		
 		var responseDto = existingUser.MapToFrontEndDto();
-		return new Response<UserDtoToFrontEnd>
-		{
-			Data = responseDto,
-		};
+		return responseDto;
 	}
 	
-	public async Task<Response<int>> RemoveOperatorAsync(int operatorId, CancellationToken cancellationToken = default)
+	public async Task<OneOf<int, Error>> RemoveOperatorAsync(int operatorId, CancellationToken cancellationToken = default)
 	{
 		var @operator =  await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
 		await _operatorRepository.DeleteAsync(@operator, cancellationToken);
-		 
-		return new Response<int>
-		{
-			Data = @operator.Id
-		};
+
+		return @operatorId;
 	}
 
-	public async Task<Response<int>> RemoveVendorAsync(int vendorId, CancellationToken cancellationToken = default)
+	public async Task<OneOf<int, Error>> RemoveVendorAsync(int vendorId, CancellationToken cancellationToken = default)
 	{
 		var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
 		await _vendorRepository.DeleteAsync(vendor, cancellationToken);
-		 
-		return new Response<int>
-		{
-			Data = vendor.Id
-		};
+
+		return vendorId;
 	}
 
-	private Response<UserDtoToFrontEnd>? ValidateAdmin(Administrator? admin)
-	{
-		if (admin == null)
-		{
-			return new Response<UserDtoToFrontEnd>
-			{
-				ErrorMessage = "Admin not found.",
-				ErrorCode = (int)ErrorCodes.UserNotFound
-			};
-		}
-		return null;
-	}
+	private bool ValidateAdmin(Administrator? admin) => admin != null && admin.Id != 0;
 
-	private async Task<Response<UserDtoToFrontEnd>?> CreateBusinessWithUser(BusinessInvitationData invitationData, 
+	private async Task<bool> CreateBusinessWithUserResult (BusinessInvitationData invitationData, 
 		CancellationToken cancellationToken = default)
 	{
 		if (invitationData.BusinessIsVendor)
@@ -233,20 +209,9 @@ public class AdministratorService : IAdministratorService
 			await _userRepository.CreateAsync(operatorUser, cancellationToken);
 		}
 
-		return null;
+		return true;
 	}
 
-	private Response<UserDtoToFrontEnd>? ValidateUserInviteData(DataForInviteDto userInvitationData)
-	{
-		if (string.IsNullOrWhiteSpace(userInvitationData.Email) || userInvitationData.BusinessId == 0)
-		{
-			return new Response<UserDtoToFrontEnd>
-			{
-				ErrorMessage = "Invalid user data in invitation",
-				ErrorCode = (int)ErrorCodes.InvalidInvitationData
-			};
-		}
-
-		return null;
-	}
+	private bool ValidateUserInviteData(DataForInviteDto userInvitationData) =>
+		string.IsNullOrWhiteSpace(userInvitationData.Email) || userInvitationData.BusinessId == 0;
 }
