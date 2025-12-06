@@ -7,7 +7,6 @@ using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
-using Product.Infrastructure.Dto;
 
 namespace Product.Infrastructure.Implementations;
 
@@ -21,11 +20,14 @@ public class AdministratorService : IAdministratorService
     private readonly IVendorRepository _vendorRepository;
     private readonly IOperatorRepository _operatorRepository;
     private readonly IUserPrincipalService _userPrincipalService;
+    private readonly IVendorUserRepository _vendorUserRepository;
+    private readonly IOperatorUserRepository _operatorUserRepository;
     
 
     public AdministratorService(IAdministratorRepository administratorRepository, IUserRepository userRepository, 
 	    IEmailService emailService, IInviteService inviteService, IInviteRepository inviteRepository, IVendorRepository vendorRepository, 
-	    IOperatorRepository operatorRepository, IUserPrincipalService userPrincipalService)
+	    IOperatorRepository operatorRepository, IUserPrincipalService userPrincipalService,
+	    IVendorUserRepository vendorUserRepository, IOperatorUserRepository operatorUserRepository)
     {
 	    _adminRepository = administratorRepository;
 	    _userRepository = userRepository;
@@ -35,6 +37,8 @@ public class AdministratorService : IAdministratorService
 	    _vendorRepository = vendorRepository;
 	    _operatorRepository = operatorRepository;
 	    _userPrincipalService = userPrincipalService;
+	    _vendorUserRepository = vendorUserRepository;
+	    _operatorUserRepository = operatorUserRepository;
     }
     
 
@@ -44,15 +48,15 @@ public class AdministratorService : IAdministratorService
 		var adminId = _userPrincipalService.UserId!.Value;
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
-		var errorResponse = ValidateAdmin(admin);
-		if (errorResponse != null)
+		var validationResult = ValidateAdmin(admin);
+		if (validationResult is false)
 			return new Error();
 
-		errorResponse = ValidateUserInviteData(inviteData);
-		if (errorResponse != null)
+		validationResult = ValidateUserInviteData(inviteData);
+		if (validationResult is false)
 			return new Error();
 		
-		var vendorUser = new VendorUser
+		var vendorUserCreationDto = new VendorUserCreationDto
 		{
 			Email = inviteData.Email, 
 			VendorId = inviteData.BusinessId, 
@@ -60,7 +64,7 @@ public class AdministratorService : IAdministratorService
 			CreatedBy = adminId
 		};
 
-		await _userRepository.CreateAsync(vendorUser, cancellationToken);
+		var vendorUser = await _vendorUserRepository.CreateAsync(vendorUserCreationDto, cancellationToken);
 
 		var invite = _inviteService.CreateInviteByAdmin(vendorUser, admin);
 		await _inviteRepository.CreateAsync(invite, cancellationToken);
@@ -84,15 +88,15 @@ public class AdministratorService : IAdministratorService
 		var adminId = _userPrincipalService.UserId!.Value;
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
-		var errorResponse = ValidateAdmin(admin);
-		if (errorResponse != null)
+		var validationResult = ValidateAdmin(admin);
+		if (validationResult is false)
 			return new Error();
 
-		errorResponse = ValidateUserInviteData(inviteData);
-		if (errorResponse != null)
+		validationResult = ValidateUserInviteData(inviteData);
+		if (validationResult is false)
 			return new Error();
 
-		var operatorUser = new OperatorUser()
+		var operatorUserCreationDto = new OperatorUserCreationDto()
 		{
 			Email = inviteData.Email, 
 			OperatorId = inviteData.BusinessId, 
@@ -100,7 +104,7 @@ public class AdministratorService : IAdministratorService
 			CreatedBy = adminId
 		};
 
-		await _userRepository.CreateAsync(operatorUser, cancellationToken);
+		var operatorUser = await _operatorUserRepository.CreateAsync(operatorUserCreationDto, cancellationToken);
 
 		var invite = _inviteService.CreateInviteByAdmin(operatorUser, admin);
 		await _inviteRepository.CreateAsync(invite, cancellationToken);
@@ -124,12 +128,12 @@ public class AdministratorService : IAdministratorService
 		var adminId = _userPrincipalService.UserId!.Value;
 		var admin = await _adminRepository.GetByIdOrDefaultAsync(adminId);
 
-		var errorResponse = ValidateAdmin(admin);
-		if (errorResponse != null)
+		var result = ValidateAdmin(admin);
+		if (result is false)
 			return new Error();
 
-		errorResponse = await CreateBusinessWithUserResult(invitationData, cancellationToken);
-		if (errorResponse != null)
+		result = await CreateBusinessWithUserResult(invitationData, cancellationToken);
+		if (result is false)
 			return new Error();
 
 		var existingUser = await _userRepository.GetByEmailAsync(invitationData.UserEmail, cancellationToken);
