@@ -1,4 +1,6 @@
-﻿using OneOf;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using OneOf;
 using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
@@ -22,12 +24,13 @@ public class AdministratorService : IAdministratorService
     private readonly IUserPrincipalService _userPrincipalService;
     private readonly IVendorUserRepository _vendorUserRepository;
     private readonly IOperatorUserRepository _operatorUserRepository;
+    private readonly ILogger<AdministratorService> _logger;
     
 
     public AdministratorService(IAdministratorRepository administratorRepository, IUserRepository userRepository, 
 	    IEmailService emailService, IInviteService inviteService, IInviteRepository inviteRepository, IVendorRepository vendorRepository, 
 	    IOperatorRepository operatorRepository, IUserPrincipalService userPrincipalService,
-	    IVendorUserRepository vendorUserRepository, IOperatorUserRepository operatorUserRepository)
+	    IVendorUserRepository vendorUserRepository, IOperatorUserRepository operatorUserRepository, ILogger<AdministratorService> logger)
     {
 	    _adminRepository = administratorRepository;
 	    _userRepository = userRepository;
@@ -39,6 +42,7 @@ public class AdministratorService : IAdministratorService
 	    _userPrincipalService = userPrincipalService;
 	    _vendorUserRepository = vendorUserRepository;
 	    _operatorUserRepository = operatorUserRepository;
+	    _logger = logger;
     }
     
 
@@ -51,7 +55,7 @@ public class AdministratorService : IAdministratorService
 			var admin = await _adminRepository.GetByIdAsync(adminId, cancellationToken);
 
 			var isValid = ValidateUserInviteData(inviteData);
-			if (isValid is false)
+			if (!isValid)
 				return new Error();
 		
 			var vendorUserCreationDto = new VendorUserCreationDto
@@ -81,7 +85,7 @@ public class AdministratorService : IAdministratorService
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine(ex);
+			_logger.LogCritical("System failed while creating invite for vendor user with message: {ex}", ex.Message);;
 			return new Error();
 		}
 	}
@@ -95,7 +99,7 @@ public class AdministratorService : IAdministratorService
 			var admin = await _adminRepository.GetByIdAsync(adminId, cancellationToken);
 
 			var isValid = ValidateUserInviteData(inviteData);
-			if (isValid is false)
+			if (!isValid)
 				return new Error();
 
 			var operatorUserCreationDto = new OperatorUserCreationDto()
@@ -125,7 +129,7 @@ public class AdministratorService : IAdministratorService
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine(ex);
+			_logger.LogCritical("System failed while creating invite for Operator {ex}", ex.Message);
 			return new Error();
 		}
 	}
@@ -133,46 +137,69 @@ public class AdministratorService : IAdministratorService
 	public async Task<OneOf<UserDtoToFrontEnd, Error>> InviteBusiness(BusinessInvitationData invitationData, 
 		CancellationToken cancellationToken = default)
 	{
-		var adminId = _userPrincipalService.UserId!.Value;
-		var admin = await _adminRepository.GetByIdAsync(adminId, cancellationToken);
+		try
+		{
+			var adminId = _userPrincipalService.UserId!.Value;
+			var admin = await _adminRepository.GetByIdAsync(adminId, cancellationToken);
 		
-		var isValid = await CreateBusinessWithUserResult(invitationData, cancellationToken);
-		if (isValid is false)
-			return new Error();
+			var businessCreationResult = await CreateBusinessWithUserResult(invitationData, cancellationToken);
+			if (businessCreationResult is Error)
+				return new Error();
 
-		var existingUser = await _userRepository.GetByEmailAsync(invitationData.UserEmail, cancellationToken);
-		var invite = _inviteService.CreateInviteByAdmin(existingUser, admin);
-		await _inviteRepository.CreateAsync(invite, cancellationToken);
-		var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
+			var existingUser = await _userRepository.GetByEmailAsync(invitationData.UserEmail, cancellationToken);
+			var invite = _inviteService.CreateInviteByAdmin(existingUser, admin);
+			await _inviteRepository.CreateAsync(invite, cancellationToken);
+			var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
 			
-		var emailBody = _emailService.GenerateEmailTemplate(invitationData.UserEmail,
-			existingUser, inviteUrl); 
+			var emailBody = _emailService.GenerateEmailTemplate(invitationData.UserEmail, existingUser, inviteUrl); 
 
-		var mailMessage = _emailService.CreateMessage(emailBody, admin.Email);
+			var mailMessage = _emailService.CreateMessage(emailBody, admin.Email);
 
-		await _emailService.SendInvitationEmailAsync(mailMessage);
+			await _emailService.SendInvitationEmailAsync(mailMessage);
 		
-		var responseDto = existingUser.MapToFrontEndDto();
-		return responseDto;
+			var responseDto = existingUser.MapToFrontEndDto();
+			return responseDto;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogCritical("System failed while creating invite for business with message: {ex}", ex.Message);
+			throw;
+		}
 	}
 	
 	public async Task<OneOf<int, Error>> RemoveOperatorAsync(int operatorId, CancellationToken cancellationToken = default)
 	{
-		var @operator =  await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
-		await _operatorRepository.DeleteAsync(@operator, cancellationToken);
+		try
+		{
+			var @operator =  await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
+			await _operatorRepository.DeleteAsync(@operator, cancellationToken);
 
-		return @operatorId;
+			return @operatorId;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogCritical("System failed removing the operator: {ex}", ex.Message);
+			throw;
+		}
 	}
 
 	public async Task<OneOf<int, Error>> RemoveVendorAsync(int vendorId, CancellationToken cancellationToken = default)
 	{
-		var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
-		await _vendorRepository.DeleteAsync(vendor, cancellationToken);
+		try
+		{
+			var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
+			await _vendorRepository.DeleteAsync(vendor, cancellationToken);
 
-		return vendorId;
+			return vendorId;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogCritical("System failed while removing vendor: {ex}", ex.Message);
+			throw;
+		}
 	}
 
-	private async Task<bool> CreateBusinessWithUserResult (BusinessInvitationData invitationData, 
+	private async Task<OneOf<Success, Error>> CreateBusinessWithUserResult (BusinessInvitationData invitationData, 
 		CancellationToken cancellationToken = default)
 	{
 		if (invitationData.BusinessIsVendor)
@@ -215,7 +242,7 @@ public class AdministratorService : IAdministratorService
 			await _userRepository.CreateAsync(operatorUser, cancellationToken);
 		}
 
-		return true;
+		return new Success();
 	}
 
 	private bool ValidateUserInviteData(DataForInviteDto userInvitationData) =>
