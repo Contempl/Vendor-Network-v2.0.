@@ -4,7 +4,7 @@ namespace Product.Application.Dto;
 
 public class BusinessInvitationData
 {
-    public bool BusinessIsVendor { get; set; }
+    public bool BusinessIsVendor { get; init; }
     
     [MaxLength(50)]
     public string BusinessName { get; set; }
