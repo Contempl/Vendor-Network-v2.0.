@@ -28,7 +28,7 @@ public static class DependencyInjection
             options.UseSqlServer(connectionString);
         });
        
-       services.InitRepoistories();
+       services.InitRepositories();
     }
 
     public static void AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
@@ -44,7 +44,7 @@ public static class DependencyInjection
         services.InitServices(configuration);
     }
     
-    private static void InitRepoistories(this IServiceCollection services)
+    private static void InitRepositories(this IServiceCollection services)
     {
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
