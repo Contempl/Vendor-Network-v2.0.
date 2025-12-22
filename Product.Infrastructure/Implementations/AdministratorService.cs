@@ -85,7 +85,7 @@ public class AdministratorService : IAdministratorService
 		}
 		catch (Exception ex)
 		{
-			_logger.LogCritical("System failed while creating invite for vendor user with message: {ex}", ex.Message);;
+			_logger.LogError("System failed while creating invite for vendor user with message: {ex}", ex.Message);
 			return new Error();
 		}
 	}
@@ -129,7 +129,7 @@ public class AdministratorService : IAdministratorService
 		}
 		catch (Exception ex)
 		{
-			_logger.LogCritical("System failed while creating invite for Operator {ex}", ex.Message);
+			_logger.LogError("System failed while creating invite for Operator {ex}", ex.Message);
 			return new Error();
 		}
 	}
@@ -162,8 +162,8 @@ public class AdministratorService : IAdministratorService
 		}
 		catch (Exception ex)
 		{
-			_logger.LogCritical("System failed while creating invite for business with message: {ex}", ex.Message);
-			throw;
+			_logger.LogError("System failed while creating invite for business with message: {ex}", ex.Message);
+			return new Error();
 		}
 	}
 	
@@ -178,8 +178,8 @@ public class AdministratorService : IAdministratorService
 		}
 		catch (Exception ex)
 		{
-			_logger.LogCritical("System failed removing the operator: {ex}", ex.Message);
-			throw;
+			_logger.LogError("System failed removing the operator: {ex}", ex.Message);
+			return new Error();
 		}
 	}
 
@@ -194,8 +194,8 @@ public class AdministratorService : IAdministratorService
 		}
 		catch (Exception ex)
 		{
-			_logger.LogCritical("System failed while removing vendor: {ex}", ex.Message);
-			throw;
+			_logger.LogError("System failed while removing vendor: {ex}", ex.Message);
+			return new Error();
 		}
 	}
 
