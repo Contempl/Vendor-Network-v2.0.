@@ -37,15 +37,15 @@ public class AdminController : ControllerBase
 	}
 
 	[HttpPost("inviteBusiness")]
-	public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteBusiness([FromBody] BusinessInvitationData invitationData,
+	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> InviteBusiness([FromBody] BusinessInvitationData invitationData,
 		CancellationToken cancellationToken)
 	{
 		var response = await _adminService.InviteBusiness(invitationData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+
+		return response.Match<ActionResult>(
+			userDto => Ok(userDto),
+			error => BadRequest(error)
+		);
 	}
 
 	[HttpPost("/inviteVendorUser")]
@@ -53,22 +53,22 @@ public class AdminController : ControllerBase
 		CancellationToken cancellationToken)
 	{
 		var response = await _adminService.InviteVendorUser(inviteData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			userDto => Ok(userDto),
+			error => BadRequest(error)
+		);
 	}
 
 	[HttpPost("/inviteOperatorUser")]
-	public async Task<IActionResult> InviteOperatorUser([FromBody] DataForInviteDto inviteData, CancellationToken cancellationToken)
+	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> InviteOperatorUser([FromBody] DataForInviteDto inviteData, CancellationToken cancellationToken)
 	{
 		var response = await _adminService.InviteOperatorUser(inviteData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			userDto => Ok(userDto),
+			error => BadRequest(error)
+		);
 	}
 	
 	
@@ -78,11 +78,11 @@ public class AdminController : ControllerBase
 	public async Task<ActionResult<Response<int>>> RemoveVendor(int vendorId, CancellationToken cancellationToken)
 	{
 		var response = await _adminService.RemoveVendorAsync(vendorId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			id => Ok(id),
+			error => BadRequest(error)
+		);
 	} 
 	
 	[HttpDelete("Operator/{operatorId}")]
@@ -91,10 +91,10 @@ public class AdminController : ControllerBase
 	public async Task<ActionResult<Response<int>>> RemoveOperator(int operatorId, CancellationToken cancellationToken)
 	{
 		var response = await _adminService.RemoveOperatorAsync(operatorId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			id => Ok(id),
+			error => BadRequest(error)
+		);
 	}
 }

@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Domain.Entity;
+using Product.Infrastructure.Extensions;
 
 namespace Product.Infrastructure.Repositories;
 
@@ -19,6 +21,14 @@ public class OperatorUserRepository : IOperatorUserRepository
 	{
 		await _operatorUsers.AddAsync(operatorUser, cancellationToken);
 		await SaveAsync(cancellationToken);
+	}
+	
+	public async Task<OperatorUser> CreateAsync(OperatorUserCreationDto userCreationDto, CancellationToken cancellationToken = default)
+	{
+		var operatorUser = userCreationDto.MapToOperatorUser();
+		await _operatorUsers.AddAsync(operatorUser, cancellationToken);
+		await SaveAsync(cancellationToken);
+		return operatorUser;
 	}
 	public IQueryable<OperatorUser> GetAll() => _operatorUsers;
 	public Task DeleteAsync(OperatorUser operatorUser, CancellationToken cancellationToken = default)
