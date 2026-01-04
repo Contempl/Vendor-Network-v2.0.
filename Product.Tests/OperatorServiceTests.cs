@@ -1,12 +1,15 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
+using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
+using Product.Domain.Pagination;
+using Product.Domain.Result;
 using Product.Infrastructure.Implementations;
 using Xunit;
 
@@ -61,8 +64,8 @@ public class OperatorServiceTests
         var result = await _operatorService.GetOperatorAsync(operatorId, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("Test Operator", result.Data.BusinessName);
+        Assert.True(result.Value is BusinessFrontEndDto);
+        Assert.Equal("Test Operator", result.AsT0.BusinessName);
         _operatorRepositoryMock.Verify(r => r.GetByIdAsync(operatorId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -123,8 +126,9 @@ public class OperatorServiceTests
         var result = await _operatorService.InviteOperatorUserAsync(emailDto, It.IsAny<CancellationToken>());
         
         // Assert
-        Assert.Equal("Operator Email Body", result.Data.Body);
-        Assert.Equal(_testOperatorUser.Email, result.Data.Sender);
+        Assert.True(result.Value is MailMsg);
+        Assert.Equal("Operator Email Body", result.AsT0.Body);
+        Assert.Equal(_testOperatorUser.Email, result.AsT0.Sender);
     }
     
     [Fact]
@@ -158,8 +162,9 @@ public class OperatorServiceTests
         var result = await _operatorService.UpdateOperatorAsync(updateDto, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Equal(updateDto.BusinessName, result.Data.BusinessName);
-        Assert.Equal(updateDto.Address, result.Data.Address);
+        Assert.True(result.Value is BusinessFrontEndDto);
+        Assert.Equal(updateDto.BusinessName, result.AsT0.BusinessName);
+        Assert.Equal(updateDto.Address, result.AsT0.Address);
     }
     
     [Fact]
@@ -180,9 +185,9 @@ public class OperatorServiceTests
         var result = await _operatorService.GetOperatorAsync(operatorId, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal(existingOperator.Id, result.Data.Id);
-        Assert.Equal(existingOperator.BusinessName, result.Data.BusinessName);
+        Assert.True(result.Value is BusinessFrontEndDto);
+        Assert.Equal(existingOperator.Id, result.AsT0.Id);
+        Assert.Equal(existingOperator.BusinessName, result.AsT0.BusinessName);
     }
 
     [Fact]
@@ -236,10 +241,10 @@ public class OperatorServiceTests
         var result = await _operatorService.SearchForVendorsAsync(industriesData, It.IsAny<CancellationToken>());
     
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal(2, result.Data.Count);
-        Assert.Equal("CleanCo", result.Data[0].BusinessName);
-        Assert.Equal("Sparkle Services", result.Data[1].BusinessName);
+        Assert.True(result.Value is List<BusinessFrontEndDto>);
+        Assert.Equal(2, result.AsT0.Count);
+        Assert.Equal("CleanCo", result.AsT0[0].BusinessName);
+        Assert.Equal("Sparkle Services", result.AsT0[1].BusinessName);
     }
     
     [Fact]
@@ -271,12 +276,12 @@ public class OperatorServiceTests
         var result = await _operatorService.GetVendorsByNameAsync(searchDto, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal(2, result.Data.Items.Count);
-        Assert.Equal("CleanCo", result.Data.Items[0].BusinessName);
-        Assert.Equal("CleanPro", result.Data.Items[1].BusinessName);
-        Assert.Equal(searchDto.PageNumber, result.Data.PageNumber);
-        Assert.Equal(searchDto.PageSize, result.Data.PageSize);
+        Assert.True(result.Value is PagedList<Vendor>);
+        Assert.Equal(2, result.AsT0.Items.Count);
+        Assert.Equal("CleanCo", result.AsT0.Items[0].BusinessName);
+        Assert.Equal("CleanPro", result.AsT0.Items[1].BusinessName);
+        Assert.Equal(searchDto.PageNumber, result.AsT0.PageNumber);
+        Assert.Equal(searchDto.PageSize, result.AsT0.PageSize);
     }
     
     [Fact]
@@ -293,9 +298,7 @@ public class OperatorServiceTests
         var result = await _operatorService.SearchForVendorsAsync(industriesData, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Null(result.Data);
-        Assert.Equal((int)ErrorCodes.InvalidServiceType, result.ErrorCode);
-        Assert.Contains(nameof(industriesData.ServiceType), result.ErrorMessage);
+        Assert.True(result.Value is ValidationError);
     }
     
 

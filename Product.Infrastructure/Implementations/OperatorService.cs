@@ -1,4 +1,6 @@
-﻿using Product.Application.Dto;
+﻿using OneOf;
+using OneOf.Types;
+using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
@@ -76,29 +78,29 @@ public class OperatorService : IOperatorService
         return matchingVendors;
     }
 
-    public async Task<Response<List<BusinessFrontEndDto>>> SearchForVendorsAsync(SearchVendorsForIndustriesDto industriesData, 
+    public async Task<OneOf<List<BusinessFrontEndDto>, ValidationError, Error>> SearchForVendorsAsync(SearchVendorsForIndustriesDto industriesData, 
         CancellationToken cancellationToken = default)
     {
-        var serviceIsValid = ValidateStringInput(industriesData.ServiceType);
-        if (!serviceIsValid)
+        try
         {
-            return new Response<List<BusinessFrontEndDto>>()
+            var serviceIsValid = ValidateStringInput(industriesData.ServiceType);
+            if (!serviceIsValid)
             {
-                ErrorMessage = $"The field '{nameof(industriesData.ServiceType)}' shouldn't be empty ",
-                ErrorCode = (int)ErrorCodes.InvalidServiceType,
-            };
-        }
+                return new ValidationError();
+            }
 
-        var operatorFacilities = GetAllOperatorIndustries(industriesData.IndustriesLocationIds);
+            var operatorFacilities = GetAllOperatorIndustries(industriesData.IndustriesLocationIds);
 
-        var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities, cancellationToken);
+            var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities, cancellationToken);
         
-        var vendorDtos = vendors.Select(v => v.ToFrontEndDto()).ToList();
+            var vendorDtoList = vendors.Select(v => v.ToFrontEndDto()).ToList();
 
-        return new Response<List<BusinessFrontEndDto>>
+            return vendorDtoList;
+        }
+        catch (Exception e)
         {
-            Data = vendorDtos
-        };
+            return new Error();
+        }
     }
 
     private double CalculateDistance(double operLatitude, double operLongitude, double vendLatitude, double vendLongitude)
@@ -128,17 +130,13 @@ public class OperatorService : IOperatorService
         return distance <= vendorFacility.RadiusOfWork;
     }
 
-    public async Task<Response<PagedList<Vendor>>> GetVendorsByNameAsync(VendorSearchDto vendorSearchDto,
+    public async Task<OneOf<PagedList<Vendor>, Error>> GetVendorsByNameAsync(VendorSearchDto vendorSearchDto,
         CancellationToken cancellationToken = default)
     {
         var isValidVendor = ValidateStringInput(vendorSearchDto.VendorName);
         if (!isValidVendor)
         {
-            return new Response<PagedList<Vendor>>
-            {
-                ErrorMessage = $"The field '{nameof(vendorSearchDto.VendorName)}' shouldn't be empty",
-                ErrorCode = (int)ErrorCodes.InvalidBusinessName
-            };
+            return new Error();
         }
 
         var pagedVendors = await _vendorRepository.GetVendorsQuery(vendorSearchDto.VendorName, vendorSearchDto.SortOrder,
@@ -147,25 +145,19 @@ public class OperatorService : IOperatorService
         var result = new PagedList<Vendor>
             (pagedVendors.Items, vendorSearchDto.PageSize, vendorSearchDto.PageNumber, pagedVendors.TotalCount);
 
-        return new Response<PagedList<Vendor>>
-        {
-            Data = result
-        };
+        return result;
     }
 
-    public async Task<Response<BusinessFrontEndDto>> GetOperatorAsync(int operatorId, 
+    public async Task<OneOf<BusinessFrontEndDto, Error>> GetOperatorAsync(int operatorId, 
         CancellationToken cancellationToken = default)
     {
         var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
         var operatorDto = @operator.ToFrontEndDto();
 
-        return new Response<BusinessFrontEndDto>
-        {
-            Data = operatorDto
-        };
+        return operatorDto;
     }
 
-    public async Task<Response<MailMsg>> InviteOperatorUserAsync(EmailForInviteDto dto, 
+    public async Task<OneOf<MailMsg, TransactionError>> InviteOperatorUserAsync(EmailForInviteDto dto, 
         CancellationToken cancellationToken = default)
     {
         await using var transaction = await _unitOfWork.BeginTransactionAsync();
@@ -196,34 +188,31 @@ public class OperatorService : IOperatorService
 
             await transaction.CommitAsync(cancellationToken);
 
-            return new Response<MailMsg>
-            {
-                Data = mailMessage
-            };
+            return mailMessage;
         }
 
         catch (Exception ex)
         {
             await transaction.RollbackAsync(cancellationToken);
 
-            return new Response<MailMsg>
-            {
-                ErrorCode = (int)ErrorCodes.InvalidInvitationData,
-                ErrorMessage = "Failed to create an invite in transaction"
-            };
+            return new TransactionError("Failed to create an invite in transaction");
         }
     }
-    public async Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(UpdateOperatorDto operatorUpdateData, 
+    public async Task<OneOf<BusinessFrontEndDto, Error>> UpdateOperatorAsync(UpdateOperatorDto operatorUpdateData, 
         CancellationToken cancellationToken = default)
     {
-        var operatorId = _userPrincipalService.BusinessId!.Value;
-        var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
-        @operator.MapOperatorFromDtoToUpdate(operatorUpdateData);
-
-        await _operatorRepository.UpdateAsync(@operator, cancellationToken);
-        return new Response<BusinessFrontEndDto>
+        try
         {
-            Data = @operator.ToFrontEndDto()
-        };
+            var operatorId = _userPrincipalService.BusinessId!.Value;
+            var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
+            @operator.MapOperatorFromDtoToUpdate(operatorUpdateData);
+
+            await _operatorRepository.UpdateAsync(@operator, cancellationToken);
+            return @operator.ToFrontEndDto();
+        }
+        catch (Exception e)
+        {
+            return new Error();
+        }
     }
 }   

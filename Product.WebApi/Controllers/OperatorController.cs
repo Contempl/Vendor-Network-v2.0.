@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OneOf;
+using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
@@ -27,70 +29,66 @@ public class OperatorController : Controller
 	[HttpPost("search/vendors")]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> SearchVendorsToServeFacilities(
+	public async Task<ActionResult<OneOf<List<BusinessFrontEndDto>, ValidationError, Error>>> SearchVendorsToServeFacilities(
 		[FromBody] SearchVendorsForIndustriesDto industriesData, CancellationToken cancellationToken)
 	{
 		var response = await _operatorService.SearchForVendorsAsync(industriesData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			vendors => Ok(vendors),
+			validationError => BadRequest(validationError),
+			error => BadRequest(error));
 	}
 
 	[HttpPost("search/vendor")]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<PagedList<Vendor>>>> GetVendors(
+	public async Task<ActionResult<OneOf<PagedList<Vendor>, Error>>> GetVendors(
 		[FromBody] VendorSearchDto vendorSearchDto, CancellationToken cancellationToken)
 	{
 		var response =  await _operatorService.GetVendorsByNameAsync(vendorSearchDto, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			vendors => Ok(vendors),
+			error => BadRequest(error));
 	}
 
 
 	[HttpGet]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<BusinessFrontEndDto>>> GetOperator(CancellationToken cancellationToken)
+	public async Task<ActionResult<OneOf<BusinessFrontEndDto, Error>>> GetOperator(CancellationToken cancellationToken)
 	{
 		var operatorId = _userPrincipalService.BusinessId!.Value;
 		var response = await _operatorService.GetOperatorAsync(operatorId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+
+		return response.Match<ActionResult>(
+			@operator => Ok(@operator),
+			error => BadRequest(error));
 	}
 
 	[HttpPut]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateOperator(
+	public async Task<ActionResult<OneOf<BusinessFrontEndDto, Error>>> UpdateOperator(
 		[FromBody] UpdateOperatorDto operatorData, CancellationToken cancellationToken)
 	{
 		var response = await _operatorService.UpdateOperatorAsync(operatorData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			@operator => Ok(@operator),
+			error => BadRequest(error));
 	}
 
 	[HttpPost("invite")]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<MailMsg>>> InviteOperatorUser(
+	public async Task<ActionResult<OneOf<MailMsg, TransactionError>>> InviteOperatorUser(
 		[FromBody] EmailForInviteDto dto, CancellationToken cancellationToken)
 	{
 		var response = await _operatorService.InviteOperatorUserAsync(dto, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			mailMsg => Ok(mailMsg),
+			error => BadRequest(error));
 	}
 }
