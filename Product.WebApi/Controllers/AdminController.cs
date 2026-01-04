@@ -44,6 +44,7 @@ public class AdminController : ControllerBase
 
 		return response.Match<ActionResult>(
 			userDto => Ok(userDto),
+			validationError => BadRequest(validationError),
 			error => BadRequest(error)
 		);
 	}
@@ -56,6 +57,7 @@ public class AdminController : ControllerBase
 		
 		return response.Match<ActionResult>(
 			userDto => Ok(userDto),
+			validationError =>BadRequest(validationError), 
 			error => BadRequest(error)
 		);
 	}
@@ -67,6 +69,7 @@ public class AdminController : ControllerBase
 		
 		return response.Match<ActionResult>(
 			userDto => Ok(userDto),
+			validationError => BadRequest(validationError),
 			error => BadRequest(error)
 		);
 	}
