@@ -24,7 +24,7 @@ jobs:
         run: dotnet restore Product.WebApi/Product.WebApi.csproj
         
       - name: Build solution
-        run: dotnet build Product.WebApi/Product.WebApi.csproj --configuration Release --no-restore
+        run: dotnet build Project.sln --configuration Release --no-restore
           
       - name: Run tests
         run: dotnet test --no-build --verbosity normal
