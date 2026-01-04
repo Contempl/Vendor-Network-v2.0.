@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using OneOf;
 using OneOf.Types;
@@ -9,6 +10,7 @@ using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
+using Product.Domain.Result;
 
 namespace Product.Infrastructure.Implementations;
 
@@ -46,8 +48,8 @@ public class AdministratorService : IAdministratorService
     }
     
 
-    public async Task<OneOf<UserDtoToFrontEnd, Error>> InviteVendorUser(DataForInviteDto inviteData, 
-	    CancellationToken cancellationToken= default)
+    public async Task<OneOf<UserDtoToFrontEnd, ValidationError, Error>> InviteVendorUser(DataForInviteDto inviteData, 
+	    CancellationToken cancellationToken= default) 
 	{
 		try
 		{
@@ -56,7 +58,7 @@ public class AdministratorService : IAdministratorService
 
 			var isValid = ValidateUserInviteData(inviteData);
 			if (!isValid)
-				return new Error();
+				return new ValidationError();
 		
 			var vendorUserCreationDto = new VendorUserCreationDto
 			{
@@ -90,7 +92,7 @@ public class AdministratorService : IAdministratorService
 		}
 	}
 
-	public async Task<OneOf<UserDtoToFrontEnd, Error>> InviteOperatorUser(DataForInviteDto inviteData, 
+	public async Task<OneOf<UserDtoToFrontEnd, ValidationError, Error>> InviteOperatorUser(DataForInviteDto inviteData, 
 		CancellationToken cancellationToken = default)
 	{
 		try
@@ -100,7 +102,7 @@ public class AdministratorService : IAdministratorService
 
 			var isValid = ValidateUserInviteData(inviteData);
 			if (!isValid)
-				return new Error();
+				return new ValidationError();
 
 			var operatorUserCreationDto = new OperatorUserCreationDto()
 			{
@@ -134,7 +136,7 @@ public class AdministratorService : IAdministratorService
 		}
 	}
 
-	public async Task<OneOf<UserDtoToFrontEnd, Error>> InviteBusiness(BusinessInvitationData invitationData, 
+	public async Task<OneOf<UserDtoToFrontEnd, ValidationError, Error>> InviteBusiness(BusinessInvitationData invitationData, 
 		CancellationToken cancellationToken = default)
 	{
 		try
@@ -246,5 +248,5 @@ public class AdministratorService : IAdministratorService
 	}
 
 	private bool ValidateUserInviteData(DataForInviteDto userInvitationData) =>
-		string.IsNullOrWhiteSpace(userInvitationData.Email) || userInvitationData.BusinessId == 0;
+		!string.IsNullOrWhiteSpace(userInvitationData.Email) || userInvitationData.BusinessId == 0;
 }

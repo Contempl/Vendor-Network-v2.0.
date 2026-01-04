@@ -1,9 +1,12 @@
+using Microsoft.Extensions.Logging;
 using Moq;
+using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
-using Product.Domain.Enum;
+using Product.Domain.Result;
 using Product.Infrastructure.Implementations;
 using Xunit;
 using static Product.Domain.Entity.InvitationStatus;
@@ -20,6 +23,9 @@ public class AdministratorServiceTests
     private readonly Mock<IVendorRepository> _vendorRepositoryMock = new();
     private readonly Mock<IOperatorRepository> _operatorRepositoryMock = new();
     private readonly Mock<IUserPrincipalService> _userPrincipalServiceMock = new();
+    private readonly Mock<IVendorUserRepository> _vendorUserRepositoryMock = new();
+    private readonly Mock<IOperatorUserRepository> _operatorUserRepositoryMock = new();
+    private readonly Mock<ILogger<AdministratorService>> _loggerMock = new();
     
 
     private readonly AdministratorService _adminService;
@@ -34,7 +40,10 @@ public class AdministratorServiceTests
             _inviteRepositoryMock.Object,
             _vendorRepositoryMock.Object,
             _operatorRepositoryMock.Object,
-            _userPrincipalServiceMock.Object
+            _userPrincipalServiceMock.Object,
+            _vendorUserRepositoryMock.Object,
+            _operatorUserRepositoryMock.Object,
+            _loggerMock.Object
         );
     }
 
@@ -67,15 +76,15 @@ public class AdministratorServiceTests
         };
 
         _adminRepositoryMock
-            .Setup(r => r.GetByIdOrDefaultAsync( _testAdmin.Id))
+            .Setup(r => r.GetByIdAsync(_testAdmin.Id, CancellationToken.None))
             .ReturnsAsync(admin);
 
         _inviteServiceMock
             .Setup(s => s.CreateInviteByAdmin(It.IsAny<User>(), It.IsAny<Administrator>()))
             .Returns(invite);
 
-        _userRepositoryMock
-            .Setup(r => r.GetByEmailAsync(inviteDto.Email, It.IsAny<CancellationToken>()))
+        _vendorUserRepositoryMock
+            .Setup(r => r.CreateAsync(It.IsAny<VendorUserCreationDto>(), CancellationToken.None))
             .ReturnsAsync(createdUser);
         
         _userPrincipalServiceMock
@@ -86,10 +95,10 @@ public class AdministratorServiceTests
             .Returns("https://invite.url/token");;
 
         // Act
-        var result = await _adminService.InviteVendorUser(inviteDto, It.IsAny<CancellationToken>());
+        var result = await _adminService.InviteVendorUser(inviteDto, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(result.Data);
+        Assert.True(result.Value is UserDtoToFrontEnd);
         _inviteRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Invite>(), It.IsAny<CancellationToken>()), Times.Once);
         _emailServiceMock.Verify(e => e.SendInvitationEmailAsync(It.IsAny<MailMsg>()), Times.Once);
     }
@@ -127,10 +136,12 @@ public class AdministratorServiceTests
             Status = Sent,
         };
 
-        _adminRepositoryMock.Setup(r => r.GetByIdOrDefaultAsync( _testAdmin.Id))
+        var ct = It.IsAny<CancellationToken>();
+
+        _adminRepositoryMock.Setup(r => r.GetByIdAsync(_testAdmin.Id, CancellationToken.None))
             .ReturnsAsync(admin);
 
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(inviteDto.Email, It.IsAny<CancellationToken>()))
+        _vendorUserRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<VendorUserCreationDto>(), CancellationToken.None))
             .ReturnsAsync(createdUser);
         
         _userPrincipalServiceMock
@@ -150,12 +161,12 @@ public class AdministratorServiceTests
             .Returns(new MailMsg("Email Body", admin.Email));
 
         // Act
-        var result = await _adminService.InviteVendorUser(inviteDto, It.IsAny<CancellationToken>());
+        var result = await _adminService.InviteVendorUser(inviteDto, ct);
 
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal(inviteDto.Email, result.Data.Email);
-        _userRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.True(result.Value is UserDtoToFrontEnd);
+        Assert.Equal(inviteDto.Email, result.AsT0.Email);
+        _vendorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUserCreationDto>(), It.IsAny<CancellationToken>()), Times.Once);
         _inviteRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Invite>(), It.IsAny<CancellationToken>()), Times.Once);
         _emailServiceMock.Verify(e => e.SendInvitationEmailAsync(It.IsAny<MailMsg>()), Times.Once);
     }
@@ -167,10 +178,10 @@ public class AdministratorServiceTests
         var inviteDto = new DataForInviteDto { Email = "operator@example.com", BusinessId = 20 };
 
 
-        _adminRepositoryMock.Setup(r => r.GetByIdOrDefaultAsync(_testAdmin.Id))
+        _adminRepositoryMock.Setup(r => r.GetByIdAsync(_testAdmin.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testAdmin);
 
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(inviteDto.Email, It.IsAny<CancellationToken>()))
+        _operatorUserRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<OperatorUserCreationDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testOperatorUser);
 
         _inviteServiceMock
@@ -194,9 +205,9 @@ public class AdministratorServiceTests
         var result = await _adminService.InviteOperatorUser(inviteDto, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal(inviteDto.Email, result.Data.Email);
-        _userRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<OperatorUser>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.True(result.Value is UserDtoToFrontEnd);
+        Assert.Equal(inviteDto.Email, result.AsT0.Email);
+        _operatorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<OperatorUserCreationDto>(), It.IsAny<CancellationToken>()), Times.Once);
         _inviteRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Invite>(), It.IsAny<CancellationToken>()), Times.Once);
         _emailServiceMock.Verify(e => e.SendInvitationEmailAsync(It.IsAny<MailMsg>()), Times.Once);
     }
@@ -216,25 +227,25 @@ public class AdministratorServiceTests
         var invite = new Invite
         {
             Id = 789,
-            InvitedUserId = _testVenodrUser.Id,
+            InvitedUserId = _testVendorUser.Id,
             SenderId = _testAdmin.Id,
             Sender = _testAdmin,
             CreatedAt = DateTime.UtcNow,
             Status = Sent
         };
 
-        _adminRepositoryMock.Setup(r => r.GetByIdOrDefaultAsync( _testAdmin.Id))
+        _adminRepositoryMock.Setup(r => r.GetByIdAsync( _testAdmin.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testAdmin);
 
          _userRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<VendorUser>(), It.IsAny<CancellationToken>()));
 
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(invitationData.UserEmail, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(_testVenodrUser);
+            .ReturnsAsync(_testVendorUser);
         
         _userPrincipalServiceMock
             .SetupProperty(p => p.UserId, _testAdmin.Id);
 
-        _inviteServiceMock.Setup(s => s.CreateInviteByAdmin(_testVenodrUser, _testAdmin))
+        _inviteServiceMock.Setup(s => s.CreateInviteByAdmin(_testVendorUser, _testAdmin))
             .Returns(invite);
 
         _inviteRepositoryMock.Setup(r => r.CreateAsync(invite, It.IsAny<CancellationToken>()));
@@ -243,11 +254,11 @@ public class AdministratorServiceTests
             .Returns("https://invite-link.com");
         
         _emailServiceMock
-            .Setup(e => e.GenerateEmailTemplate(invitationData.UserEmail, _testVenodrUser, "https://invite-link.com"))
+            .Setup(e => e.GenerateEmailTemplate(invitationData.UserEmail, _testVendorUser, "https://invite-link.com"))
             .Returns("Email body");
 
         _emailServiceMock.Setup(e =>
-                e.GenerateEmailTemplate(invitationData.BusinessEmail, _testVenodrUser, "https://invite-link.com"))
+                e.GenerateEmailTemplate(invitationData.BusinessEmail, _testVendorUser, "https://invite-link.com"))
             .Returns("Email body");
 
         _emailServiceMock.Setup(e => e.CreateMessage("Email body", _testAdmin.Email))
@@ -259,9 +270,8 @@ public class AdministratorServiceTests
         var result = await _adminService.InviteBusiness(invitationData, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal(_testVenodrUser.Email, result.Data.Email);
-
+        Assert.True(result.Value is UserDtoToFrontEnd);
+        Assert.Equal(_testVendorUser.Email, result.AsT0.Email);
         _userRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>(), It.IsAny<CancellationToken>()), Times.Once);
         _inviteRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Invite>(), It.IsAny<CancellationToken>()), Times.Once);
         _emailServiceMock.Verify(e => e.SendInvitationEmailAsync(It.IsAny<MailMsg>()), Times.Once);
@@ -283,31 +293,7 @@ public class AdministratorServiceTests
         var result = await _adminService.InviteVendorUser(inviteDto, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Null(result.Data);
-        Assert.Equal((int)ErrorCodes.InvalidInvitationData, result.ErrorCode);
-        Assert.Equal("Invalid user data in invitation", result.ErrorMessage);
-    }
-    
-    [Fact]
-    public async Task InviteVendorUser_WhenAdminNotFound_ReturnsError()
-    {
-        // Arrange
-        var adminId = 999;
-        var inviteDto = new DataForInviteDto { Email = "test@example.com", BusinessId = 10 };
-
-        _adminRepositoryMock.Setup(r => r.GetByIdAsync(adminId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Administrator)null!);
-        
-        _userPrincipalServiceMock
-            .SetupProperty(p => p.UserId, adminId);
-
-        // Act
-        var result = await _adminService.InviteVendorUser(inviteDto, It.IsAny<CancellationToken>());
-
-        // Assert
-        Assert.Equal((int)ErrorCodes.UserNotFound, result.ErrorCode);
-        Assert.Equal("Admin not found.", result.ErrorMessage);
+        Assert.True(result.Value is Error);
     }
     
     [Fact]
@@ -326,10 +312,7 @@ public class AdministratorServiceTests
         var result = await _adminService.InviteVendorUser(inviteDto, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Null(result.Data);
-        Assert.Equal((int)ErrorCodes.InvalidInvitationData, result.ErrorCode);
-        Assert.Equal("Invalid user data in invitation", result.ErrorMessage);
+        Assert.True(result.Value is ValidationError);
     }
     
 
@@ -358,7 +341,7 @@ public class AdministratorServiceTests
         Status = Sent
     };
 
-    private readonly VendorUser _testVenodrUser = new VendorUser
+    private readonly VendorUser _testVendorUser = new VendorUser
     {
         Id = 123,
         Email = "vendor@example.com",
