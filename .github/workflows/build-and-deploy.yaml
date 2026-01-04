@@ -21,7 +21,7 @@ jobs:
           dotnet-version: '7.0.x'
           
       - name: Restore dependencies
-        run: dotnet restore Product.WebApi/Product.WebApi.csproj
+        run: dotnet restore Project.sln
         
       - name: Build solution
         run: dotnet build Project.sln --configuration Release --no-restore
