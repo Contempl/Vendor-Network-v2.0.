@@ -36,8 +36,9 @@ public class OperatorController : Controller
 		
 		return response.Match<ActionResult>(
 			vendors => Ok(vendors),
+			notFound => NotFound(notFound),
 			validationError => BadRequest(validationError),
-			error => BadRequest(error));
+			error => StatusCode(500, error));
 	}
 
 	[HttpPost("search/vendor")]
@@ -49,7 +50,7 @@ public class OperatorController : Controller
 		
 		return response.Match<ActionResult>(
 			vendors => Ok(vendors),
-			error => BadRequest(error));
+			error => StatusCode(500, error));
 	}
 
 
@@ -63,7 +64,7 @@ public class OperatorController : Controller
 
 		return response.Match<ActionResult>(
 			@operator => Ok(@operator),
-			error => BadRequest(error));
+			error => StatusCode(500, error));
 	}
 
 	[HttpPut]
@@ -76,7 +77,7 @@ public class OperatorController : Controller
 		
 		return response.Match<ActionResult>(
 			@operator => Ok(@operator),
-			error => BadRequest(error));
+			error => StatusCode(500, error));
 	}
 
 	[HttpPost("invite")]
@@ -89,6 +90,6 @@ public class OperatorController : Controller
 		
 		return response.Match<ActionResult>(
 			mailMsg => Ok(mailMsg),
-			error => BadRequest(error));
+			error => StatusCode(500, error));
 	}
 }

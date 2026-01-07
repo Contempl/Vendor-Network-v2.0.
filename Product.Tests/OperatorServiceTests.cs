@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using Moq;
 using OneOf.Types;
 using Product.Application.Dto;
@@ -27,6 +28,7 @@ public class OperatorServiceTests
     private readonly Mock<IUserPrincipalService> _userPrincipalServiceMock = new();
     private readonly Mock<IInviteService> _inviteServiceMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
+    private readonly Mock<ILogger<OperatorService>> _loggerMock = new();
     
     private readonly OperatorService _operatorService;
 
@@ -42,7 +44,8 @@ public class OperatorServiceTests
             _inviteRepositoryMock.Object,
             _userPrincipalServiceMock.Object,
             _inviteServiceMock.Object,
-            _unitOfWorkMock.Object
+            _unitOfWorkMock.Object,
+            _loggerMock.Object
         );
     }
     
