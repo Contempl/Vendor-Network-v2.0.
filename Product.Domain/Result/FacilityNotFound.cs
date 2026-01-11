@@ -1,3 +1,11 @@
 namespace Product.Domain.Result;
 
-public record FacilityNotFound(string? Name);
+public struct FacilityNotFound
+{
+    public string? Name { get;  private set; }
+
+    public FacilityNotFound(string? name)
+    {
+        Name = name;
+    }
+}
