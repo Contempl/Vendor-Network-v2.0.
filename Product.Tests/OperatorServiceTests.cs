@@ -68,7 +68,8 @@ public class OperatorServiceTests
 
         // Assert
         Assert.True(result.Value is BusinessFrontEndDto);
-        Assert.Equal("Test Operator", result.AsT0.BusinessName);
+        var resultDto = result.Value as BusinessFrontEndDto;
+        Assert.Equal("Test Operator", resultDto!.BusinessName);
         _operatorRepositoryMock.Verify(r => r.GetByIdAsync(operatorId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -130,8 +131,9 @@ public class OperatorServiceTests
         
         // Assert
         Assert.True(result.Value is MailMsg);
-        Assert.Equal("Operator Email Body", result.AsT0.Body);
-        Assert.Equal(_testOperatorUser.Email, result.AsT0.Sender);
+        var resultMsg = result.Value as MailMsg;
+        Assert.Equal("Operator Email Body", resultMsg!.Body);
+        Assert.Equal(_testOperatorUser.Email, resultMsg.Sender);
     }
     
     [Fact]
@@ -166,8 +168,9 @@ public class OperatorServiceTests
 
         // Assert
         Assert.True(result.Value is BusinessFrontEndDto);
-        Assert.Equal(updateDto.BusinessName, result.AsT0.BusinessName);
-        Assert.Equal(updateDto.Address, result.AsT0.Address);
+        var resultDto = result.Value as UpdateOperatorDto;
+        Assert.Equal(updateDto.BusinessName, resultDto!.BusinessName);
+        Assert.Equal(updateDto.Address, resultDto.Address);
     }
     
     [Fact]
@@ -189,8 +192,9 @@ public class OperatorServiceTests
 
         // Assert
         Assert.True(result.Value is BusinessFrontEndDto);
-        Assert.Equal(existingOperator.Id, result.AsT0.Id);
-        Assert.Equal(existingOperator.BusinessName, result.AsT0.BusinessName);
+        var resultDto = result.Value as BusinessFrontEndDto;
+        Assert.Equal(existingOperator.Id, resultDto!.Id);
+        Assert.Equal(existingOperator.BusinessName, resultDto.BusinessName);
     }
 
     [Fact]
@@ -245,9 +249,10 @@ public class OperatorServiceTests
     
         // Assert
         Assert.True(result.Value is List<BusinessFrontEndDto>);
-        Assert.Equal(2, result.AsT0.Count);
-        Assert.Equal("CleanCo", result.AsT0[0].BusinessName);
-        Assert.Equal("Sparkle Services", result.AsT0[1].BusinessName);
+        var vendorsResult = result.Value as List<Vendor>;
+        Assert.Equal(2, vendorsResult!.Count);
+        Assert.Equal("CleanCo", vendorsResult[0].BusinessName);
+        Assert.Equal("Sparkle Services", vendorsResult[1].BusinessName);
     }
     
     [Fact]
@@ -280,11 +285,12 @@ public class OperatorServiceTests
 
         // Assert
         Assert.True(result.Value is PagedList<Vendor>);
-        Assert.Equal(2, result.AsT0.Items.Count);
-        Assert.Equal("CleanCo", result.AsT0.Items[0].BusinessName);
-        Assert.Equal("CleanPro", result.AsT0.Items[1].BusinessName);
-        Assert.Equal(searchDto.PageNumber, result.AsT0.PageNumber);
-        Assert.Equal(searchDto.PageSize, result.AsT0.PageSize);
+        var resultingList = result.Value as PagedList<Vendor>;
+        Assert.Equal(2, resultingList!.Items.Count);
+        Assert.Equal("CleanCo", resultingList.Items[0].BusinessName);
+        Assert.Equal("CleanPro", resultingList.Items[1].BusinessName);
+        Assert.Equal(searchDto.PageNumber, resultingList.PageNumber);
+        Assert.Equal(searchDto.PageSize, resultingList.PageSize);
     }
     
     [Fact]
