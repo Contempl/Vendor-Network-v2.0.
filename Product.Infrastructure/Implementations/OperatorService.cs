@@ -27,11 +27,18 @@ public class OperatorService : IOperatorService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<OperatorService> _logger;
 
-	public OperatorService
-    (
-        IOperatorRepository operatorRepository, IVendorRepository vendorRepository, IOperatorIndustryRepository operatorFacilityRepository, 
-        IUserRepository userRepository, IOperatorUserRepository operatorUserRepository, IEmailService emailService, IInviteRepository inviteRepository, 
-        IUserPrincipalService userPrincipalService, IInviteService inviteService, IUnitOfWork unitOfWork, ILogger<OperatorService> logger)
+	public OperatorService(
+        IOperatorRepository operatorRepository, 
+        IVendorRepository vendorRepository, 
+        IOperatorIndustryRepository operatorFacilityRepository, 
+        IUserRepository userRepository, 
+        IOperatorUserRepository operatorUserRepository, 
+        IEmailService emailService, 
+        IInviteRepository inviteRepository, 
+        IUserPrincipalService userPrincipalService, 
+        IInviteService inviteService, 
+        IUnitOfWork unitOfWork, 
+        ILogger<OperatorService> logger)
 	{
 		_operatorRepository = operatorRepository;
         _vendorRepository = vendorRepository;
@@ -61,19 +68,20 @@ public class OperatorService : IOperatorService
             }
 
             var operatorFacilitiesResult = GetAllOperatorIndustries(industriesData.IndustriesLocationIds);
-            if (operatorFacilitiesResult is FacilityNotFound)
-                return operatorFacilitiesResult.AsT0;
+            if (operatorFacilitiesResult.Value is FacilityNotFound facilityNotFound)
+                return facilityNotFound;
             
-            var operatorFacilities = operatorFacilitiesResult.AsT1;
+            var operatorFacilities = operatorFacilitiesResult.Value as List<OperatorIndustry>;
 
-            var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities, cancellationToken);
+            var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities!, cancellationToken);
         
             var vendorDtoList = vendors.Select(v => v.ToFrontEndDto()).ToList();
 
             return vendorDtoList;
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
+            _logger.LogError($"Failed to search for vendors with exception: {ex.Message}");
             return new Error();
         }
     }
@@ -143,7 +151,7 @@ public class OperatorService : IOperatorService
         catch (Exception ex)
         {
             await transaction.RollbackAsync(cancellationToken);
-            _logger.LogError("The transaction was cancelled");
+            _logger.LogError("The transaction was cancelled. {ex}", ex.Message);
             return new Error();
         }
     }
@@ -218,7 +226,7 @@ public class OperatorService : IOperatorService
     {
         if (facilityIds.Count == 0)
         {
-            _logger.LogError("No facilities found");
+            _logger.LogWarning("No facilities found");
             return new FacilityNotFound("");
         }
         var facilities = _operatorFacilityRepository.GetAll()
