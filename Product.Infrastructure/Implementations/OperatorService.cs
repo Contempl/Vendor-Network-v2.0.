@@ -169,9 +169,9 @@ public class OperatorService : IOperatorService
             var operatorDto = @operator.ToFrontEndDto();
             return operatorDto;
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            _logger.LogError("Couldn't update the operator");
+            _logger.LogError($"Couldn't update the operator {ex.Message}");
             return new Error();
         }
     }
