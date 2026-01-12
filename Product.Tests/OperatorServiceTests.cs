@@ -168,7 +168,7 @@ public class OperatorServiceTests
 
         // Assert
         Assert.True(result.Value is BusinessFrontEndDto);
-        var resultDto = result.Value as UpdateOperatorDto;
+        var resultDto = result.Value as BusinessFrontEndDto;
         Assert.Equal(updateDto.BusinessName, resultDto!.BusinessName);
         Assert.Equal(updateDto.Address, resultDto.Address);
     }
@@ -249,7 +249,7 @@ public class OperatorServiceTests
     
         // Assert
         Assert.True(result.Value is List<BusinessFrontEndDto>);
-        var vendorsResult = result.Value as List<Vendor>;
+        var vendorsResult = result.Value as List<BusinessFrontEndDto>;
         Assert.Equal(2, vendorsResult!.Count);
         Assert.Equal("CleanCo", vendorsResult[0].BusinessName);
         Assert.Equal("Sparkle Services", vendorsResult[1].BusinessName);
