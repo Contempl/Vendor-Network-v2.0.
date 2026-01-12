@@ -83,7 +83,7 @@ public class OperatorController : Controller
 	[HttpPost("invite")]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<OneOf<MailMsg, TransactionError>>> InviteOperatorUser(
+	public async Task<ActionResult<OneOf<MailMsg, Error>>> InviteOperatorUser(
 		[FromBody] EmailForInviteDto dto, CancellationToken cancellationToken)
 	{
 		var response = await _operatorService.InviteOperatorUserAsync(dto, cancellationToken);
