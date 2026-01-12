@@ -151,7 +151,7 @@ public class OperatorService : IOperatorService
         catch (Exception ex)
         {
             await transaction.RollbackAsync(cancellationToken);
-            _logger.LogError(ex ,"The transaction was cancelled.");
+            _logger.LogError(ex ,"Couldn't create operator invitation.");
             return new Error();
         }
     }
