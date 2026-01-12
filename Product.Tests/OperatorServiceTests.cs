@@ -1,12 +1,16 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using Moq;
+using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
+using Product.Domain.Pagination;
+using Product.Domain.Result;
 using Product.Infrastructure.Implementations;
 using Xunit;
 
@@ -24,6 +28,7 @@ public class OperatorServiceTests
     private readonly Mock<IUserPrincipalService> _userPrincipalServiceMock = new();
     private readonly Mock<IInviteService> _inviteServiceMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
+    private readonly Mock<ILogger<OperatorService>> _loggerMock = new();
     
     private readonly OperatorService _operatorService;
 
@@ -39,7 +44,8 @@ public class OperatorServiceTests
             _inviteRepositoryMock.Object,
             _userPrincipalServiceMock.Object,
             _inviteServiceMock.Object,
-            _unitOfWorkMock.Object
+            _unitOfWorkMock.Object,
+            _loggerMock.Object
         );
     }
     
@@ -61,8 +67,9 @@ public class OperatorServiceTests
         var result = await _operatorService.GetOperatorAsync(operatorId, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("Test Operator", result.Data.BusinessName);
+        Assert.True(result.Value is BusinessFrontEndDto);
+        var resultDto = result.Value as BusinessFrontEndDto;
+        Assert.Equal("Test Operator", resultDto!.BusinessName);
         _operatorRepositoryMock.Verify(r => r.GetByIdAsync(operatorId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -123,8 +130,10 @@ public class OperatorServiceTests
         var result = await _operatorService.InviteOperatorUserAsync(emailDto, It.IsAny<CancellationToken>());
         
         // Assert
-        Assert.Equal("Operator Email Body", result.Data.Body);
-        Assert.Equal(_testOperatorUser.Email, result.Data.Sender);
+        Assert.True(result.Value is MailMsg);
+        var resultMsg = result.Value as MailMsg;
+        Assert.Equal("Operator Email Body", resultMsg!.Body);
+        Assert.Equal(_testOperatorUser.Email, resultMsg.Sender);
     }
     
     [Fact]
@@ -158,8 +167,10 @@ public class OperatorServiceTests
         var result = await _operatorService.UpdateOperatorAsync(updateDto, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Equal(updateDto.BusinessName, result.Data.BusinessName);
-        Assert.Equal(updateDto.Address, result.Data.Address);
+        Assert.True(result.Value is BusinessFrontEndDto);
+        var resultDto = result.Value as BusinessFrontEndDto;
+        Assert.Equal(updateDto.BusinessName, resultDto!.BusinessName);
+        Assert.Equal(updateDto.Address, resultDto.Address);
     }
     
     [Fact]
@@ -180,9 +191,10 @@ public class OperatorServiceTests
         var result = await _operatorService.GetOperatorAsync(operatorId, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal(existingOperator.Id, result.Data.Id);
-        Assert.Equal(existingOperator.BusinessName, result.Data.BusinessName);
+        Assert.True(result.Value is BusinessFrontEndDto);
+        var resultDto = result.Value as BusinessFrontEndDto;
+        Assert.Equal(existingOperator.Id, resultDto!.Id);
+        Assert.Equal(existingOperator.BusinessName, resultDto.BusinessName);
     }
 
     [Fact]
@@ -236,10 +248,11 @@ public class OperatorServiceTests
         var result = await _operatorService.SearchForVendorsAsync(industriesData, It.IsAny<CancellationToken>());
     
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal(2, result.Data.Count);
-        Assert.Equal("CleanCo", result.Data[0].BusinessName);
-        Assert.Equal("Sparkle Services", result.Data[1].BusinessName);
+        Assert.True(result.Value is List<BusinessFrontEndDto>);
+        var vendorsResult = result.Value as List<BusinessFrontEndDto>;
+        Assert.Equal(2, vendorsResult!.Count);
+        Assert.Equal("CleanCo", vendorsResult[0].BusinessName);
+        Assert.Equal("Sparkle Services", vendorsResult[1].BusinessName);
     }
     
     [Fact]
@@ -271,12 +284,13 @@ public class OperatorServiceTests
         var result = await _operatorService.GetVendorsByNameAsync(searchDto, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal(2, result.Data.Items.Count);
-        Assert.Equal("CleanCo", result.Data.Items[0].BusinessName);
-        Assert.Equal("CleanPro", result.Data.Items[1].BusinessName);
-        Assert.Equal(searchDto.PageNumber, result.Data.PageNumber);
-        Assert.Equal(searchDto.PageSize, result.Data.PageSize);
+        Assert.True(result.Value is PagedList<Vendor>);
+        var resultingList = result.Value as PagedList<Vendor>;
+        Assert.Equal(2, resultingList!.Items.Count);
+        Assert.Equal("CleanCo", resultingList.Items[0].BusinessName);
+        Assert.Equal("CleanPro", resultingList.Items[1].BusinessName);
+        Assert.Equal(searchDto.PageNumber, resultingList.PageNumber);
+        Assert.Equal(searchDto.PageSize, resultingList.PageSize);
     }
     
     [Fact]
@@ -293,9 +307,7 @@ public class OperatorServiceTests
         var result = await _operatorService.SearchForVendorsAsync(industriesData, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Null(result.Data);
-        Assert.Equal((int)ErrorCodes.InvalidServiceType, result.ErrorCode);
-        Assert.Contains(nameof(industriesData.ServiceType), result.ErrorMessage);
+        Assert.True(result.Value is ValidationError);
     }
     
 

@@ -1,4 +1,7 @@
-﻿using Product.Application.Dto;
+﻿using Microsoft.Extensions.Logging;
+using OneOf;
+using OneOf.Types;
+using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
@@ -22,12 +25,20 @@ public class OperatorService : IOperatorService
     private readonly IUserPrincipalService _userPrincipalService;
     private readonly IInviteService _inviteService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<OperatorService> _logger;
 
-	public OperatorService
-    (
-        IOperatorRepository operatorRepository, IVendorRepository vendorRepository, IOperatorIndustryRepository operatorFacilityRepository, 
-        IUserRepository userRepository, IOperatorUserRepository operatorUserRepository, IEmailService emailService, IInviteRepository inviteRepository, 
-        IUserPrincipalService userPrincipalService, IInviteService inviteService, IUnitOfWork unitOfWork)
+	public OperatorService(
+        IOperatorRepository operatorRepository, 
+        IVendorRepository vendorRepository, 
+        IOperatorIndustryRepository operatorFacilityRepository, 
+        IUserRepository userRepository, 
+        IOperatorUserRepository operatorUserRepository, 
+        IEmailService emailService, 
+        IInviteRepository inviteRepository, 
+        IUserPrincipalService userPrincipalService, 
+        IInviteService inviteService, 
+        IUnitOfWork unitOfWork, 
+        ILogger<OperatorService> logger)
 	{
 		_operatorRepository = operatorRepository;
         _vendorRepository = vendorRepository;
@@ -39,106 +50,50 @@ public class OperatorService : IOperatorService
         _userPrincipalService = userPrincipalService;
         _inviteService = inviteService;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
 
-    private List<OperatorIndustry> GetAllOperatorIndustries(List<int> facilityIds)
-    {
-        if (facilityIds.Count == 0)
-        {
-            throw new ArgumentException("No facilities provided for search");
-        }
-        var facilities = _operatorFacilityRepository.GetAll()
-            .Where(of => facilityIds.Contains(of.Id)).ToList();
 
-        return facilities;
-	}
-    private bool ValidateStringInput(string input)
-    {
-        return !string.IsNullOrWhiteSpace(input);
-    }
-
-    private async Task<List<Vendor>> SearchVendorsAsync(string serviceType, List<OperatorIndustry> operatorFacilities, 
+    public async Task<OneOf<List<BusinessFrontEndDto>, FacilityNotFound, ValidationError, Error>> SearchForVendorsAsync(SearchVendorsForIndustriesDto industriesData, 
         CancellationToken cancellationToken = default)
     {
-        if (operatorFacilities == null || !operatorFacilities.Any())
+        try
         {
-            return new List<Vendor>();
-        }
-
-        var vendorsWithService = await _vendorRepository.GetVendorsWithService(serviceType, cancellationToken);
-
-        var matchingVendors = vendorsWithService.Where(vendor =>
-            vendor.VendorFacilities.Any(facility =>
-                operatorFacilities.All(operatorFacility =>
-                    IsOperatorIndustryInServiceArea(operatorFacility, facility)))).ToList();
-		
-        return matchingVendors;
-    }
-
-    public async Task<Response<List<BusinessFrontEndDto>>> SearchForVendorsAsync(SearchVendorsForIndustriesDto industriesData, 
-        CancellationToken cancellationToken = default)
-    {
-        var serviceIsValid = ValidateStringInput(industriesData.ServiceType);
-        if (!serviceIsValid)
-        {
-            return new Response<List<BusinessFrontEndDto>>()
+            var serviceIsValid = ValidateStringInput(industriesData.ServiceType);
+            if (!serviceIsValid)
             {
-                ErrorMessage = $"The field '{nameof(industriesData.ServiceType)}' shouldn't be empty ",
-                ErrorCode = (int)ErrorCodes.InvalidServiceType,
-            };
-        }
+                _logger.LogError($"Invalid Service Type: {industriesData.ServiceType}.");
+                return new ValidationError();
+            }
 
-        var operatorFacilities = GetAllOperatorIndustries(industriesData.IndustriesLocationIds);
+            var operatorFacilitiesResult = GetAllOperatorIndustries(industriesData.IndustriesLocationIds);
+            if (operatorFacilitiesResult.Value is FacilityNotFound facilityNotFound)
+                return facilityNotFound;
+            
+            var operatorFacilities = operatorFacilitiesResult.Value as List<OperatorIndustry>;
 
-        var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities, cancellationToken);
+            var vendors = await SearchVendorsAsync(industriesData.ServiceType, operatorFacilities!, cancellationToken);
         
-        var vendorDtos = vendors.Select(v => v.ToFrontEndDto()).ToList();
+            var vendorDtoList = vendors.Select(v => v.ToFrontEndDto()).ToList();
 
-        return new Response<List<BusinessFrontEndDto>>
+            return vendorDtoList;
+        }
+        catch (Exception ex)
         {
-            Data = vendorDtos
-        };
+            _logger.LogError(ex, "Failed to search for vendors with exception.");
+            return new Error();
+        }
     }
-
-    private double CalculateDistance(double operLatitude, double operLongitude, double vendLatitude, double vendLongitude)
-    {
-        const double R = 6371;
-
-        var dLat = ToRadians(vendLatitude - operLatitude);
-        var dLon = ToRadians(vendLongitude - operLongitude);
-
-        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                Math.Cos(ToRadians(operLatitude)) * Math.Cos(ToRadians(vendLatitude)) *
-                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-
-        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-
-        var distance = R * c;
-        return distance;
-    }
-    private double ToRadians(double degrees)
-    {
-        return (Math.PI / 180) * degrees;
-    }
-    private bool IsOperatorIndustryInServiceArea(OperatorIndustry operatorFacility, VendorFacility vendorFacility)
-    {
-        double distance = CalculateDistance(operatorFacility.Latitude, operatorFacility.Longitude,
-            vendorFacility.Latitude, vendorFacility.Longitude);
-        return distance <= vendorFacility.RadiusOfWork;
-    }
-
-    public async Task<Response<PagedList<Vendor>>> GetVendorsByNameAsync(VendorSearchDto vendorSearchDto,
+    
+    public async Task<OneOf<PagedList<Vendor>, ValidationError>> GetVendorsByNameAsync(VendorSearchDto vendorSearchDto,
         CancellationToken cancellationToken = default)
     {
         var isValidVendor = ValidateStringInput(vendorSearchDto.VendorName);
         if (!isValidVendor)
         {
-            return new Response<PagedList<Vendor>>
-            {
-                ErrorMessage = $"The field '{nameof(vendorSearchDto.VendorName)}' shouldn't be empty",
-                ErrorCode = (int)ErrorCodes.InvalidBusinessName
-            };
+            _logger.LogError($"Invalid Vendor Name: {vendorSearchDto.VendorName}.");
+            return new ValidationError();
         }
 
         var pagedVendors = await _vendorRepository.GetVendorsQuery(vendorSearchDto.VendorName, vendorSearchDto.SortOrder,
@@ -147,25 +102,19 @@ public class OperatorService : IOperatorService
         var result = new PagedList<Vendor>
             (pagedVendors.Items, vendorSearchDto.PageSize, vendorSearchDto.PageNumber, pagedVendors.TotalCount);
 
-        return new Response<PagedList<Vendor>>
-        {
-            Data = result
-        };
+        return result;
     }
 
-    public async Task<Response<BusinessFrontEndDto>> GetOperatorAsync(int operatorId, 
+    public async Task<OneOf<BusinessFrontEndDto, Error>> GetOperatorAsync(int operatorId, 
         CancellationToken cancellationToken = default)
     {
         var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
         var operatorDto = @operator.ToFrontEndDto();
 
-        return new Response<BusinessFrontEndDto>
-        {
-            Data = operatorDto
-        };
+        return operatorDto;
     }
 
-    public async Task<Response<MailMsg>> InviteOperatorUserAsync(EmailForInviteDto dto, 
+    public async Task<OneOf<MailMsg, Error>> InviteOperatorUserAsync(EmailForInviteDto dto, 
         CancellationToken cancellationToken = default)
     {
         await using var transaction = await _unitOfWork.BeginTransactionAsync();
@@ -196,34 +145,97 @@ public class OperatorService : IOperatorService
 
             await transaction.CommitAsync(cancellationToken);
 
-            return new Response<MailMsg>
-            {
-                Data = mailMessage
-            };
+            return mailMessage;
         }
 
         catch (Exception ex)
         {
             await transaction.RollbackAsync(cancellationToken);
-
-            return new Response<MailMsg>
-            {
-                ErrorCode = (int)ErrorCodes.InvalidInvitationData,
-                ErrorMessage = "Failed to create an invite in transaction"
-            };
+            _logger.LogError(ex ,"Couldn't create operator invitation.");
+            return new Error();
         }
     }
-    public async Task<Response<BusinessFrontEndDto>> UpdateOperatorAsync(UpdateOperatorDto operatorUpdateData, 
+    public async Task<OneOf<BusinessFrontEndDto, Error>> UpdateOperatorAsync(UpdateOperatorDto operatorUpdateData, 
         CancellationToken cancellationToken = default)
     {
-        var operatorId = _userPrincipalService.BusinessId!.Value;
-        var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
-        @operator.MapOperatorFromDtoToUpdate(operatorUpdateData);
-
-        await _operatorRepository.UpdateAsync(@operator, cancellationToken);
-        return new Response<BusinessFrontEndDto>
+        try
         {
-            Data = @operator.ToFrontEndDto()
-        };
+            var operatorId = _userPrincipalService.BusinessId!.Value;
+            var @operator = await _operatorRepository.GetByIdAsync(operatorId, cancellationToken);
+            @operator.MapOperatorFromDtoToUpdate(operatorUpdateData);
+
+            await _operatorRepository.UpdateAsync(@operator, cancellationToken);
+            
+            var operatorDto = @operator.ToFrontEndDto();
+            return operatorDto;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Couldn't update the operator.");
+            return new Error();
+        }
+    }
+    
+    private async Task<List<Vendor>> SearchVendorsAsync(string serviceType, List<OperatorIndustry> operatorFacilities, 
+        CancellationToken cancellationToken = default)
+    {
+        if (operatorFacilities == null || !operatorFacilities.Any())
+        {
+            _logger.LogError("No operator facilities provided.");
+            return new List<Vendor>();
+        }
+
+        var vendorsWithService = await _vendorRepository.GetVendorsWithService(serviceType, cancellationToken);
+
+        var matchingVendors = vendorsWithService.Where(vendor =>
+            vendor.VendorFacilities.Any(facility =>
+                operatorFacilities.All(operatorFacility =>
+                    IsOperatorIndustryInServiceArea(operatorFacility, facility)))).ToList();
+		
+        return matchingVendors;
+    }
+    
+    private double CalculateDistance(double operLatitude, double operLongitude, double vendLatitude, double vendLongitude)
+    {
+        const double R = 6371;
+
+        var dLat = ToRadians(vendLatitude - operLatitude);
+        var dLon = ToRadians(vendLongitude - operLongitude);
+
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(ToRadians(operLatitude)) * Math.Cos(ToRadians(vendLatitude)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+        var distance = R * c;
+        return distance;
+    }
+    private double ToRadians(double degrees)
+    {
+        return (Math.PI / 180) * degrees;
+    }
+    private bool IsOperatorIndustryInServiceArea(OperatorIndustry operatorFacility, VendorFacility vendorFacility)
+    {
+        double distance = CalculateDistance(operatorFacility.Latitude, operatorFacility.Longitude,
+            vendorFacility.Latitude, vendorFacility.Longitude);
+        return distance <= vendorFacility.RadiusOfWork;
+    }
+    
+    private OneOf<FacilityNotFound, List<OperatorIndustry>> GetAllOperatorIndustries(List<int> facilityIds)
+    {
+        if (facilityIds.Count == 0)
+        {
+            _logger.LogWarning("No facilities found.");
+            return new FacilityNotFound("");
+        }
+        var facilities = _operatorFacilityRepository.GetAll()
+            .Where(of => facilityIds.Contains(of.Id)).ToList();
+
+        return facilities;
+    }
+    private bool ValidateStringInput(string input)
+    {
+        return !string.IsNullOrWhiteSpace(input);
     }
 }   
