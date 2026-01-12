@@ -63,7 +63,7 @@ public class OperatorService : IOperatorService
             var serviceIsValid = ValidateStringInput(industriesData.ServiceType);
             if (!serviceIsValid)
             {
-                _logger.LogError($"Invalid Service Type: {industriesData.ServiceType}");
+                _logger.LogError($"Invalid Service Type: {industriesData.ServiceType}.");
                 return new ValidationError();
             }
 
@@ -81,7 +81,7 @@ public class OperatorService : IOperatorService
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Failed to search for vendors with exception: {ex.Message}");
+            _logger.LogError(ex, "Failed to search for vendors with exception.");
             return new Error();
         }
     }
@@ -92,7 +92,7 @@ public class OperatorService : IOperatorService
         var isValidVendor = ValidateStringInput(vendorSearchDto.VendorName);
         if (!isValidVendor)
         {
-            _logger.LogError($"Invalid Vendor Name: {vendorSearchDto.VendorName}");
+            _logger.LogError($"Invalid Vendor Name: {vendorSearchDto.VendorName}.");
             return new ValidationError();
         }
 
@@ -151,7 +151,7 @@ public class OperatorService : IOperatorService
         catch (Exception ex)
         {
             await transaction.RollbackAsync(cancellationToken);
-            _logger.LogError("The transaction was cancelled. {ex}", ex.Message);
+            _logger.LogError(ex ,"The transaction was cancelled.");
             return new Error();
         }
     }
@@ -171,7 +171,7 @@ public class OperatorService : IOperatorService
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Couldn't update the operator {ex.Message}");
+            _logger.LogError(ex, "Couldn't update the operator.");
             return new Error();
         }
     }
@@ -181,7 +181,7 @@ public class OperatorService : IOperatorService
     {
         if (operatorFacilities == null || !operatorFacilities.Any())
         {
-            _logger.LogError("No operator facilities provided");
+            _logger.LogError("No operator facilities provided.");
             return new List<Vendor>();
         }
 
@@ -226,7 +226,7 @@ public class OperatorService : IOperatorService
     {
         if (facilityIds.Count == 0)
         {
-            _logger.LogWarning("No facilities found");
+            _logger.LogWarning("No facilities found.");
             return new FacilityNotFound("");
         }
         var facilities = _operatorFacilityRepository.GetAll()
