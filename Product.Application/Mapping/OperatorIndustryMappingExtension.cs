@@ -24,4 +24,17 @@ public static class OperatorIndustryMappingExtension
         industry.Latitude = industryData.Latitude ?? industry.Latitude;
         industry.Longitude = industryData.Longitude ?? industry.Longitude;
     }
+    
+    public static OperatorIndustry MapIndustryToCreateOperator(this OperatorIndustryCreationDto? industryData, Operator @operator)
+    {
+        var newIndustry = new OperatorIndustry
+        {
+            Name = industryData.Name,
+            Address = industryData.Address,
+            Latitude = industryData.Latitude,
+            Longitude = industryData.Longitude,
+            Operator = @operator
+        };
+        return newIndustry;
+    }
 }
