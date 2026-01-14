@@ -26,14 +26,15 @@ public class AdminController : ControllerBase
 	
 	[AllowAnonymous]
 	[HttpPost("Login")]
-	public async Task<ActionResult<Response<TokenDto>>> Login (UserLoginDto userData, CancellationToken cancellationToken)
+	public async Task<ActionResult<OneOf<TokenDto, NotFoundError, ValidationError, Error>>> Login (UserLoginDto userData, CancellationToken cancellationToken)
 	{
 		var response = await _authService.LoginAdministrator(userData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			dto => Ok(dto),
+			notFound => BadRequest(notFound),
+			validationError => BadRequest(validationError),
+			error => StatusCode(500, error));
 	}
 
 	[HttpPost("inviteBusiness")]

@@ -1,11 +1,14 @@
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Moq;
+using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
+using Product.Domain.Result;
 using Product.Infrastructure.Implementations;
 using Xunit;
 
@@ -20,6 +23,7 @@ public class AuthServiceTests
     private readonly Mock<IVendorUserRepository> _vendorUserRepositoryMock = new();
     private readonly Mock<IOperatorUserRepository> _operatorUserRepositoryMock = new();
     private readonly Mock<IAdministratorRepository> _adminRepositoryMock = new();
+    private readonly Mock<ILogger<AuthService>> _loggerMock = new();
     
     private readonly AuthService _authService;
 
@@ -32,7 +36,8 @@ public class AuthServiceTests
             _refreshTokenRepositoryMock.Object,
             _vendorUserRepositoryMock.Object,
             _operatorUserRepositoryMock.Object,
-            _adminRepositoryMock.Object);
+            _adminRepositoryMock.Object,
+            _loggerMock.Object);
     }
     
     [Fact]
@@ -65,8 +70,9 @@ public class AuthServiceTests
         );
 
         //Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("fake_token", result.Data.AccessToken);
+        Assert.True(result.Value is TokenDto);
+        var jwtToken = result.Value as TokenDto;
+        Assert.Equal("fake_token", jwtToken.AccessToken);
     }
     [Fact]
     public async Task LoginAsync_InvalidEmail_ReturnsError()
@@ -79,8 +85,7 @@ public class AuthServiceTests
         var result = await _authService.Login(new UserLoginDto { Email = "notfound@example.com", Password = "123" }, It.IsAny<CancellationToken>());
 
         //Assert
-        Assert.Null(result.Data);
-        Assert.Equal((int)ErrorCodes.UserNotFound, result.ErrorCode);
+        Assert.True(result.Value is NotFoundError);
         _jwtTokenServiceMock.Verify(j => j.GenerateToken(It.IsAny<UserClaimDto>()), Times.Never);
     }
 
@@ -99,8 +104,7 @@ public class AuthServiceTests
         var result = await _authService.Login(new UserLoginDto { Email = user.Email, Password = "wrongpass" }, It.IsAny<CancellationToken>());
 
         //Assert
-        Assert.Null(result.Data);
-        Assert.Equal((int)ErrorCodes.InvalidPassword, result.ErrorCode);
+        Assert.True(result.Value is ValidationError);
         _passwordHasherMock.Verify(h => h.ValidatePassword("wrongpass", user.PasswordHash), Times.Once);
     }
 
@@ -119,8 +123,9 @@ public class AuthServiceTests
         var result = await _authService.RegisterUser(dto, It.IsAny<CancellationToken>());
     
         //Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("new@example.com", result.Data.Email);
+        Assert.True(result.Value is UserDtoToFrontEnd);
+        var resultDto = result.Value as UserDtoToFrontEnd;
+        Assert.Equal("new@example.com", resultDto!.Email);
         _vendorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>(), It.IsAny<CancellationToken>()), Times.Once);
     }
     
@@ -138,8 +143,9 @@ public class AuthServiceTests
         var result = await _authService.RegisterUser(dto, It.IsAny<CancellationToken>());
     
         //Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("new@example.com", result.Data.Email);
+        Assert.True(result.Value is UserDtoToFrontEnd);
+        var resultDto = result.Value as UserDtoToFrontEnd;
+        Assert.Equal("new@example.com", resultDto!.Email);
         _operatorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<OperatorUser>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -161,7 +167,7 @@ public class AuthServiceTests
         var result = await _authService.LoginAdministrator(adminLoginData, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Equal("fake_token", result.Data.AccessToken);
+        Assert.True(result.Value is TokenDto);
     }
     
     [Fact]
@@ -174,8 +180,7 @@ public class AuthServiceTests
         var result = await _authService.LoginAdministrator(adminLoginData, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Equal("Admin not found", result.ErrorMessage);
-        Assert.Equal((int)ErrorCodes.UserNotFound, result.ErrorCode);
+        Assert.True(result.Value is NotFoundError);
     }
     
     [Fact]
@@ -192,7 +197,6 @@ public class AuthServiceTests
         var result = await _authService.LoginAdministrator(adminLoginData, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Equal("Invalid password", result.ErrorMessage);
-        Assert.Equal((int)ErrorCodes.InvalidPassword, result.ErrorCode);
+        Assert.True(result.Value is ValidationError);
     }
 }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OneOf;
+using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
@@ -49,15 +51,15 @@ public class AccountController : ControllerBase
 	}
 
 	[HttpPost("Register/User")]
-	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> RegisterUser([FromBody] UserRegistrationDto registrationData,
+	public async Task<ActionResult<OneOf<UserDtoToFrontEnd, NotFoundError, Error>>> RegisterUser([FromBody] UserRegistrationDto registrationData,
 		CancellationToken cancellationToken)
 	{
 		var response = await _authService.RegisterUser(registrationData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			dto => Ok(dto),
+			notFound => BadRequest(notFound),
+			error => StatusCode(500, error));
 	}
 
 
@@ -75,14 +77,15 @@ public class AccountController : ControllerBase
 	}
 
 	[HttpPost("Login")]
-	public async Task<ActionResult<Response<TokenDto>>> Login (UserLoginDto userData, CancellationToken cancellationToken)
+	public async Task<ActionResult<OneOf<TokenDto, NotFoundError, ValidationError, Error>>> Login (UserLoginDto userData, CancellationToken cancellationToken)
 	{
 		var response = await _authService.Login(userData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			dto => Ok(dto),
+			notFound => BadRequest(notFound),
+			validationError => BadRequest(validationError),
+			error => StatusCode(500, error));
 	}
 
 	[HttpDelete("/{userId}")]
@@ -114,14 +117,14 @@ public class AccountController : ControllerBase
 
 	[HttpPost("/refresh")]
 	[Authorize(policy: "All")]
-	public async Task<ActionResult<Response<TokenDto>>> RefreshToken([FromBody] RefreshTokenRequestDto tokenRequestDto,
+	public async Task<ActionResult<OneOf<TokenDto, ValidationError, Error>>> RefreshToken([FromBody] RefreshTokenRequestDto tokenRequestDto,
 		CancellationToken cancellationToken)
 	{
 		var response = await _authService.Refresh(tokenRequestDto, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			dto => Ok(dto),
+			validationError => BadRequest(validationError),
+			error => StatusCode(500, error));
 	}
 }
