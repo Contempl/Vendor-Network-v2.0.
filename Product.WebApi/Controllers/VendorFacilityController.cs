@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OneOf;
+using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
@@ -31,11 +33,10 @@ public class VendorFacilityController : ControllerBase
 		CancellationToken cancellationToken)
 	{
 		var response = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			facility => Ok(facility),
+			error => StatusCode(500, error));
 	}
 
 	[HttpPost("/facility")]
@@ -45,11 +46,11 @@ public class VendorFacilityController : ControllerBase
 		CancellationToken cancellationToken)
 	{
 		var response = await _vendorFacilityService.AddFacilityAsync(facilityData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			facility => Ok(facility),
+			notFound => BadRequest(notFound),
+			error => StatusCode(500, error));
 	}
 
 	[HttpPut("facility/{facilityId}")]
@@ -60,25 +61,23 @@ public class VendorFacilityController : ControllerBase
 		[FromBody] UpdateVendorFacilityDto facilityData, CancellationToken cancellationToken)
 	{
 		var response = await _vendorFacilityService.UpdateFacilityAsync(facilityId, facilityData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			facility => Ok(facility),
+			error => StatusCode(500, error));
 	}
 
 	[HttpDelete("{vendorId}/facilities/{facilityId}")]
 	[EnsureVendorFacilityExists] 
 	[Authorize(policy: "VendorUser")] 
-	public async Task<ActionResult<Response<int>>> DeleteFacility(int vendorId, int facilityId,
+	public async Task<ActionResult<OneOf<int, Error>>> DeleteFacility(int vendorId, int facilityId,
 		CancellationToken cancellationToken)
 	{
 		var response = await _vendorFacilityService.RemoveFacilityAsync(vendorId, facilityId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			facilityId => Ok(facilityId),
+			error => StatusCode(500, error));
 	}
 
 
@@ -89,11 +88,11 @@ public class VendorFacilityController : ControllerBase
 		int facilityServiceId, CancellationToken cancellationToken)
 	{
 		var response = await _vendorFacilityService.GetVendorFacilityServiceAsync(facilityId, facilityServiceId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			facility => Ok(facility),
+			notFound => BadRequest(notFound),
+			error => StatusCode(500, error));
 		
 	}
 
@@ -104,11 +103,10 @@ public class VendorFacilityController : ControllerBase
 		CancellationToken cancellationToken)
 	{
 		var response = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			facility => Ok(facility),
+			error => StatusCode(500, error));
 	}
 
 	[HttpPost("/facility/{facilityId}/service")]

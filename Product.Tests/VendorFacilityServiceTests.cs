@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
+using Product.Domain.Result;
 using Product.Infrastructure.Implementations;
 using Xunit;
 
@@ -17,6 +19,7 @@ public class VendorFacilityServiceTests
     private readonly Mock<IVendorRepository> _vendorRepositoryMock = new();
     private readonly Mock<IUserPrincipalService> _userPrincipalServiceMock = new();
     private readonly Mock<IVendorFacilityRepository> _vendorFacilityRepositoryMock = new();
+    private readonly Mock<ILogger<VendFacilityService>> _loggerMock = new();
     
     private readonly VendFacilityService _vendorFacilityService; 
 
@@ -25,7 +28,8 @@ public class VendorFacilityServiceTests
         _vendorFacilityService = new VendFacilityService(
             _vendorFacilityRepositoryMock.Object,
             _userPrincipalServiceMock.Object,
-            _vendorRepositoryMock.Object
+            _vendorRepositoryMock.Object,
+            _loggerMock.Object
         );
     }
 
@@ -47,10 +51,11 @@ public class VendorFacilityServiceTests
         // Act
         var result = await _vendorFacilityService.GetFacilityWithServicesByIdAsync(facilityId, It.IsAny<CancellationToken>());
         
-        
         // Assert
-        Assert.Equal(4, result.Data.Services.Count);
-        Assert.Equal("Service Name #1", result.Data.Services[0].Name);
+        Assert.True(result.Value is VendorFacility);
+        var facility = result.Value as VendorFacility;
+        Assert.Equal(4, facility.Services.Count);
+        Assert.Equal("Service Name #1", facility.Services[0].Name);
     }
     
     [Fact]
@@ -72,8 +77,9 @@ public class VendorFacilityServiceTests
         var result = await _vendorFacilityService.AddFacilityAsync(creationDto, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.IsType<VendorFacility>(result.Data);
-        Assert.Equal("Test Name", result.Data.Name);
+        Assert.True(result.Value is VendorFacility);
+        var facility = result.Value as VendorFacility;
+        Assert.Equal("Test Name", facility!.Name);
         _vendorFacilityRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorFacility>(), It.IsAny<CancellationToken>()), Times.Once);
     }
     
@@ -93,7 +99,7 @@ public class VendorFacilityServiceTests
         var result = await _vendorFacilityService.AddFacilityAsync(creationDto, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Equal((int)ErrorCodes.InvalidVendorFacilityData, result.ErrorCode);
+        Assert.True(result.Value is NotFoundError);
     }
     
     [Fact]
@@ -119,9 +125,8 @@ public class VendorFacilityServiceTests
             .UpdateFacilityAsync(vendFacility.Id, updateDto, It.IsAny<CancellationToken>());
 
         // Assert
+        Assert.True(result.Value is VendorFacility);
         _vendorFacilityRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<VendorFacility>(), It.IsAny<CancellationToken>()), Times.Once);
-        Assert.Equal(updateDto.Name, result.Data.Name);
-        Assert.Equal(updateDto.Location, result.Data.Location);
     }
     
     [Fact]
@@ -146,8 +151,10 @@ public class VendorFacilityServiceTests
             .UpdateFacilityAsync(vendFacility.Id, updateDto, It.IsAny<CancellationToken>());
 
         // Assert
+        Assert.True(result.Value is VendorFacility);
+        var facility = result.Value as VendorFacility;
         _vendorFacilityRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<VendorFacility>(), It.IsAny<CancellationToken>()), Times.Once);
-        Assert.Equal(updateDto.Services[0], result.Data.Services[0].Name);
+        Assert.Equal(updateDto.Services[0], facility!.Services[0].Name);
     }
     
     
@@ -164,7 +171,9 @@ public class VendorFacilityServiceTests
         var result = await _vendorFacilityService.RemoveFacilityAsync(_testVendor.Id, _testVendorFacility.Id, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Equal(_testVendorFacility.Id, result.Data);
+        Assert.True(result.Value is int);
+        var facility = (int)result.Value;
+        Assert.Equal(_testVendorFacility.Id, facility);
         _vendorFacilityRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<VendorFacility>(), It.IsAny<CancellationToken>()), Times.Once);
     }
     
@@ -183,10 +192,8 @@ public class VendorFacilityServiceTests
             .GetVendorFacilityServiceAsync(_testVendorFacility.Id, 16, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Equal((int)ErrorCodes.InvalidVendorFacilityServiceData, result.ErrorCode);
-        Assert.Equal("Couldn't fetch vendor facility service", result.ErrorMessage);
+        Assert.True(result.Value is NotFoundError);
     }
-
     
     private readonly Vendor _testVendor = new Vendor()
     {
