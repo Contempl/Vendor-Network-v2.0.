@@ -100,7 +100,7 @@ public class VendorServiceTests
     }
     
     [Fact]
-    public async Task InviteVendorUserAsync_CallsAllMethodsWithWhenParametersAreValid()
+    public async Task InviteVendorUserAsync_ReturnsMailMessage()
     {
         // Arrange
         var emailDto = new EmailForInviteDto { Email = "test@test.com" };
