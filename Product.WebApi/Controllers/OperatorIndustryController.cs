@@ -39,7 +39,7 @@ public class OperatorIndustryController : ControllerBase
 
 	[HttpGet("industries")]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<List<OperatorIndustry>>>> GetOperatorIndustries(CancellationToken cancellationToken)
+	public async Task<ActionResult<OneOf<List<OperatorIndustry>, Error>>> GetOperatorIndustries(CancellationToken cancellationToken)
 	{
 		var response = await _operatorIndustryService.GetOperatorsIndustriesAsync(cancellationToken);
 		
@@ -51,7 +51,7 @@ public class OperatorIndustryController : ControllerBase
 	[HttpPost("{operatorId}/industry")]
 
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> AddOperatorIndustry(
+	public async Task<ActionResult<OneOf<OpIndustryFrontEndDto, Error>>> AddOperatorIndustry(
 		[FromBody] OperatorIndustryCreationDto industryData, CancellationToken cancellationToken)
 	{
 		var response = await _operatorIndustryService.CreateOperatorIndustryAsync(industryData, cancellationToken);
@@ -64,7 +64,7 @@ public class OperatorIndustryController : ControllerBase
 	[HttpPut("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> UpdateOperatorIndustry(int industryId,
+	public async Task<ActionResult<OneOf<OpIndustryFrontEndDto, NotFoundError, Error>>> UpdateOperatorIndustry(int industryId,
 		UpdateOperatorIndustryDto industryData, CancellationToken cancellationToken)
 	{
 		var response = await _operatorIndustryService.UpdateOperatorIndustryAsync(industryId, industryData, cancellationToken);
