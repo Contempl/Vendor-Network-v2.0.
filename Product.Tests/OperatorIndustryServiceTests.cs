@@ -1,9 +1,11 @@
+using Microsoft.Extensions.Logging;
 using Moq;
+using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
-using Product.Domain.Enum;
 using Product.Infrastructure.Implementations;
 using Xunit;
 
@@ -14,6 +16,7 @@ public class OperatorIndustryServiceTests
     private readonly Mock<IOperatorIndustryRepository> _operatorIndustryRepositoryMock = new ();
     private readonly Mock<IUserPrincipalService> _userPrincipalServiceMock = new ();
     private readonly Mock<IOperatorRepository> _operatorRepositoryMock = new ();
+    private readonly Mock<ILogger<OperatorIndustryService>> _loggerMock = new ();
     
     private readonly OperatorIndustryService _operatorIndustryService;
 
@@ -22,7 +25,8 @@ public class OperatorIndustryServiceTests
         _operatorIndustryService = new OperatorIndustryService(
             _operatorIndustryRepositoryMock.Object,
             _userPrincipalServiceMock.Object,
-            _operatorRepositoryMock.Object
+            _operatorRepositoryMock.Object,
+            _loggerMock.Object
         );
     }
 
@@ -44,8 +48,9 @@ public class OperatorIndustryServiceTests
         var result = await _operatorIndustryService.GetOperatorsIndustriesAsync( It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal(2, result.Data.Count);        
+        Assert.True(result.Value is List<OpIndustryFrontEndDto>);
+        var industriesFrontEnd = result.Value as List<OpIndustryFrontEndDto>;
+        Assert.Equal(2, industriesFrontEnd!.Count);        
     }
     
     [Fact]
@@ -61,9 +66,7 @@ public class OperatorIndustryServiceTests
         var result = await _operatorIndustryService.GetOperatorsIndustriesAsync(It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Null(result.Data);
-        Assert.Equal("Operator Industries Couldn't be fetched", result.ErrorMessage);
-        Assert.Equal((int)ErrorCodes.InvalidOperatorIndustryData, result.ErrorCode);
+        Assert.True(result.Value is Error);
     }
 
 
@@ -96,10 +99,12 @@ public class OperatorIndustryServiceTests
             .UpdateOperatorIndustryAsync(operatorIndustry.Id, industrData, It.IsAny<CancellationToken>());
 
         // Assert
-        Assert.Equal(industrData.Address, result.Data.Address);
-        Assert.Equal(industrData.Name, result.Data.Name);
-        Assert.Equal(industrData.Name, result.Data.Name);
-        Assert.Equal(industrData.Address, result.Data.Address);
+        Assert.True(result.Value is OpIndustryFrontEndDto);
+        var industriesFrontEnd = result.Value as OpIndustryFrontEndDto;
+        Assert.Equal(industrData.Address, industriesFrontEnd!.Address);
+        Assert.Equal(industrData.Name, industriesFrontEnd.Name);
+        Assert.Equal(industrData.Name, industriesFrontEnd.Name);
+        Assert.Equal(industrData.Address, industriesFrontEnd.Address);
         _operatorIndustryRepositoryMock.Verify(r => 
             r.GetByIdAsync(_testOperator.Id, operatorIndustry.Id, It.IsAny<CancellationToken>()), Times.Once);
         
@@ -124,7 +129,9 @@ public class OperatorIndustryServiceTests
         var result = await _operatorIndustryService.RemoveOperatorIndustryAsync(operatorIndustry.Id, It.IsAny<CancellationToken>());
         
         // Assert
-        Assert.Equal(operatorIndustry.Id, result.Data);
+        Assert.True(result.Value is int);
+        var resultId = (int)result.Value;
+        Assert.Equal(operatorIndustry.Id, resultId);
         _operatorIndustryRepositoryMock.Verify(r =>
             r.DeleteAsync(It.Is<OperatorIndustry>(oi => oi.Id == operatorIndustry.Id), It.IsAny<CancellationToken>()), Times.Once);
         
@@ -151,8 +158,10 @@ public class OperatorIndustryServiceTests
         var result = await _operatorIndustryService.CreateOperatorIndustryAsync(industryCreationDto, It.IsAny<CancellationToken>());
         
         // Assert
-        Assert.Equal(industryCreationDto.Name, result.Data.Name);
-        Assert.Equal(industryCreationDto.Address, result.Data.Address);
+        Assert.True(result.Value is OpIndustryFrontEndDto);
+        var industriesFrontEnd = result.Value as OpIndustryFrontEndDto;
+        Assert.Equal(industryCreationDto.Name, industriesFrontEnd!.Name);
+        Assert.Equal(industryCreationDto.Address, industriesFrontEnd.Address);
         _operatorIndustryRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<OperatorIndustry>(), It.IsAny<CancellationToken>()), Times.Once);
         _operatorRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -174,8 +183,10 @@ public class OperatorIndustryServiceTests
         var result = await _operatorIndustryService.GetOpIndustryByIdAsync(operatorIndustry.Id, It.IsAny<CancellationToken>());
         
         // Assert
-        Assert.Equal(operatorIndustry.Address, result.Data.Address);
-        Assert.Equal(operatorIndustry.Name, result.Data.Name);
+        Assert.True(result.Value is OpIndustryFrontEndDto);
+        var industriesFrontEnd = result.Value as OpIndustryFrontEndDto;
+        Assert.Equal(operatorIndustry.Address, industriesFrontEnd!.Address);
+        Assert.Equal(operatorIndustry.Name, industriesFrontEnd.Name);
         _operatorIndustryRepositoryMock.Verify(r => 
             r.GetByIdAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
     }

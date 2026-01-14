@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OneOf;
+using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
@@ -26,14 +28,13 @@ public class OperatorIndustryController : ControllerBase
 	[HttpGet("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<OpIndustryFrontEndDto>>> GetOperatorIndustry(int industryId, CancellationToken cancellationToken)
+	public async Task<ActionResult<OneOf<OpIndustryFrontEndDto, Error>>> GetOperatorIndustry(int industryId, CancellationToken cancellationToken)
 	{
 		var response = await _operatorIndustryService.GetOpIndustryByIdAsync(industryId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+
+		return response.Match<ActionResult>(
+			dto => Ok(response),
+			error => StatusCode(500, error));
 	}
 
 	[HttpGet("industries")]
@@ -41,11 +42,10 @@ public class OperatorIndustryController : ControllerBase
 	public async Task<ActionResult<Response<List<OperatorIndustry>>>> GetOperatorIndustries(CancellationToken cancellationToken)
 	{
 		var response = await _operatorIndustryService.GetOperatorsIndustriesAsync(cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			industryList => Ok(industryList),
+			error => StatusCode(500, error));
 	}
 
 	[HttpPost("{operatorId}/industry")]
@@ -55,11 +55,10 @@ public class OperatorIndustryController : ControllerBase
 		[FromBody] OperatorIndustryCreationDto industryData, CancellationToken cancellationToken)
 	{
 		var response = await _operatorIndustryService.CreateOperatorIndustryAsync(industryData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			dto => Ok(dto),
+			error => StatusCode(500, error));
 	}
 
 	[HttpPut("industry/{industryId}")]
@@ -69,24 +68,23 @@ public class OperatorIndustryController : ControllerBase
 		UpdateOperatorIndustryDto industryData, CancellationToken cancellationToken)
 	{
 		var response = await _operatorIndustryService.UpdateOperatorIndustryAsync(industryId, industryData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			dto => Ok(dto),
+			notFoundError =>  BadRequest(notFoundError),
+			error => StatusCode(500, error));
 	}
 
 	[HttpDelete("industry/{industryId}")]
 	[EnsureOperatorIndustryExists]
 	[Authorize(policy: "OperatorUser")]
-	public async Task<ActionResult<Response<int>>> RemoveOperatorIndustry(int industryId, 
+	public async Task<ActionResult<OneOf<int, Error>>> RemoveOperatorIndustry(int industryId, 
 		CancellationToken cancellationToken)
 	{
 		var response = await _operatorIndustryService.RemoveOperatorIndustryAsync(industryId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			result => Ok(result),
+			error => StatusCode(500, error));
 	}
 }
