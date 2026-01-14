@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OneOf;
+using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
@@ -23,56 +25,53 @@ namespace Product.WebApi.Controllers
 
 		[HttpPost("Search/Operators/")]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Response<List<BusinessFrontEndDto>>>> GetOperators(
+		public async Task<ActionResult<OneOf<List<BusinessFrontEndDto>, InvalidOperatorNameError, Error>>> GetOperators(
 			[FromBody]OperatorSearchDto operatorData, CancellationToken cancellationToken)
 		{
 			var response = await _vendorService.SearchOperatorsAsync(operatorData, cancellationToken);
-			if (response.IsSuccess)
-			{
-				return Ok(response);
-			}
-			return BadRequest(response);
+
+			return response.Match<ActionResult>(
+				operators => Ok(operators),
+				invalid => BadRequest(invalid),
+				error => StatusCode(500, error));
 		}
 
 		[HttpGet("{vendorId}")]
 		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Vendor>> GetVendor(int vendorId, CancellationToken cancellationToken)
+		public async Task<ActionResult<OneOf<BusinessFrontEndDto, Error>>> GetVendor(int vendorId, CancellationToken cancellationToken)
 		{
 			var response = await _vendorService.GetVendorByIdAsync(vendorId, cancellationToken);
-			if (response.IsSuccess)
-			{
-				return Ok(response);
-			}
-			return BadRequest(response);
+
+			return response.Match<ActionResult>(
+				dto => Ok(dto),
+				error => StatusCode(500, error));
 		}
 
 		[HttpPut]
 		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Response<BusinessFrontEndDto>>> UpdateVendor(
+		public async Task<ActionResult<OneOf<BusinessFrontEndDto, Error>>> UpdateVendor(
 			[FromBody] UpdateVendorDto vendorData, CancellationToken cancellationToken)
 		{
 			var response = await _vendorService.UpdateVendorAsync(vendorData, cancellationToken);
-			if (response.IsSuccess)
-			{
-				return Ok(response);
-			}
-			return BadRequest(response);
+			
+			return response.Match<ActionResult>(
+				dto => Ok(dto),
+				error => StatusCode(500, error));
 		}
 		
 		[HttpPost("invite")]
 		[EnsureBusinessAccess(UserType.VendorUser)]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<Response<InviteIdToFrontEnd>>> InviteVendorUser(
+		public async Task<ActionResult<OneOf<MailMsg, Error>>> InviteVendorUser(
 			[FromBody] EmailForInviteDto email, CancellationToken cancellationToken)
 		{
 			var response = await _vendorService.InviteVendorUserAsync(email, cancellationToken);
-			if (response.IsSuccess)
-			{
-				return Ok(response);
-			}
-			return BadRequest(response);
+			
+			return response.Match<ActionResult>(
+				mailMsg => Ok(mailMsg),
+				error => StatusCode(500, error));
 		}
 	}
 }
