@@ -1,8 +1,10 @@
-﻿using Product.Application.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using OneOf;
+using OneOf.Types;
+using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
-using Product.Domain.Enum;
 using Product.Domain.Result;
 
 namespace Product.Infrastructure.Implementations;
@@ -12,115 +14,97 @@ public class FacilityService : IFacilityService
 	private readonly IVendorFacilityServiceRepository _facilityRepository;
 	private readonly IUserPrincipalService _userPrincipalService;
 	private readonly IVendorFacilityRepository _vendorFacilityRepository;
+	private readonly ILogger<FacilityService> _logger;
 	
 
-	public FacilityService(IVendorFacilityServiceRepository facilityRepository, 
-		IUserPrincipalService userPrincipalService, IVendorFacilityRepository vendorFacilityRepository)
+	public FacilityService(
+		IVendorFacilityServiceRepository facilityRepository, 
+		IUserPrincipalService userPrincipalService, 
+		IVendorFacilityRepository vendorFacilityRepository, 
+		ILogger<FacilityService> logger)
 	{
 		_userPrincipalService = userPrincipalService;
 		_vendorFacilityRepository = vendorFacilityRepository;
+		_logger = logger;
 		_facilityRepository = facilityRepository;
 	}
+	
 
-	private VendorFacilityService MapFacilityServiceDtoToCreate(VendorFacility facility, string serviceName) =>
-	new VendorFacilityService
-	{
-		Name = serviceName,
-		VendorFacilityId = facility.Id,
-		VendorFacility = facility,
-	};
-
-	private void UpdateFacilityServiceName(VendorFacilityService facilityService, string serviceName)
-	{
-		ValidateServiceName(serviceName);
-		facilityService.Name = serviceName;
-	}
-
-	public async Task<Response<VendorFacilityService>> AddFacilityServiceAsync(int facilityId, string facilityServiceName, 
+	public async Task<OneOf<VendorFacilityService, NotFoundError, Error>> AddFacilityServiceAsync(int facilityId, string facilityServiceName, 
 		CancellationToken cancellationToken = default)
 	{
-		var vendorId = _userPrincipalService.BusinessId!.Value;
-		var vendorFacility = await _vendorFacilityRepository.GetByIdAsync(vendorId, facilityId, cancellationToken);
-
-		if (vendorFacility == null)
+		try
 		{
-			return new Response<VendorFacilityService>
+			var vendorId = _userPrincipalService.BusinessId!.Value;
+			var vendorFacility = await _vendorFacilityRepository.GetByIdAsync(vendorId, facilityId, cancellationToken);
+
+			if (vendorFacility == null)
 			{
-				ErrorMessage = "Vendor Facility not found while trying to add service",
-				ErrorCode = (int)ErrorCodes.InvalidVendorFacilityServiceData
-			};
-		}
+				_logger.LogWarning("Vendor Facility not found while trying to add service.");
+				return new NotFoundError("Vendor Facility not found");
+			}
 		
-		var newFacilityService = MapFacilityServiceDtoToCreate(vendorFacility, facilityServiceName);
+			var newFacilityService = MapFacilityServiceDtoToCreate(vendorFacility, facilityServiceName);
 
-		await _facilityRepository.CreateAsync(newFacilityService, cancellationToken);
+			await _facilityRepository.CreateAsync(newFacilityService, cancellationToken);
 
-		return new Response<VendorFacilityService>
+			return newFacilityService;
+		}
+		catch (Exception ex)
 		{
-			Data = newFacilityService,
-		};
+			_logger.LogError(ex, "Error while adding facility service.");
+			return new Error();
+		}
 	}
 
-	public async Task<Response<VendorFacilityService>> UpdateFacilityServiceAsync(int facilityId, int facilityServiceId, 
+	public async Task<OneOf<VendorFacilityService, ValidationError, Error>> UpdateFacilityServiceAsync(int facilityId, int facilityServiceId, 
 		VendorFacilityServiceDto facilityServiceDto, CancellationToken cancellationToken = default)
 	{
-		var vendorId = _userPrincipalService.BusinessId!.Value;
-		var vendorFacilityService = await _facilityRepository.GetByIdAsync(vendorId, facilityId, 
-			facilityServiceId, cancellationToken);
-
-		var serviceNameIsValid = ValidateServiceName(facilityServiceDto.Name);
-
-		if (!serviceNameIsValid)
+		try
 		{
-			return new Response<VendorFacilityService>
-			{
-				ErrorMessage = "Invalid Facility Service Name",
-				ErrorCode = (int)ErrorCodes.InvalidVendorFacilityServiceData,
-			};
-		}
+			var vendorId = _userPrincipalService.BusinessId!.Value;
+			var vendorFacilityService = await _facilityRepository.GetByIdAsync(vendorId, facilityId, 
+				facilityServiceId, cancellationToken);
 
-		if (vendorFacilityService == null)
-		{
-			return new Response<VendorFacilityService>
+			var serviceNameIsValid = ValidateServiceName(facilityServiceDto.Name);
+
+			if (!serviceNameIsValid)
 			{
-				ErrorMessage = "Vendor Facility Service not found to update",
-				ErrorCode = (int)ErrorCodes.InvalidVendorFacilityServiceData,
-			};
-		}
+				_logger.LogWarning("Invalid Facility Service Name.");
+				return new ValidationError();
+			}
 		
-		UpdateFacilityServiceName(vendorFacilityService, facilityServiceDto.Name);
+			UpdateFacilityServiceName(vendorFacilityService, facilityServiceDto.Name);
 
-		await _facilityRepository.UpdateAsync(vendorFacilityService, cancellationToken);
+			await _facilityRepository.UpdateAsync(vendorFacilityService, cancellationToken);
 
-		return new Response<VendorFacilityService>
+			return vendorFacilityService;
+		}
+		catch (Exception ex)
 		{
-			Data = vendorFacilityService,
-		};
+			_logger.LogError(ex, "Error while updating facility service.");
+			return new Error();
+		}
 	}
 
-	public async Task<Response<int>> RemoveFacilityServiceAsync(int facilityId, int facilityServiceId, 
+	public async Task<OneOf<int, Error>> RemoveFacilityServiceAsync(int facilityId, int facilityServiceId, 
 		CancellationToken cancellationToken = default)
 	{
-		var vendorId = _userPrincipalService.BusinessId!.Value;
-		var vendorFacilityService = await _facilityRepository.GetByIdAsync(vendorId, facilityId, 
-			facilityServiceId, cancellationToken);
-
-		if (vendorFacilityService == null)
+		try
 		{
-			return new Response<int>
-			{
-				ErrorMessage = "Vendor Facility Service not found to delete",
-				ErrorCode = (int)ErrorCodes.InvalidVendorFacilityServiceData,
-			};
-		}
+			var vendorId = _userPrincipalService.BusinessId!.Value;
+			var vendorFacilityService = await _facilityRepository.GetByIdAsync(vendorId, facilityId, 
+				facilityServiceId, cancellationToken);
 		
-		await _facilityRepository.DeleteAsync(vendorFacilityService, cancellationToken);
+			await _facilityRepository.DeleteAsync(vendorFacilityService, cancellationToken);
 
-		var result = new Response<int>
+			return facilityServiceId;
+		}
+		catch (Exception ex)
 		{
-			Data = facilityServiceId,
-		};
-		return result;
+			_logger.LogError(ex, "Error while removing facility service.");
+			return new Error();
+		}
 	}
 
 	private bool ValidateServiceName(string serviceName)
@@ -130,5 +114,18 @@ public class FacilityService : IFacilityService
 			return false;
 		}
 		return true;
+	}
+	private VendorFacilityService MapFacilityServiceDtoToCreate(VendorFacility facility, string serviceName) =>
+		new VendorFacilityService
+		{
+			Name = serviceName,
+			VendorFacilityId = facility.Id,
+			VendorFacility = facility,
+		};
+
+	private void UpdateFacilityServiceName(VendorFacilityService facilityService, string serviceName)
+	{
+		ValidateServiceName(serviceName);
+		facilityService.Name = serviceName;
 	}
 }
