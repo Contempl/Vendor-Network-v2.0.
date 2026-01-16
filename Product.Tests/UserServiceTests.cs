@@ -69,7 +69,7 @@ public class UserServiceTests
         // Arrange
         var userId = 999;
     
-        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId, CancellationToken.None))
             .ThrowsAsync(new KeyNotFoundException($"User with id: {userId} could not be found."));
     
         // Act & Assert
@@ -86,7 +86,7 @@ public class UserServiceTests
         // Arrange
         var userId = 999;
     
-        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId, CancellationToken.None))
             .ThrowsAsync(new KeyNotFoundException("User not found"));
     
         // Act & Assert

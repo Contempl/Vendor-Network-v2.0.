@@ -52,7 +52,7 @@ public class VendorServiceTests
         var operatorSearchDto = new OperatorSearchDto { Name = "" };
         
         // Act
-        var result = await _vendorService.SearchOperatorsAsync(operatorSearchDto, It.IsAny<CancellationToken>());
+        var result = await _vendorService.SearchOperatorsAsync(operatorSearchDto, CancellationToken.None);
 
         // Assert
         Assert.True(result.Value is InvalidOperatorNameError);
@@ -62,18 +62,18 @@ public class VendorServiceTests
     public async Task GetVendorByIdAsync_ReturnsVendor()
     {
         // Arrange
-        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id, It.IsAny<CancellationToken>()))
+        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id, CancellationToken.None))
             .ReturnsAsync(_testVendor);
         
         // Act
-        var result = await _vendorService.GetVendorByIdAsync(_testVendorUser.Id, It.IsAny<CancellationToken>());
+        var result = await _vendorService.GetVendorByIdAsync(_testVendorUser.Id, CancellationToken.None);
         
         // Assert
         Assert.True(result.Value is BusinessFrontEndDto);
         var resultDto = result.Value as BusinessFrontEndDto;
         Assert.Equal(_testVendor.BusinessName, resultDto!.BusinessName);
         Assert.Equal(_testVendor.Address, resultDto.Address);
-        _vendorRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
+        _vendorRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<int>(), CancellationToken.None), Times.Once);
     }
     
     [Fact]
@@ -85,18 +85,18 @@ public class VendorServiceTests
             BusinessName = "Business Name", Address = "Test Address", Email = "test@test.com",
         };
         _userPrincipalServiceMock.SetupProperty(r => r.BusinessId, 1);
-        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id, It.IsAny<CancellationToken>()))
+        _vendorRepositoryMock.Setup(r => r.GetByIdAsync(_testVendor.Id, CancellationToken.None))
             .ReturnsAsync(_testVendor);
 
         // Act
-        var result = await _vendorService.UpdateVendorAsync(updateVendorDto, It.IsAny<CancellationToken>());
+        var result = await _vendorService.UpdateVendorAsync(updateVendorDto, CancellationToken.None);
 
         // Assert
         Assert.True(result.Value is BusinessFrontEndDto);
         var resultDto = result.Value as BusinessFrontEndDto;
         Assert.Equal(updateVendorDto.BusinessName, resultDto!.BusinessName);
         Assert.Equal(updateVendorDto.Address, resultDto.Address);
-        _vendorRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Vendor>(), It.IsAny<CancellationToken>()), Times.Once);
+        _vendorRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Vendor>(), CancellationToken.None), Times.Once);
     }
     
     [Fact]
@@ -154,11 +154,11 @@ public class VendorServiceTests
 
         
         // Act
-        var result = await _vendorService.InviteVendorUserAsync(emailDto, It.IsAny<CancellationToken>());
+        var result = await _vendorService.InviteVendorUserAsync(emailDto, CancellationToken.None);
         
         // Assert
         Assert.True(result.Value is MailMsg);
-        _vendorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>(), It.IsAny<CancellationToken>()), Times.Once);
+        _vendorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>(), CancellationToken.None), Times.Once);
         _emailServiceMock.Verify(s => s.CreateMessage(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         _emailServiceMock.Verify(s => s.SendInvitationEmailAsync(It.IsAny<MailMsg>()), Times.Once);
     }

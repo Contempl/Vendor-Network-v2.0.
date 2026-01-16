@@ -39,11 +39,11 @@ public class FacilityServiceTests
         string serviceName = "Cleaning";
 
         _userPrincipalServiceMock.SetupProperty(r => r.BusinessId, 1);
-        _vendorFacilityRepositoryMock.Setup(r => r.GetByIdAsync(_testVendorFacility.Id, _testVendor.Id, It.IsAny<CancellationToken>()))
+        _vendorFacilityRepositoryMock.Setup(r => r.GetByIdAsync(_testVendorFacility.Id, _testVendor.Id, CancellationToken.None))
             .ReturnsAsync(_testVendorFacility);
 
         // Act
-        var result = await _facilityService.AddFacilityServiceAsync(_testVendorFacility.Id, serviceName, It.IsAny<CancellationToken>());
+        var result = await _facilityService.AddFacilityServiceAsync(_testVendorFacility.Id, serviceName, CancellationToken.None);
 
         // Assert
         Assert.True(result.Value is VendorFacilityService);
@@ -58,11 +58,11 @@ public class FacilityServiceTests
         string serviceName = "Cleaning";
         
         _userPrincipalServiceMock.SetupProperty(r => r.BusinessId, 1);
-        _vendorFacilityRepositoryMock.Setup(r => r.GetByIdAsync(_testVendorFacility.Id, _testVendor.Id, It.IsAny<CancellationToken>()))
+        _vendorFacilityRepositoryMock.Setup(r => r.GetByIdAsync(_testVendorFacility.Id, _testVendor.Id, CancellationToken.None))
             .ReturnsAsync(_testVendorFacility);
         
         // Act
-        var result = await _facilityService.AddFacilityServiceAsync(_testVendorFacility.Id, serviceName, It.IsAny<CancellationToken>());
+        var result = await _facilityService.AddFacilityServiceAsync(_testVendorFacility.Id, serviceName, CancellationToken.None);
 
         // Assert
         Assert.True(result.Value is VendorFacilityService);
@@ -83,19 +83,19 @@ public class FacilityServiceTests
 
         _userPrincipalServiceMock.SetupProperty(r => r.BusinessId, 1);
         _vendorFacilityServiceRepositoryMock
-            .Setup(r => r.GetByIdAsync(vendorId, facilityId, serviceId, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(vendorId, facilityId, serviceId, CancellationToken.None))
             .ReturnsAsync(existingService);
 
         _vendorFacilityServiceRepositoryMock
-            .Setup(r => r.UpdateAsync(It.IsAny<VendorFacilityService>(), It.IsAny<CancellationToken>()));
+            .Setup(r => r.UpdateAsync(It.IsAny<VendorFacilityService>(), CancellationToken.None));
 
         // Act
-        var result = await _facilityService.UpdateFacilityServiceAsync(facilityId, serviceId, updatedDto, It.IsAny<CancellationToken>());
+        var result = await _facilityService.UpdateFacilityServiceAsync(facilityId, serviceId, updatedDto, CancellationToken.None);
 
         // Assert
         Assert.True(result.Value is VendorFacilityService);
         var service = result.Value as VendorFacilityService;
-        _vendorFacilityServiceRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<VendorFacilityService>(), It.IsAny<CancellationToken>()), Times.Once);
+        _vendorFacilityServiceRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<VendorFacilityService>(), CancellationToken.None), Times.Once);
     }
 
     [Fact]
@@ -109,21 +109,21 @@ public class FacilityServiceTests
         
         _userPrincipalServiceMock.SetupProperty(r => r.BusinessId, 1);
         _vendorFacilityServiceRepositoryMock
-            .Setup(r => r.GetByIdAsync(vendorId, facilityId, serviceId, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(vendorId, facilityId, serviceId, CancellationToken.None))
             .ReturnsAsync(existingService);
 
         _vendorFacilityServiceRepositoryMock
-            .Setup(r => r.DeleteAsync(existingService, It.IsAny<CancellationToken>()))
+            .Setup(r => r.DeleteAsync(existingService, CancellationToken.None))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _facilityService.RemoveFacilityServiceAsync(facilityId, serviceId, It.IsAny<CancellationToken>());
+        var result = await _facilityService.RemoveFacilityServiceAsync(facilityId, serviceId, CancellationToken.None);
 
         // Assert
         Assert.True(result.Value is int);
         var deletionResult = (int)result.Value;
         Assert.Equal(serviceId, deletionResult);
-        _vendorFacilityServiceRepositoryMock.Verify(r => r.DeleteAsync(existingService, It.IsAny<CancellationToken>()), Times.Once);
+        _vendorFacilityServiceRepositoryMock.Verify(r => r.DeleteAsync(existingService, CancellationToken.None), Times.Once);
     }
 
     [Fact]
@@ -136,7 +136,7 @@ public class FacilityServiceTests
         _userPrincipalServiceMock.SetupProperty(r => r.BusinessId, 1);
 
         // Act
-        var result = await _facilityService.AddFacilityServiceAsync(facilityId, serviceName, It.IsAny<CancellationToken>());
+        var result = await _facilityService.AddFacilityServiceAsync(facilityId, serviceName, CancellationToken.None);
 
         // Assert
         Assert.True(result.Value is NotFoundError);
@@ -153,11 +153,11 @@ public class FacilityServiceTests
 
         _userPrincipalServiceMock.SetupProperty(r => r.BusinessId, 1);
         _vendorFacilityServiceRepositoryMock
-            .Setup(r => r.GetByIdAsync(vendorId, facilityId, serviceId, CancellationToken.None))!
+            .Setup(r => r.GetByIdAsync(vendorId, facilityId, serviceId, CancellationToken.None))
             .ReturnsAsync(It.IsAny<VendorFacilityService>());
 
         // Act
-        var result = await _facilityService.UpdateFacilityServiceAsync(facilityId, serviceId, updatedDto, It.IsAny<CancellationToken>());
+        var result = await _facilityService.UpdateFacilityServiceAsync(facilityId, serviceId, updatedDto, CancellationToken.None);
 
         // Assert
         Assert.True(result.Value is ValidationError);

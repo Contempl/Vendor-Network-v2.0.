@@ -71,16 +71,16 @@ public class InviteServiceTests
 			InvitedUserId = user.Id
 		};
 		
-		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, It.IsAny<CancellationToken>())).ReturnsAsync(invite);
+		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, CancellationToken.None)).ReturnsAsync(invite);
 		
 		// Act
-		var result = await _inviteService.RegisterUser(invite.Id, It.IsAny<CancellationToken>());
+		var result = await _inviteService.RegisterUser(invite.Id, CancellationToken.None);
 		
 		// Assert
 		Assert.True(result.Value is InviteIdToFrontEnd);
 		var resultDto = result.Value as InviteIdToFrontEnd;
 		Assert.Equal(invite.Id, resultDto!.InviteId);
-		_inviteRepositoryMock.Verify(r => r.GetByIdAsync(invite.Id, It.IsAny<CancellationToken>()), Times.Once);	
+		_inviteRepositoryMock.Verify(r => r.GetByIdAsync(invite.Id, CancellationToken.None), Times.Once);	
 	}
 	
 	[Fact]
@@ -100,10 +100,10 @@ public class InviteServiceTests
 			InvitedUserId = user.Id
 		};
 		
-		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, It.IsAny<CancellationToken>())).ReturnsAsync(invite);
+		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, CancellationToken.None)).ReturnsAsync(invite);
 		
 		// Act
-		var result = await _inviteService.RegisterUser(invite.Id, It.IsAny<CancellationToken>());
+		var result = await _inviteService.RegisterUser(invite.Id, CancellationToken.None);
 		
 		// Assert
 		Assert.True(result.Value is ValidationError);
@@ -133,14 +133,14 @@ public class InviteServiceTests
 			LastName = "Test",
 			Password = "password",
 		};
-		_userRepositoryMock.Setup(r => r.GetByIdAsync(invite.InvitedUserId.Value, It.IsAny<CancellationToken>())).ReturnsAsync(user);
-		_inviteRepositoryMock.Setup(r => r.GetInviteWithUserAsync(invite.Id, It.IsAny<CancellationToken>()))
+		_userRepositoryMock.Setup(r => r.GetByIdAsync(invite.InvitedUserId.Value, CancellationToken.None)).ReturnsAsync(user);
+		_inviteRepositoryMock.Setup(r => r.GetInviteWithUserAsync(invite.Id, CancellationToken.None))
 			.ReturnsAsync(invite);
-		_vendorUserRepositoryMock.Setup(r => r.UpdateAsync(user, It.IsAny<CancellationToken>()));
+		_vendorUserRepositoryMock.Setup(r => r.UpdateAsync(user, CancellationToken.None));
 		
 		
 		// Act
-		var result = await _inviteService.RegisterByInvite(invite.Id, registrationData, It.IsAny<CancellationToken>());
+		var result = await _inviteService.RegisterByInvite(invite.Id, registrationData, CancellationToken.None);
 		
 		// Assert
 		Assert.True(result.Value is ValidationError);
