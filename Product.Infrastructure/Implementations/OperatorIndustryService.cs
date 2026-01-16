@@ -64,7 +64,7 @@ public class OperatorIndustryService : IOperatorIndustryService
             return new Error();
         }
 
-        var result = industries.Select(oi => oi.ToFrontEndDto()).ToList();
+        var result = industries.Select(industry => industry.ToFrontEndDto()).ToList();
         return result;
     }
 

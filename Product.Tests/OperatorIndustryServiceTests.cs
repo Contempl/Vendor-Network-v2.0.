@@ -133,7 +133,7 @@ public class OperatorIndustryServiceTests
         var resultId = (int)result.Value;
         Assert.Equal(operatorIndustry.Id, resultId);
         _operatorIndustryRepositoryMock.Verify(r =>
-            r.DeleteAsync(It.Is<OperatorIndustry>(oi => oi.Id == operatorIndustry.Id), CancellationToken.None), Times.Once);
+            r.DeleteAsync(It.Is<OperatorIndustry>(industry => industry.Id == operatorIndustry.Id), CancellationToken.None), Times.Once);
         
         _operatorIndustryRepositoryMock.Verify(r => 
             r.GetByIdAsync(It.IsAny<int>(), It.IsAny<int>(), CancellationToken.None), Times.Once);
