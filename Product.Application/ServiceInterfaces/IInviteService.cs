@@ -1,4 +1,6 @@
-﻿using Product.Application.Dto;
+﻿using OneOf;
+using OneOf.Types;
+using Product.Application.Dto;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Result;
@@ -10,6 +12,6 @@ public interface IInviteService
 	Invite CreateInvite(User user, User sender);
 
 	Invite CreateInviteByAdmin(User user, Administrator sender);
-	Task<Response<InviteIdToFrontEnd>> RegisterUser(int inviteId, CancellationToken cancellationToken);
-	Task<Response<UserDtoToFrontEnd>> RegisterByInvite(int inviteId, UserRegistrationByInviteDto registrationData, CancellationToken cancellationToken);
+	Task<OneOf<InviteIdToFrontEnd, ValidationError, Error>> RegisterUser(int inviteId, CancellationToken cancellationToken);
+	Task<OneOf<UserDtoToFrontEnd, ValidationError, NotFoundError, Error>> RegisterByInvite(int inviteId, UserRegistrationByInviteDto registrationData, CancellationToken cancellationToken);
 }

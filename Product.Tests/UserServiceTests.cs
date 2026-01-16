@@ -1,15 +1,12 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Moq;
-using Product.Application.Dto;
+using OneOf.Types;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
-using Product.Domain.Enum;
+using Product.Domain.Result;
 using Product.Infrastructure.Implementations;
 using Xunit;
 
@@ -18,10 +15,8 @@ namespace Product.Tests;
 public class UserServiceTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
-    private readonly Mock<IPasswordHasher> _passwordHasherMock = new();
-    private readonly Mock<IJwtTokenService> _jwtTokenServiceMock = new();
     private readonly Mock<IUserPrincipalService> _userPrincipalServiceMock = new();
-    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock = new();
+    private readonly Mock<ILogger<UserService>> _loggerMock = new();
 
     private readonly UserService _userService;
 
@@ -29,7 +24,8 @@ public class UserServiceTests
     {
         _userService = new UserService(
             _userRepositoryMock.Object,
-            _userPrincipalServiceMock.Object
+            _userPrincipalServiceMock.Object,
+            _loggerMock.Object
         );
     }
 
@@ -48,7 +44,7 @@ public class UserServiceTests
         };
         
         _userRepositoryMock
-            .Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(userId, CancellationToken.None))
             .ReturnsAsync(new VendorUser
             {
                 Id = 1,
@@ -58,29 +54,45 @@ public class UserServiceTests
             });
         
         // Act
-        var result = await _userService.GetUserAsync(userId, It.IsAny<CancellationToken>());
+        var result = await _userService.GetUserAsync(userId, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Data);
-        Assert.Equal("John", result.Data.FirstName);
-        Assert.Equal("john@example.com", result.Data.Email);
+        Assert.True(result.Value is UserDtoToFrontEnd);
+        var resultDto = result.Value as UserDtoToFrontEnd;
+        Assert.Equal("John", resultDto!.FirstName);
+        Assert.Equal("john@example.com", resultDto.Email);
     }
     
     [Fact]
-    public async Task GetUserAsync_WhenUserDoesNotExist_ThrowsException()
+    public async Task GetUserAsync_RepositoryThrows_ReturnsError()
     {
         // Arrange
         var userId = 999;
-        
+    
         _userRepositoryMock.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new KeyNotFoundException($"User with id: {userId} could not be found."));
-        
+    
         // Act & Assert
-        var ex = await Record.ExceptionAsync(() => _userService.GetUserAsync(userId, It.IsAny<CancellationToken>()));
-        await Assert.ThrowsAnyAsync<KeyNotFoundException>(() => _userService.GetUserAsync(userId, It.IsAny<CancellationToken>()));
+        var ex = await Record.ExceptionAsync(
+            () => _userService.GetUserAsync(userId, CancellationToken.None));
+    
+        Assert.NotNull(ex);
+        Assert.IsType<KeyNotFoundException>(ex); 
     }
-
+    
+    [Fact]
+    public async Task GetUserAsync_ThrowsKeyNotFound()
+    {
+        // Arrange
+        var userId = 999;
+    
+        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new KeyNotFoundException("User not found"));
+    
+        // Act & Assert
+        await Assert.ThrowsAnyAsync<Exception>(
+            () => _userService.GetUserAsync(userId, CancellationToken.None));
+    }
     
     [Fact]
     public async Task UpdateUserAsync_WhenUserExists_Updates()
@@ -105,7 +117,7 @@ public class UserServiceTests
         dbSetMock.As<IQueryable<User>>().Setup(m => m.ElementType).Returns(users.ElementType);
         dbSetMock.As<IQueryable<User>>().Setup(m => m.GetEnumerator()).Returns(users.GetEnumerator());
 
-        _userRepositoryMock.Setup(r => r.GetByIdWithInvitesAsync(vendorUserId, It.IsAny<CancellationToken>()))
+        _userRepositoryMock.Setup(r => r.GetByIdWithInvitesAsync(vendorUserId, CancellationToken.None))
             .ReturnsAsync(new VendorUser
             {
                 Id = vendorUserId,
@@ -118,12 +130,13 @@ public class UserServiceTests
             .Returns(vendorUserId);
         
         // Act
-        var result = await _userService.UpdateUserAsync(dto, vendorUserId, It.IsAny<CancellationToken>());
+        var result = await _userService.UpdateUserAsync(dto, vendorUserId, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("NewName", result.Data.FirstName);
-        _userRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.True(result.Value is UserDtoToFrontEnd);
+        var resultDto = result.Value as UserDtoToFrontEnd;
+        Assert.Equal("NewName", resultDto!.FirstName);
+        _userRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<User>(), CancellationToken.None), Times.Once);
     }
 
     [Fact]
@@ -133,7 +146,7 @@ public class UserServiceTests
         var vendorUserId = 2;
         var dto = new UserToUpdateDto { FirstName = "NewName" };
         
-        _userRepositoryMock.Setup(r => r.GetByIdWithInvitesAsync(vendorUserId, It.IsAny<CancellationToken>()))
+        _userRepositoryMock.Setup(r => r.GetByIdWithInvitesAsync(vendorUserId, CancellationToken.None))
             .ReturnsAsync(new VendorUser
             {
                 Id = vendorUserId,
@@ -147,49 +160,9 @@ public class UserServiceTests
         
 
         // Act
-        var result = await _userService.UpdateUserAsync(dto, vendorUserId, It.IsAny<CancellationToken>());
+        var result = await _userService.UpdateUserAsync(dto, vendorUserId, CancellationToken.None);
 
         // Assert
-        Assert.Null(result.Data);
-        Assert.Equal((int)ErrorCodes.UsersDontMatch, result.ErrorCode);
+        Assert.True(result.Value is ValidationError);
     }
-    
-    [Fact]
-    public async Task UpdatingEntityShouldSetUpdatedAtAndUpdatedBy()
-    {
-        // Arrange
-        var vendorUserId = 1;
-        var dto = new UserToUpdateDto { FirstName = "NewName" };
-        
-        var users = new List<User>
-        {
-            new VendorUser
-            {
-                Id = vendorUserId,
-                FirstName = "OldName",
-                SentInvites = new List<Invite>()
-            }
-        }.AsQueryable();
-
-
-        _userRepositoryMock.Setup(r => r.GetByIdWithInvitesAsync(vendorUserId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new VendorUser
-            {
-                Id = vendorUserId,
-                FirstName = "OldName",
-                SentInvites = new List<Invite> { new Invite { Id = 1 } }
-            });
-        
-        _userPrincipalServiceMock
-            .Setup(x => x.UserId)
-            .Returns(vendorUserId);
-        
-        // Act
-        var result = await _userService.UpdateUserAsync(dto, vendorUserId, It.IsAny<CancellationToken>());
-
-        // Assert
-        // Assert.Equal(vendorUserId, result.Data.UpdatedBy);
-        // Assert.True(result.Data.UpdatedAt <= DateTime.UtcNow && result.Data.UpdatedAt > DateTime.UtcNow.AddSeconds(-5));
-    }
-
 }

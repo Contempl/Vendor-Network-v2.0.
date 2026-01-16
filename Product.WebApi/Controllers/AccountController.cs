@@ -17,7 +17,10 @@ public class AccountController : ControllerBase
 	private readonly IUserService _userService;
 	private readonly IInviteService _inviteService;
 	private readonly IAuthService _authService;
-	public AccountController(IInviteService inviteService, IUserService userService, IAuthService authService)
+	public AccountController(
+		IInviteService inviteService, 
+		IUserService userService, 
+		IAuthService authService)
 	{
 		_inviteService = inviteService;
 		_userService = userService;
@@ -26,28 +29,29 @@ public class AccountController : ControllerBase
 
 	[HttpGet("Register/User/{inviteId}")]
 	[EnsureInviteExists]
-	public async Task<ActionResult<Response<InviteIdToFrontEnd>>> RegisterUser (int inviteId, CancellationToken cancellationToken)
+	public async Task<ActionResult<OneOf<InviteIdToFrontEnd, ValidationError, Error>>> RegisterUser (int inviteId, CancellationToken cancellationToken)
 	{
 		var response = await _inviteService.RegisterUser(inviteId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			dto => Ok(dto),
+			validationError => BadRequest(validationError),
+			error => StatusCode(500, error));
 	}
 
 
 	[HttpPost("Register/User/{inviteId}")]
 	[EnsureInviteExists]
-	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> RegisterUserByInvite (int inviteId, 
+	public async Task<ActionResult<OneOf<UserDtoToFrontEnd, ValidationError, NotFoundError, Error>>> RegisterUserByInvite (int inviteId, 
 		[FromBody] UserRegistrationByInviteDto registrationData, CancellationToken cancellationToken)
 	{
 		var response = await _inviteService.RegisterByInvite(inviteId, registrationData, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			dto => Ok(dto),
+			validationError => BadRequest(validationError),
+			notFound => BadRequest(notFound),
+			error => StatusCode(500, error));
 	}
 
 	[HttpPost("Register/User")]
@@ -66,14 +70,13 @@ public class AccountController : ControllerBase
 	[HttpGet("User/{userId}")]
 	[EnsureUserExists]
 	[Authorize(policy: "All")]
-	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> GetUser(int userId, CancellationToken cancellationToken)
+	public async Task<ActionResult<OneOf<UserDtoToFrontEnd, Error>>> GetUser(int userId, CancellationToken cancellationToken)
 	{
 		var response = await _userService.GetUserAsync(userId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+
+		return response.Match<ActionResult>(
+			userDto => Ok(userDto),
+			error => StatusCode(500, error));
 	}
 
 	[HttpPost("Login")]
@@ -91,28 +94,27 @@ public class AccountController : ControllerBase
 	[HttpDelete("/{userId}")]
 	[EnsureUserExists]
 	[Authorize(policy: "Admin")]
-	public async Task<ActionResult<Response<int>>> RemoveUser(int userId, CancellationToken cancellationToken)
+	public async Task<ActionResult<OneOf<int, Error>>> RemoveUser(int userId, CancellationToken cancellationToken)
 	{
 		var response = await _userService.RemoveUserAsync(userId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			id => Ok(id),
+			error => StatusCode(500, error));
 	}
 	
 	[HttpPut("/User/{userId}")]
 	[EnsureUserExists]
 	[Authorize(policy: "All")]
-	public async Task<ActionResult<Response<UserDtoToFrontEnd>>> UpdateUser(UserToUpdateDto userUpdateData, int userId,
+	public async Task<ActionResult<OneOf<UserDtoToFrontEnd, ValidationError, Error>>> UpdateUser(UserToUpdateDto userUpdateData, int userId,
 		CancellationToken cancellationToken)
 	{
 		var response = await _userService.UpdateUserAsync(userUpdateData, userId, cancellationToken);
-		if (response.IsSuccess)
-		{
-			return Ok(response);
-		}
-		return BadRequest(response);
+		
+		return response.Match<ActionResult>(
+			dto => Ok(dto),
+			validationError => BadRequest(validationError),
+			error => StatusCode(500, error));
 	}
 
 	[HttpPost("/refresh")]
