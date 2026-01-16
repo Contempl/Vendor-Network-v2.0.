@@ -60,7 +60,7 @@ public class OperatorIndustryService : IOperatorIndustryService
 
         if (!industries.Any())
         {
-            _logger.LogWarning("Operator Industries Couldn't be fetched");
+            _logger.LogWarning("Operator Industries couldn't be fetched");
             return new Error();
         }
 
