@@ -50,8 +50,7 @@ public class VendorService : IVendorService
     {
         try
         {
-            var operatorIsValid = ValidateString(operatorSearchDto.Name);
-            if (!operatorIsValid)
+            if (string.IsNullOrWhiteSpace(operatorSearchDto.Name))
             {
                 _logger.LogWarning("Operator name for search is invalid");
                 return new InvalidOperatorNameError("Invalid Operator Name");
@@ -152,14 +151,5 @@ public class VendorService : IVendorService
             _logger.LogError(ex, "Failed to create an invite for vendor user");
             return new Error();
         }
-    }
-    private bool ValidateString(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            return false;
-        }
-
-        return true;
     }
 }

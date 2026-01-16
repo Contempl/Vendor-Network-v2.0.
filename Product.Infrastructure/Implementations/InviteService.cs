@@ -60,7 +60,7 @@ public class InviteService : IInviteService
 		{
 			var invite = await _inviteRepository.GetByIdAsync(inviteId, cancellationToken);
 		
-			var inviteIsValid = ValidateInvite(invite);
+			var inviteIsValid = Invite.ValidateInvite(invite);
 
 			if (!inviteIsValid)
 			{
@@ -85,7 +85,7 @@ public class InviteService : IInviteService
 		{
 			var invite = await _inviteRepository.GetInviteWithUserAsync(inviteId, cancellationToken);
 		
-			var inviteIsValid = ValidateInvite(invite);
+			var inviteIsValid = Invite.ValidateInvite(invite);
 
 			if (!inviteIsValid)
 			{
@@ -138,12 +138,5 @@ public class InviteService : IInviteService
 		invite.Id = inviteId;
 		invite.Status = InvitationStatus.Accepted;
 		await _inviteRepository.UpdateAsync(invite, cancellationToken);
-	}
-	
-	private bool ValidateInvite(Invite invite)
-	{
-		if (invite.ExpiresAt < DateTime.UtcNow || invite.Status != InvitationStatus.Sent)
-			return false;
-		return true;
 	}
 }

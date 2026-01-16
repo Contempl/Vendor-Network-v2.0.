@@ -35,6 +35,7 @@ public class UserService : IUserService
 		}
 		catch (KeyNotFoundException ex)
 		{
+			_logger.LogWarning(ex, "User with given Id was not found.");
 			throw;
 		}
 		catch (Exception ex)

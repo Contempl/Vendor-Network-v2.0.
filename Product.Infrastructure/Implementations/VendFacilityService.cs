@@ -50,7 +50,7 @@ public class VendFacilityService : IVendFacilityService
 	{
 		try
 		{
-			if (facilityData.Services is null || facilityData.Services.Any() == false)
+			if (facilityData.Services?.Any() == false)
 			{
 				_logger.LogWarning("No services provided for vendor facility creation");
 				return new NotFoundError();

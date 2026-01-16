@@ -58,7 +58,7 @@ public class AdminController : ControllerBase
 		
 		return response.Match<ActionResult>(
 			userDto => Ok(userDto),
-			validationError =>BadRequest(validationError), 
+			validationError => BadRequest(validationError), 
 			error => StatusCode(500, error)
 		);
 	}

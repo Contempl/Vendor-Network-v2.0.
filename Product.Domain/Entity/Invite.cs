@@ -18,7 +18,11 @@ public class Invite : IEntityId<int>, IAuditable
     public User? InvitedUser { get; set; }
     public int SenderId { get; set; }
     public User Sender { get; set; }
+    
+public static bool ValidateInvite(Invite invite) =>
+    !(invite.ExpiresAt < DateTime.UtcNow || invite.Status != InvitationStatus.Sent);
 }
+
 
 public enum InvitationStatus
 {
