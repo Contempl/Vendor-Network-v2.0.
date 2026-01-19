@@ -1,6 +1,7 @@
-﻿using Product.Application.Dto;
+﻿using OneOf;
+using OneOf.Types;
+using Product.Application.Dto;
 using Product.Domain.Dto;
-using Product.Domain.Entity;
 using Product.Domain.Result;
 
 namespace Product.Application.ServiceInterfaces;
@@ -8,9 +9,9 @@ namespace Product.Application.ServiceInterfaces;
 public interface IOperatorIndustryService
 {
 
-    Task<Response<OpIndustryFrontEndDto>> UpdateOperatorIndustryAsync(int industryId, UpdateOperatorIndustryDto operatorIndustry, CancellationToken cancellationToken);
-    Task<Response<int>> RemoveOperatorIndustryAsync(int industryId, CancellationToken cancellationToken);
-    Task<Response<List<OpIndustryFrontEndDto>>> GetOperatorsIndustriesAsync(CancellationToken cancellationToken);
-    Task<Response<OpIndustryFrontEndDto>> CreateOperatorIndustryAsync(OperatorIndustryCreationDto industryCreationData, CancellationToken cancellationToken);
-    Task<Response<OpIndustryFrontEndDto>> GetOpIndustryByIdAsync(int industryId, CancellationToken cancellationToken);
+    Task<OneOf<OpIndustryFrontEndDto, NotFoundError, Error>> UpdateOperatorIndustryAsync(int industryId, UpdateOperatorIndustryDto operatorIndustry, CancellationToken cancellationToken);
+    Task<OneOf<int, Error>> RemoveOperatorIndustryAsync(int industryId, CancellationToken cancellationToken);
+    Task<OneOf<List<OpIndustryFrontEndDto>, Error>> GetOperatorsIndustriesAsync(CancellationToken cancellationToken);
+    Task<OneOf<OpIndustryFrontEndDto, Error>> CreateOperatorIndustryAsync(OperatorIndustryCreationDto industryCreationData, CancellationToken cancellationToken);
+    Task<OneOf<OpIndustryFrontEndDto, Error>> GetOpIndustryByIdAsync(int industryId, CancellationToken cancellationToken);
 }

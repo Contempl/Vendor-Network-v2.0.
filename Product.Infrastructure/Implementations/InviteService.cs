@@ -1,10 +1,12 @@
-﻿using Product.Application.Dto;
+﻿using Microsoft.Extensions.Logging;
+using OneOf;
+using OneOf.Types;
+using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
-using Product.Domain.Enum;
 using Product.Domain.Result;
 
 namespace Product.Infrastructure.Implementations;
@@ -16,25 +18,22 @@ public class InviteService : IInviteService
 	private readonly IOperatorUserRepository _operatorUserRepository;
 	private readonly IVendorUserRepository _vendorUserRepository;
 	private readonly IPasswordHasher _passwordHasher;
+	private readonly ILogger<InviteService> _logger;
 
 	public InviteService(
 		IInviteRepository inviteRepository, IUserRepository userRepository, 
 		IOperatorUserRepository operatorUserRepository, IVendorUserRepository vendorUserRepository, 
-		IPasswordHasher passwordHasher)
+		IPasswordHasher passwordHasher, ILogger<InviteService> logger)
 	{
 		_inviteRepository = inviteRepository;
 		_userRepository = userRepository;
 		_operatorUserRepository = operatorUserRepository;
 		_vendorUserRepository = vendorUserRepository;
 		_passwordHasher = passwordHasher;
+		_logger = logger;
 	}
 	
-	private bool ValidateInvite(Invite invite)
-	{
-		if (invite.ExpiresAt < DateTime.UtcNow || invite.Status != InvitationStatus.Sent)
-			return false;
-		return true;
-	}
+
 	public Invite CreateInvite(User user, User sender) => new Invite
 	{
 		InvitedUser = user,
@@ -54,53 +53,64 @@ public class InviteService : IInviteService
 	};
 
 
-	public async Task<Response<InviteIdToFrontEnd>> RegisterUser(int inviteId, 
+	public async Task<OneOf<InviteIdToFrontEnd, ValidationError, Error>> RegisterUser(int inviteId, 
 		CancellationToken cancellationToken = default)
 	{
-		var invite = await _inviteRepository.GetByIdAsync(inviteId, cancellationToken);
+		try
+		{
+			var invite = await _inviteRepository.GetByIdAsync(inviteId, cancellationToken);
 		
-		var inviteIsValid = ValidateInvite(invite);
+			var inviteIsValid = Invite.ValidateInvite(invite);
 
-		if (!inviteIsValid)
-		{
-			return new Response<InviteIdToFrontEnd>
+			if (!inviteIsValid)
 			{
-				ErrorMessage = $"Invalid invitation. Invite id: {invite.Id}",
-				ErrorCode = (int)ErrorCodes.InvalidInvitation
-			};
-		}
+				_logger.LogWarning("Invalid invitation. Invite id: {invite.Id}.", invite.Id);
+				return new ValidationError();
+			}
 		
-		var newUser = new InviteIdToFrontEnd { InviteId = inviteId };
-		return new Response<InviteIdToFrontEnd>
+			var newUser = new InviteIdToFrontEnd { InviteId = inviteId };
+			return newUser;
+		}
+		catch (Exception ex)
 		{
-			Data = newUser
-		};
+			_logger.LogError(ex, "Error while registering user.");
+			return new Error();
+		}
 	}
 	
-	public async Task<Response<UserDtoToFrontEnd>> RegisterByInvite(int inviteId, 
+	public async Task<OneOf<UserDtoToFrontEnd, ValidationError, NotFoundError, Error>> RegisterByInvite(int inviteId, 
 		UserRegistrationByInviteDto registrationData, CancellationToken cancellationToken = default)
 	{
-		var invite = await _inviteRepository.GetInviteWithUserAsync(inviteId, cancellationToken);
-		
-		var inviteIsValid = ValidateInvite(invite);
-
-		if (!inviteIsValid)
+		try
 		{
-			return new Response<UserDtoToFrontEnd>
+			var invite = await _inviteRepository.GetInviteWithUserAsync(inviteId, cancellationToken);
+		
+			var inviteIsValid = Invite.ValidateInvite(invite);
+
+			if (!inviteIsValid)
 			{
-				ErrorMessage = $"Invalid invitation. Invite id: {invite.Id}",
-				ErrorCode = (int)ErrorCodes.InvalidInvitation
-			};
-		}
+				_logger.LogWarning("Invalid invitation. Invite id: {invite.Id}.", invite.Id);
+				return new ValidationError();
+			}
 		
-		await UpdateInviteAndUser(registrationData, invite, inviteId, cancellationToken);
+			await UpdateInviteAndUser(registrationData, invite, inviteId, cancellationToken);
 		
-		var updatedUser = await _userRepository.GetByIdOrDefaultAsync(invite.InvitedUserId!.Value);
+			var updatedUser = await _userRepository.GetByIdOrDefaultAsync(invite.InvitedUserId!.Value);
 
-		return new Response<UserDtoToFrontEnd>
+			if (updatedUser == null)
+			{
+				_logger.LogWarning("User with id: {inviteId} was not found.", invite.Id);
+				return new NotFoundError();
+			}
+
+			var result = updatedUser.MapToFrontEndDto();
+			return result;
+		}
+		catch (Exception ex)
 		{
-			Data = updatedUser.MapToFrontEndDto()
-		};
+			_logger.LogError(ex, "Error while registering user.");
+			return new Error();
+		}
 	}
 	
 	private async Task UpdateInviteAndUser (UserRegistrationByInviteDto dto, Invite invite, int inviteId, 

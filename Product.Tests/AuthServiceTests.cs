@@ -1,11 +1,14 @@
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Moq;
+using OneOf.Types;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
+using Product.Domain.Result;
 using Product.Infrastructure.Implementations;
 using Xunit;
 
@@ -20,6 +23,7 @@ public class AuthServiceTests
     private readonly Mock<IVendorUserRepository> _vendorUserRepositoryMock = new();
     private readonly Mock<IOperatorUserRepository> _operatorUserRepositoryMock = new();
     private readonly Mock<IAdministratorRepository> _adminRepositoryMock = new();
+    private readonly Mock<ILogger<AuthService>> _loggerMock = new();
     
     private readonly AuthService _authService;
 
@@ -32,7 +36,8 @@ public class AuthServiceTests
             _refreshTokenRepositoryMock.Object,
             _vendorUserRepositoryMock.Object,
             _operatorUserRepositoryMock.Object,
-            _adminRepositoryMock.Object);
+            _adminRepositoryMock.Object,
+            _loggerMock.Object);
     }
     
     [Fact]
@@ -43,7 +48,7 @@ public class AuthServiceTests
         var password = "password";
         var user = new VendorUser { Id = 1, Email = email, PasswordHash = Encoding.UTF8.GetBytes("hashed"), VendorId = 1};
 
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(email, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _userRepositoryMock.Setup(r => r.GetByEmailAsync(email, CancellationToken.None)).ReturnsAsync(user);
         _passwordHasherMock.Setup(h => h.ValidatePassword(password, user.PasswordHash)).Returns(true);
         _jwtTokenServiceMock.Setup(j => j.GenerateToken(It.IsAny<UserClaimDto>())).Returns
         (
@@ -61,26 +66,26 @@ public class AuthServiceTests
                 Email = email,
                 Password = password
             }, 
-            It.IsAny<CancellationToken>()
+            CancellationToken.None
         );
 
         //Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("fake_token", result.Data.AccessToken);
+        Assert.True(result.Value is TokenDto);
+        var jwtToken = result.Value as TokenDto;
+        Assert.Equal("fake_token", jwtToken.AccessToken);
     }
     [Fact]
     public async Task LoginAsync_InvalidEmail_ReturnsError()
     {
         //Arrange
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User)null!);
+        _userRepositoryMock.Setup(r => r.GetByEmailAsync(It.IsAny<string>(), CancellationToken.None)).ReturnsAsync((User)null!);
         _jwtTokenServiceMock.Setup(j => j.GenerateToken(It.IsAny<UserClaimDto>())).Returns(new TokenDto { AccessToken = "log_token" });
         
         //Act
-        var result = await _authService.Login(new UserLoginDto { Email = "notfound@example.com", Password = "123" }, It.IsAny<CancellationToken>());
+        var result = await _authService.Login(new UserLoginDto { Email = "notfound@example.com", Password = "123" }, CancellationToken.None);
 
         //Assert
-        Assert.Null(result.Data);
-        Assert.Equal((int)ErrorCodes.UserNotFound, result.ErrorCode);
+        Assert.True(result.Value is NotFoundError);
         _jwtTokenServiceMock.Verify(j => j.GenerateToken(It.IsAny<UserClaimDto>()), Times.Never);
     }
 
@@ -90,17 +95,16 @@ public class AuthServiceTests
         //Arrange
         var user = new VendorUser { Id = 1, Email = "test@example.com", PasswordHash = Encoding.UTF8.GetBytes("hash") };
 
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+        _userRepositoryMock.Setup(r => r.GetByEmailAsync(user.Email, CancellationToken.None))
             .ReturnsAsync(user);
         _passwordHasherMock.Setup(h => h.ValidatePassword("wrongpass", user.PasswordHash))
             .Returns(false);
 
         //Act
-        var result = await _authService.Login(new UserLoginDto { Email = user.Email, Password = "wrongpass" }, It.IsAny<CancellationToken>());
+        var result = await _authService.Login(new UserLoginDto { Email = user.Email, Password = "wrongpass" }, CancellationToken.None);
 
         //Assert
-        Assert.Null(result.Data);
-        Assert.Equal((int)ErrorCodes.InvalidPassword, result.ErrorCode);
+        Assert.True(result.Value is ValidationError);
         _passwordHasherMock.Verify(h => h.ValidatePassword("wrongpass", user.PasswordHash), Times.Once);
     }
 
@@ -112,16 +116,17 @@ public class AuthServiceTests
         var dto = new UserRegistrationDto { Email = "new@example.com", Password = "pass123" };
     
         _userRepositoryMock
-            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync((User)null!);
 
         //Act
-        var result = await _authService.RegisterUser(dto, It.IsAny<CancellationToken>());
+        var result = await _authService.RegisterUser(dto, CancellationToken.None);
     
         //Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("new@example.com", result.Data.Email);
-        _vendorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.True(result.Value is UserDtoToFrontEnd);
+        var resultDto = result.Value as UserDtoToFrontEnd;
+        Assert.Equal("new@example.com", resultDto!.Email);
+        _vendorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>(), CancellationToken.None), Times.Once);
     }
     
     [Fact]
@@ -131,16 +136,17 @@ public class AuthServiceTests
         var dto = new UserRegistrationDto { Email = "new@example.com", Password = "pass123", IsOperator = true};
     
         _userRepositoryMock
-            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync((User)null!);
 
         //Act
-        var result = await _authService.RegisterUser(dto, It.IsAny<CancellationToken>());
+        var result = await _authService.RegisterUser(dto, CancellationToken.None);
     
         //Assert
-        Assert.NotNull(result.Data);
-        Assert.Equal("new@example.com", result.Data.Email);
-        _operatorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<OperatorUser>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.True(result.Value is UserDtoToFrontEnd);
+        var resultDto = result.Value as UserDtoToFrontEnd;
+        Assert.Equal("new@example.com", resultDto!.Email);
+        _operatorUserRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<OperatorUser>(), CancellationToken.None), Times.Once);
     }
 
     [Fact]
@@ -150,7 +156,7 @@ public class AuthServiceTests
         var adminLoginData = new UserLoginDto { Email = "admin@example.com", Password = "pass123" };
         var admin = new Administrator {Id = 1, Email = "admin@example.com", PasswordHash = "hashed"u8.ToArray()};
         
-        _adminRepositoryMock.Setup(r => r.GetByEmailAsync(adminLoginData.Email, It.IsAny<CancellationToken>()))
+        _adminRepositoryMock.Setup(r => r.GetByEmailAsync(adminLoginData.Email, CancellationToken.None))
             .ReturnsAsync(admin);
         _passwordHasherMock.Setup(h => h.ValidatePassword(adminLoginData.Password, admin.PasswordHash))
             .Returns(true);
@@ -158,10 +164,10 @@ public class AuthServiceTests
             .Returns(new TokenDto { AccessToken = "fake_token" });
         
         // Act
-        var result = await _authService.LoginAdministrator(adminLoginData, It.IsAny<CancellationToken>());
+        var result = await _authService.LoginAdministrator(adminLoginData, CancellationToken.None);
 
         // Assert
-        Assert.Equal("fake_token", result.Data.AccessToken);
+        Assert.True(result.Value is TokenDto);
     }
     
     [Fact]
@@ -171,11 +177,10 @@ public class AuthServiceTests
         var adminLoginData = new UserLoginDto { Email = "admin@example.com", Password = "pass123" };
         
         // Act
-        var result = await _authService.LoginAdministrator(adminLoginData, It.IsAny<CancellationToken>());
+        var result = await _authService.LoginAdministrator(adminLoginData, CancellationToken.None);
 
         // Assert
-        Assert.Equal("Admin not found", result.ErrorMessage);
-        Assert.Equal((int)ErrorCodes.UserNotFound, result.ErrorCode);
+        Assert.True(result.Value is NotFoundError);
     }
     
     [Fact]
@@ -185,14 +190,13 @@ public class AuthServiceTests
         var adminLoginData = new UserLoginDto { Email = "admin@example.com", Password = "pass123" };
         var admin = new Administrator {Id = 1, Email = "admin@example.com", PasswordHash = "hashed"u8.ToArray()};
         
-        _adminRepositoryMock.Setup(r => r.GetByEmailAsync(adminLoginData.Email, It.IsAny<CancellationToken>()))
+        _adminRepositoryMock.Setup(r => r.GetByEmailAsync(adminLoginData.Email, CancellationToken.None))
             .ReturnsAsync(admin);
         
         // Act
-        var result = await _authService.LoginAdministrator(adminLoginData, It.IsAny<CancellationToken>());
+        var result = await _authService.LoginAdministrator(adminLoginData, CancellationToken.None);
 
         // Assert
-        Assert.Equal("Invalid password", result.ErrorMessage);
-        Assert.Equal((int)ErrorCodes.InvalidPassword, result.ErrorCode);
+        Assert.True(result.Value is ValidationError);
     }
 }

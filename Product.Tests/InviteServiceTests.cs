@@ -1,10 +1,13 @@
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
+using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
+using Product.Domain.Result;
 using Product.Infrastructure.Implementations;
 using Xunit;
 
@@ -17,6 +20,7 @@ public class InviteServiceTests
 	private readonly Mock<IOperatorUserRepository> _operatorUserRepositoryMock = new();
 	private readonly Mock<IVendorUserRepository> _vendorUserRepositoryMock = new();
 	private readonly Mock<IPasswordHasher> _passwordHasherMock = new();
+	private readonly Mock<ILogger<InviteService>> _loggerMock = new();
 	
 	private readonly IInviteService _inviteService;
 
@@ -27,7 +31,8 @@ public class InviteServiceTests
 			_userRepositoryMock.Object,
 			_operatorUserRepositoryMock.Object,
 			_vendorUserRepositoryMock.Object,
-			_passwordHasherMock.Object
+			_passwordHasherMock.Object,
+			_loggerMock.Object
 		);
 	}
 
@@ -66,15 +71,16 @@ public class InviteServiceTests
 			InvitedUserId = user.Id
 		};
 		
-		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, It.IsAny<CancellationToken>())).ReturnsAsync(invite);
+		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, CancellationToken.None)).ReturnsAsync(invite);
 		
 		// Act
-		var result = await _inviteService.RegisterUser(invite.Id, It.IsAny<CancellationToken>());
+		var result = await _inviteService.RegisterUser(invite.Id, CancellationToken.None);
 		
 		// Assert
-		Assert.NotNull(result.Data);
-		Assert.Equal(invite.Id, result.Data.InviteId);
-		_inviteRepositoryMock.Verify(r => r.GetByIdAsync(invite.Id, It.IsAny<CancellationToken>()), Times.Once);	
+		Assert.True(result.Value is InviteIdToFrontEnd);
+		var resultDto = result.Value as InviteIdToFrontEnd;
+		Assert.Equal(invite.Id, resultDto!.InviteId);
+		_inviteRepositoryMock.Verify(r => r.GetByIdAsync(invite.Id, CancellationToken.None), Times.Once);	
 	}
 	
 	[Fact]
@@ -94,14 +100,13 @@ public class InviteServiceTests
 			InvitedUserId = user.Id
 		};
 		
-		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, It.IsAny<CancellationToken>())).ReturnsAsync(invite);
+		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, CancellationToken.None)).ReturnsAsync(invite);
 		
 		// Act
-		var result = await _inviteService.RegisterUser(invite.Id, It.IsAny<CancellationToken>());
+		var result = await _inviteService.RegisterUser(invite.Id, CancellationToken.None);
 		
 		// Assert
-		Assert.Equal((int)ErrorCodes.InvalidInvitation, result.ErrorCode);
-		Assert.Equal($"Invalid invitation. Invite id: {invite.Id}", result.ErrorMessage);
+		Assert.True(result.Value is ValidationError);
 	}
 
 	[Fact]
@@ -128,18 +133,16 @@ public class InviteServiceTests
 			LastName = "Test",
 			Password = "password",
 		};
-		_userRepositoryMock.Setup(r => r.GetByIdAsync(invite.InvitedUserId.Value, It.IsAny<CancellationToken>())).ReturnsAsync(user);
-		_inviteRepositoryMock.Setup(r => r.GetInviteWithUserAsync(invite.Id, It.IsAny<CancellationToken>()))
+		_userRepositoryMock.Setup(r => r.GetByIdAsync(invite.InvitedUserId.Value, CancellationToken.None)).ReturnsAsync(user);
+		_inviteRepositoryMock.Setup(r => r.GetInviteWithUserAsync(invite.Id, CancellationToken.None))
 			.ReturnsAsync(invite);
-		_vendorUserRepositoryMock.Setup(r => r.UpdateAsync(user, It.IsAny<CancellationToken>()));
+		_vendorUserRepositoryMock.Setup(r => r.UpdateAsync(user, CancellationToken.None));
 		
 		
 		// Act
-		var result = await _inviteService.RegisterByInvite(invite.Id, registrationData, It.IsAny<CancellationToken>());
+		var result = await _inviteService.RegisterByInvite(invite.Id, registrationData, CancellationToken.None);
 		
 		// Assert
-		Assert.NotNull(result);
-		Assert.Equal((int)ErrorCodes.InvalidInvitation, result.ErrorCode);
-		Assert.Equal($"Invalid invitation. Invite id: {invite.Id}", result.ErrorMessage);
+		Assert.True(result.Value is ValidationError);
 	}
 }

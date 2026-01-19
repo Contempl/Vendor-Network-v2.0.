@@ -1,4 +1,7 @@
-﻿using Product.Application.Dto;
+﻿using Microsoft.Extensions.Logging;
+using OneOf;
+using OneOf.Types;
+using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
@@ -19,10 +22,17 @@ public class VendorService : IVendorService
     private readonly IInviteService _inviteService;
     private readonly IInviteRepository _inviteRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<VendorService> _logger;
 
-    public VendorService(IVendorRepository vendorRepository, IOperatorRepository operatorRepository,
-        IVendorUserRepository vendorUserRepository, IUserPrincipalService userPrincipalService,
-        IEmailService emailService, IInviteService inviteService, IInviteRepository inviteRepository, IUnitOfWork unitOfWork)
+    public VendorService(IVendorRepository vendorRepository,
+        IOperatorRepository operatorRepository,
+        IVendorUserRepository vendorUserRepository,
+        IUserPrincipalService userPrincipalService,
+        IEmailService emailService,
+        IInviteService inviteService, 
+        IInviteRepository inviteRepository,
+        IUnitOfWork unitOfWork,
+        ILogger<VendorService> logger)
     {
         _vendorRepository = vendorRepository;
         _operatorRepository = operatorRepository;
@@ -32,70 +42,73 @@ public class VendorService : IVendorService
         _inviteService = inviteService;
         _inviteRepository = inviteRepository;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
-    private bool ValidateString(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    public async Task<Response<List<BusinessFrontEndDto>>> SearchOperatorsAsync(OperatorSearchDto operatorSearchDto, 
+    public async Task<OneOf<List<BusinessFrontEndDto>, InvalidOperatorNameError, Error>> SearchOperatorsAsync(OperatorSearchDto operatorSearchDto, 
         CancellationToken cancellationToken = default)
     {
-        var operatorIsValid = ValidateString(operatorSearchDto.Name);
-        if (!operatorIsValid)
+        try
         {
-            return new Response<List<BusinessFrontEndDto>>
+            if (string.IsNullOrWhiteSpace(operatorSearchDto.Name))
             {
-                ErrorMessage = "Invalid Operator Name",
-                ErrorCode = (int)ErrorCodes.InvalidBusinessName
-            };
+                _logger.LogWarning("Operator name for search is invalid");
+                return new InvalidOperatorNameError("Invalid Operator Name");
+            }
+
+            var operators = await _operatorRepository.GetOperatorsByNameAsync(operatorSearchDto.Name, cancellationToken);
+            var result = operators.Select(o => o.ToFrontEndDto()).ToList();
+
+            return result;
         }
-
-        var operators = await _operatorRepository.GetOperatorsByNameAsync(operatorSearchDto.Name, cancellationToken);
-        var result = operators.Select(o => o.ToFrontEndDto()).ToList();
-
-        return new Response<List<BusinessFrontEndDto>>
+        catch (Exception ex)
         {
-            Data = result,
-        };
+            _logger.LogError(ex, "Search for operators failed");
+            return new Error();
+        }
     }
 
-    public async Task<Response<BusinessFrontEndDto>> GetVendorByIdAsync(int vendorId, 
+    public async Task<OneOf<BusinessFrontEndDto, Error>> GetVendorByIdAsync(int vendorId, 
         CancellationToken cancellationToken = default)
     {
-        var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
-        var result = vendor.ToFrontEndDto();
-
-        return new Response<BusinessFrontEndDto>
+        try
         {
-            Data = result,
-        };
+            var vendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
+            var result = vendor.ToFrontEndDto();
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occured while getting vendor");
+            return new Error();
+        }
     }
 
-    public async Task<Response<BusinessFrontEndDto>> UpdateVendorAsync(UpdateVendorDto vendorData, 
+    public async Task<OneOf<BusinessFrontEndDto, Error>> UpdateVendorAsync(UpdateVendorDto vendorData, 
         CancellationToken cancellationToken = default)
     {
-        var vendorId = _userPrincipalService.BusinessId!.Value;
-        var existingVendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
-
-        existingVendor.MapVendorToUpdate(vendorData);
-
-        await _vendorRepository.UpdateAsync(existingVendor, cancellationToken);
-
-        var result = existingVendor.ToFrontEndDto();
-        return new Response<BusinessFrontEndDto>
+        try
         {
-            Data = result,
-        };
+            var vendorId = _userPrincipalService.BusinessId!.Value;
+            var existingVendor = await _vendorRepository.GetByIdAsync(vendorId, cancellationToken);
+
+            existingVendor.MapVendorToUpdate(vendorData);
+
+            await _vendorRepository.UpdateAsync(existingVendor, cancellationToken);
+
+            var result = existingVendor.ToFrontEndDto();
+        
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occured while updating vendor");
+            return new Error();
+        }
     }
 
-    public async Task<Response<MailMsg>> InviteVendorUserAsync(EmailForInviteDto emailDto, 
+    public async Task<OneOf<MailMsg, Error>> InviteVendorUserAsync(EmailForInviteDto emailDto, 
         CancellationToken cancellationToken = default)
     {
         await using var transaction = await _unitOfWork.BeginTransactionAsync();
@@ -129,20 +142,14 @@ public class VendorService : IVendorService
 
             await transaction.CommitAsync(cancellationToken);
 
-            return new Response<MailMsg>
-            {
-                Data = mailMessage,
-            };
+            return mailMessage;
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync(cancellationToken);
             
-            return new Response<MailMsg>
-            {
-                ErrorCode = (int)ErrorCodes.InvalidInvitationData,
-                ErrorMessage = "Failed to craete an invite in"
-            };
+            _logger.LogError(ex, "Failed to create an invite for vendor user");
+            return new Error();
         }
     }
 }
