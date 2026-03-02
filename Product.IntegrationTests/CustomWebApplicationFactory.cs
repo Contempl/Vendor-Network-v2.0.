@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -5,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Enum;
 using Product.Infrastructure;
@@ -57,24 +60,25 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.
                 services.Remove(d);
 
             services.AddDbContext<AppDbContext>(options => { options.UseNpgsql(_dbContainer.GetConnectionString()); });
-
-            services.AddAuthentication("Test")
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                    "Test", options => { });
-
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("VendorUser", policy =>
-                    policy.RequireClaim("role", "VendorUser"));
-            });
             
-            services.AddScoped<IUserPrincipalService>(_ =>
-                new FakeUserPrincipalService
+            var authDescriptors = services
+                .Where(d => d.ServiceType == typeof(IAuthenticationSchemeProvider) 
+                            || d.ServiceType == typeof(IAuthenticationHandlerProvider)
+                            || d.ServiceType == typeof(IAuthenticationService))
+                .ToList();
+
+            foreach (var d in authDescriptors)
+                services.Remove(d);
+            
+            services.AddAuthentication(options =>
                 {
-                    UserId = 1,
-                    UserType = UserType.VendorUser,
-                    BusinessId = 10
-                });
+                    options.DefaultAuthenticateScheme = "Test";
+                    options.DefaultChallengeScheme = "Test";
+                    options.DefaultForbidScheme = "Test";
+                })
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
+            
+            services.AddScoped<IUserPrincipalService, FakeUserPrincipalService>();
         });
     }
     
@@ -85,6 +89,15 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.
         await seeder(context);
     }
 
+    public async Task ResetDatabaseAsync()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        await context.Database.ExecuteSqlRawAsync(
+            "TRUNCATE TABLE \"Businesses\", \"User\", \"VendorUsers\" RESTART IDENTITY CASCADE;");
+    }
+    
     public async Task InitializeAsync()
     {
         await _dbContainer.StartAsync();
@@ -106,7 +119,28 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.
 
 public class FakeUserPrincipalService : IUserPrincipalService
 {
-    public int? UserId { get; set; }
-    public UserType? UserType { get; set; }
-    public int? BusinessId { get; set; }
+    public int? UserId { get; set; } = 1;
+    public UserType? UserType { get; set; } = Domain.Enum.UserType.VendorUser;
+    public int? BusinessId { get; set; } = 10;
+}
+
+public class AllowAnonymousAuthHandler
+    : AuthenticationHandler<AuthenticationSchemeOptions>
+{
+    public AllowAnonymousAuthHandler(
+        IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
+        ISystemClock clock)
+        : base(options, logger, encoder, clock)
+    { }
+
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        var identity = new ClaimsIdentity("Test");
+        var principal = new ClaimsPrincipal(identity);
+        var ticket = new AuthenticationTicket(principal, "Test");
+
+        return Task.FromResult(AuthenticateResult.Success(ticket));
+    }
 }
