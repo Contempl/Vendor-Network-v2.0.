@@ -5,7 +5,7 @@ using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
 
-namespace Product.IntegrationTests.VendorIntegrationTests;
+namespace Product.IntegrationTests.Tests;
 
 public class VendorIntegrationTests : IntegrationTestBase
 {
@@ -25,11 +25,11 @@ public class VendorIntegrationTests : IntegrationTestBase
         };
 
         // Act
-        var result = await _client.PostAsJsonAsync("/Vendor/Search/Operators/", dto);
-        var response =  await result.Content.ReadFromJsonAsync<List<BusinessFrontEndDto>>();
+        var request = await _client.PostAsJsonAsync("/Vendor/Search/Operators/", dto);
+        var response =  await request.Content.ReadFromJsonAsync<List<BusinessFrontEndDto>>();
         
         // Assert
-        Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, request.StatusCode);
         Assert.Empty(response!);
     }
     
@@ -49,18 +49,18 @@ public class VendorIntegrationTests : IntegrationTestBase
             await context.SaveChangesAsync();
         });
 
-        var request = new OperatorSearchDto
+        var requestDto = new OperatorSearchDto
         {
             Name = "Clean"
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/Vendor/Search/Operators/", request);
+        var request = await _client.PostAsJsonAsync("/Vendor/Search/Operators/", requestDto);
 
         // Assert
-        response.EnsureSuccessStatusCode();
+        request.EnsureSuccessStatusCode();
 
-        var result = await response.Content.ReadFromJsonAsync<List<BusinessFrontEndDto>>();
+        var result = await request.Content.ReadFromJsonAsync<List<BusinessFrontEndDto>>();
 
         Assert.NotNull(result);
         Assert.Single(result);
@@ -71,18 +71,17 @@ public class VendorIntegrationTests : IntegrationTestBase
     {
         // Arrange
         var testVendorId = 10; 
-        var updatedVendorName = "Updated Vendor";
 
         await _factory.ResetDatabaseAsync();
         await SeedVendorAsync();
 
         // Act
-        var response = await _client.GetAsync($"/Vendor/{testVendorId}"); 
-        var obtainedVendor = await response.Content.ReadFromJsonAsync<BusinessFrontEndDto>();
+        var request = await _client.GetAsync($"/Vendor/{testVendorId}"); 
+        var obtainedVendor = await request.Content.ReadFromJsonAsync<BusinessFrontEndDto>();
         
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(updatedVendorName, obtainedVendor!.BusinessName);
+        Assert.Equal(HttpStatusCode.OK, request.StatusCode);
+        Assert.Equal(_vendor.BusinessName, obtainedVendor!.BusinessName);
     }
     
     [Fact]
@@ -100,11 +99,11 @@ public class VendorIntegrationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/Vendor", updatedVendor); 
+        var request = await _client.PutAsJsonAsync($"/Vendor", updatedVendor); 
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var obtainedVendor = await response.Content.ReadFromJsonAsync<UpdateVendorDto>();
+        Assert.Equal(HttpStatusCode.OK, request.StatusCode);
+        var obtainedVendor = await request.Content.ReadFromJsonAsync<UpdateVendorDto>();
         Assert.Equal(updatedVendor.BusinessName, obtainedVendor!.BusinessName);
     }
 
@@ -121,10 +120,10 @@ public class VendorIntegrationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/Vendor", updatedVendor); 
+        var request = await _client.PutAsJsonAsync($"/Vendor", updatedVendor); 
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal(HttpStatusCode.InternalServerError, request.StatusCode);
     }
 
     [Fact]
@@ -140,11 +139,11 @@ public class VendorIntegrationTests : IntegrationTestBase
         var emailDto = new EmailForInviteDto { Email = "mock@mail.ru" };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/Vendor/invite", emailDto);
-        var obtainedEmailMessage = await response.Content.ReadFromJsonAsync<MailMsg>();
+        var request = await _client.PostAsJsonAsync("/Vendor/invite", emailDto);
+        var obtainedEmailMessage = await request.Content.ReadFromJsonAsync<MailMsg>();
         
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, request.StatusCode);
         Assert.Equal(existingVendorUserMail, obtainedEmailMessage!.Sender);
         Assert.Contains(emailDto.Email, obtainedEmailMessage!.Body);
     }
@@ -158,27 +157,32 @@ public class VendorIntegrationTests : IntegrationTestBase
         var emailDto = new EmailForInviteDto { Email = "mock@mail.ru" };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/Vendor/invite", emailDto);
+        var request = await _client.PostAsJsonAsync("/Vendor/invite", emailDto);
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal(HttpStatusCode.InternalServerError, request.StatusCode);
     }
     
 
     private async Task SeedVendorAsync()
     {
+        var vendor = new Vendor
+        {
+            Id = 10,
+            BusinessName = "Test Vendor",
+            Address = "popa",
+            Email = "mock",
+        };
+        
         await _factory.SeedAsync(async context =>
         {
-            context.Add(new Vendor
-            {
-                Id = 10,
-                BusinessName = "Test Vendor",
-                Address = "popa",
-                Email = "mock",
-            });
+            context.Add(vendor);
             await context.SaveChangesAsync();
+            _vendor = vendor;
         });
     }
+
+    private Vendor _vendor;
     
     private async Task SeedUserAsync()
     {
