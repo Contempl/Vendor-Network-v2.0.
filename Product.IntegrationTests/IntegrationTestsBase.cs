@@ -40,10 +40,4 @@ public abstract class IntegrationTestBase : IClassFixture<CustomWebApplicationFa
 
         return request;
     }
-
-    protected HttpRequestMessage AsVendor(HttpMethod method, string url, object? body = null)
-        => CreateRequest(method, url, UserType.VendorUser, body: body);
-
-    protected HttpRequestMessage AsOperator(HttpMethod method, string url, object? body = null)
-        => CreateRequest(method, url, UserType.OperatorUser, body: body);
 }
