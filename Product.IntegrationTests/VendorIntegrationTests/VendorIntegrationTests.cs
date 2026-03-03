@@ -7,28 +7,25 @@ using Product.Domain.Enum;
 
 namespace Product.IntegrationTests.VendorIntegrationTests;
 
-public class VendorIntegrationTests : IClassFixture<CustomWebApplicationFactory>
+public class VendorIntegrationTests : IntegrationTestBase
 {
-    private readonly HttpClient _client;
-    private readonly CustomWebApplicationFactory _factory;
-
-    public VendorIntegrationTests(CustomWebApplicationFactory factory)
+    public VendorIntegrationTests(CustomWebApplicationFactory factory) : base(factory)
     {
-        _client = factory.CreateClient();
-        _factory = factory;
     }
 
     [Fact]
     public async Task SearchOperators_ReturnsEmptyList_WhenOperatorsDoNotExist()
     {
         // Arrange
-        var request = new OperatorSearchDto
+        await _factory.ResetDatabaseAsync();
+        
+        var dto = new OperatorSearchDto
         {
             Name = "Clean"
         };
 
         // Act
-        var result = await _client.PostAsJsonAsync("/Vendor/Search/Operators/", request);
+        var result = await _client.PostAsJsonAsync("/Vendor/Search/Operators/", dto);
         var response =  await result.Content.ReadFromJsonAsync<List<BusinessFrontEndDto>>();
         
         // Assert
@@ -40,7 +37,17 @@ public class VendorIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     public async Task SearchOperators_ReturnsOperators_WhenOperatorsExist()
     {
         // Arrange
-        await SeedVendorAsync();
+        await _factory.ResetDatabaseAsync();
+        await _factory.SeedAsync(async context =>
+        {
+            context.Operators.Add(new Operator
+            {
+                BusinessName = "Clean",
+                Address = "test",
+                Email = "test"
+            });
+            await context.SaveChangesAsync();
+        });
 
         var request = new OperatorSearchDto
         {
@@ -64,7 +71,9 @@ public class VendorIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Arrange
         var testVendorId = 10; 
+        var updatedVendorName = "Updated Vendor";
 
+        await _factory.ResetDatabaseAsync();
         await SeedVendorAsync();
 
         // Act
@@ -73,13 +82,14 @@ public class VendorIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("Test Vendor", obtainedVendor!.BusinessName);
+        Assert.Equal(updatedVendorName, obtainedVendor!.BusinessName);
     }
     
     [Fact]
     public async Task UpdateVendor_UpdatesVendor_WhenVendorExists()
     {
         // Arrange
+        await _factory.ResetDatabaseAsync();
         await SeedVendorAsync();
 
         var updatedVendor = new UpdateVendorDto
@@ -102,6 +112,7 @@ public class VendorIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     public async Task UpdateVendor_ReturnsError_WhenVendorDoesntExist()
     {
         // Arrange
+        await _factory.ResetDatabaseAsync();
         var updatedVendor = new UpdateVendorDto
         {
             BusinessName = "Updated Vendor",
@@ -121,6 +132,8 @@ public class VendorIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Arrange
         var existingVendorUserMail = "mock@";
+        
+        await _factory.ResetDatabaseAsync();
         await SeedVendorAsync();
         await SeedUserAsync();
 
@@ -140,6 +153,8 @@ public class VendorIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     public async Task InviteVendor_ReturnsError_WhenEmailCreationFails()
     {
         // Arrange
+        await _factory.ResetDatabaseAsync();
+        
         var emailDto = new EmailForInviteDto { Email = "mock@mail.ru" };
 
         // Act

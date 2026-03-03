@@ -123,24 +123,3 @@ public class FakeUserPrincipalService : IUserPrincipalService
     public UserType? UserType { get; set; } = Domain.Enum.UserType.VendorUser;
     public int? BusinessId { get; set; } = 10;
 }
-
-public class AllowAnonymousAuthHandler
-    : AuthenticationHandler<AuthenticationSchemeOptions>
-{
-    public AllowAnonymousAuthHandler(
-        IOptionsMonitor<AuthenticationSchemeOptions> options,
-        ILoggerFactory logger,
-        UrlEncoder encoder,
-        ISystemClock clock)
-        : base(options, logger, encoder, clock)
-    { }
-
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-    {
-        var identity = new ClaimsIdentity("Test");
-        var principal = new ClaimsPrincipal(identity);
-        var ticket = new AuthenticationTicket(principal, "Test");
-
-        return Task.FromResult(AuthenticateResult.Success(ticket));
-    }
-}
