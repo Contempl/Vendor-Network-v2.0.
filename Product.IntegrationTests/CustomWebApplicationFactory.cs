@@ -94,8 +94,10 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        await context.Database.ExecuteSqlRawAsync(
-            "TRUNCATE TABLE \"Businesses\", \"User\", \"VendorUsers\" RESTART IDENTITY CASCADE;");
+        await context.Database.ExecuteSqlRawAsync("""
+                                                      TRUNCATE TABLE "Businesses", "User", "VendorUsers"
+                                                      RESTART IDENTITY CASCADE;
+                                                  """);
     }
     
     public async Task InitializeAsync()
