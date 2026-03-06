@@ -29,8 +29,8 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
             int.TryParse(userIdVal, out var userId))
             ((FakeUserPrincipalService)_userPrincipalService).UserId = userId;
 
-        if (Request.Headers.TryGetValue("X-Test-BusinessId", out var bizIdVal) &&
-            int.TryParse(bizIdVal, out var bizId))
+        if (Request.Headers.TryGetValue("X-Test-BusinessId", out var businessIdValue) &&
+            int.TryParse(businessIdValue, out var bizId))
             ((FakeUserPrincipalService)_userPrincipalService).BusinessId = bizId;
 
         UserType userType = UserType.VendorUser; 
