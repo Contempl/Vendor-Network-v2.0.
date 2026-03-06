@@ -7,7 +7,7 @@ using Product.Domain.Enum;
 
 namespace Product.IntegrationTests.Tests;
 
-public class VendorIntegrationTests : IntegrationTestBase
+public class VendorIntegrationTests : IntegrationTestBase, IAsyncLifetime
 {
     public VendorIntegrationTests(CustomWebApplicationFactory factory) : base(factory) { }
 
@@ -15,8 +15,6 @@ public class VendorIntegrationTests : IntegrationTestBase
     public async Task SearchOperators_ReturnsEmptyList_WhenOperatorsDoNotExist()
     {
         // Arrange
-        await _factory.ResetDatabaseAsync();
-        
         var dto = new OperatorSearchDto
         {
             Name = "Clean"
@@ -35,7 +33,6 @@ public class VendorIntegrationTests : IntegrationTestBase
     public async Task SearchOperators_ReturnsOperators_WhenOperatorsExist()
     {
         // Arrange
-        await _factory.ResetDatabaseAsync();
         await _factory.SeedAsync(async context =>
         {
             context.Operators.Add(new Operator
@@ -77,7 +74,6 @@ public class VendorIntegrationTests : IntegrationTestBase
             Email = "mock",
         };
 
-        await _factory.ResetDatabaseAsync();
         await SeedVendorAsync(vendor);
 
         // Act
@@ -101,7 +97,6 @@ public class VendorIntegrationTests : IntegrationTestBase
             Email = "mock",
         };
         
-        await _factory.ResetDatabaseAsync();
         await SeedVendorAsync(vendor);
 
         var updatedVendor = new UpdateVendorDto
@@ -124,7 +119,6 @@ public class VendorIntegrationTests : IntegrationTestBase
     public async Task UpdateVendor_ReturnsError_WhenVendorDoesntExist()
     {
         // Arrange
-        await _factory.ResetDatabaseAsync();
         var updatedVendor = new UpdateVendorDto
         {
             BusinessName = "Updated Vendor",
@@ -210,4 +204,11 @@ public class VendorIntegrationTests : IntegrationTestBase
             await context.SaveChangesAsync();
         });
     }
+
+    public async Task InitializeAsync()
+    {
+        await _factory.ResetDatabaseAsync();
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
 }

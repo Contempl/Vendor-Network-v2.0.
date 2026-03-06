@@ -8,7 +8,7 @@ using Product.Domain.Pagination;
 
 namespace Product.IntegrationTests.Tests;
 
-public class OperatorIntegrationTests : IntegrationTestBase
+public class OperatorIntegrationTests : IntegrationTestBase, IAsyncLifetime
 {
     public OperatorIntegrationTests(CustomWebApplicationFactory factory) : base(factory)
     {
@@ -22,8 +22,15 @@ public class OperatorIntegrationTests : IntegrationTestBase
     public async Task SearchVendorsToServeFacilities_ReturnsVendors_WhenVendorsFacilitiesReach()
     {
         // Arrange
+        var vendor = new Vendor
+        {
+            BusinessName = "Test",
+            Address = "Test",
+            Email = "email"
+        };
+        
         await SeedOperatorWithIndustriesAsync();
-        await SeedData();
+        await SeedData(vendor);
 
         var requestDto = new SearchVendorsForIndustriesDto
         {
@@ -44,9 +51,15 @@ public class OperatorIntegrationTests : IntegrationTestBase
     public async Task SearchVendorsToServeFacilities_ReturnsEmpty_WhenNoVendorsMatchServiceType()
     {
         // Arrange
-        await _factory.ResetDatabaseAsync();
+        var vendor = new Vendor
+        {
+            BusinessName = "Test",
+            Address = "Test",
+            Email = "email"
+        };
+        
         await SeedOperatorWithIndustriesAsync();
-        await SeedData();
+        await SeedData(vendor);
 
         var requestDto = new SearchVendorsForIndustriesDto
         {
@@ -67,8 +80,6 @@ public class OperatorIntegrationTests : IntegrationTestBase
     public async Task SearchVendorsToServeFacilities_ReturnsEmptyCollection_WhenIndustryIdsDoNotExist()
     {
         // Arrange
-        await _factory.ResetDatabaseAsync();
-
         var requestDto = new SearchVendorsForIndustriesDto
         {
             IndustriesLocationIds = [999, 1000, 1001],
@@ -88,8 +99,6 @@ public class OperatorIntegrationTests : IntegrationTestBase
     public async Task SearchVendorsToServeFacilities_ReturnsBadRequest_WhenServiceNameInputIsInvalid()
     {
         // Arrange
-        await _factory.ResetDatabaseAsync();
-
         var requestDto = new SearchVendorsForIndustriesDto
         {
             IndustriesLocationIds = [1, 2, 3],
@@ -107,8 +116,6 @@ public class OperatorIntegrationTests : IntegrationTestBase
     public async Task SearchVendorsToServeFacilities_ReturnsNotFound_WhenIndustryIdsIsEmpty()
     {
         // Arrange
-        await _factory.ResetDatabaseAsync();
-
         var requestDto = new SearchVendorsForIndustriesDto
         {
             IndustriesLocationIds = [],
@@ -126,8 +133,14 @@ public class OperatorIntegrationTests : IntegrationTestBase
     public async Task GetVendors_ReturnsPagedVendors_WhenInputIsValid()
     {
         // Arrange
-        await _factory.ResetDatabaseAsync();
-        await SeedData();
+        var vendor = new Vendor
+        {
+            BusinessName = "Test",
+            Address = "Test",
+            Email = "email"
+        };
+        
+        await SeedData(vendor);
 
         var requestDto = new VendorSearchDto
         {
@@ -148,8 +161,14 @@ public class OperatorIntegrationTests : IntegrationTestBase
     public async Task GetVendors_ReturnsEmptyCollection_WhenNoVendorWithGivenNameExists()
     {
         // Arrange
-        await _factory.ResetDatabaseAsync();
-        await SeedData();
+        var vendor = new Vendor
+        {
+            BusinessName = "Test",
+            Address = "Test",
+            Email = "email"
+        };
+        
+        await SeedData(vendor);
 
         var requestDto = new VendorSearchDto
         {
@@ -169,8 +188,14 @@ public class OperatorIntegrationTests : IntegrationTestBase
     public async Task GetVendors_ReturnsBadRequest_WhenServiceNameIsInvalid()
     {
         // Arrange
-        await _factory.ResetDatabaseAsync();
-        await SeedData();
+        var vendor = new Vendor
+        {
+            BusinessName = "Test",
+            Address = "Test",
+            Email = "email"
+        };
+        
+        await SeedData(vendor);
 
         var requestDto = new VendorSearchDto
         {
@@ -287,6 +312,7 @@ public class OperatorIntegrationTests : IntegrationTestBase
             Address = "Mock",
             Email = "moockmail@"
         };
+        await SeedOperator(@operator);
         
         var operatorUser = new OperatorUser
         {
@@ -297,8 +323,6 @@ public class OperatorIntegrationTests : IntegrationTestBase
             OperatorId = _operator.Id
         };
         
-        await _factory.ResetDatabaseAsync();
-        await SeedOperator(@operator);
         await SeedOperatorUser(operatorUser);
 
         var emailDto = new EmailForInviteDto { Email = "testing@mail" };
@@ -323,15 +347,8 @@ public class OperatorIntegrationTests : IntegrationTestBase
     }
 
 
-    private async Task SeedData()
+    private async Task SeedData(Vendor vendor)
     {
-        var vendor = new Vendor
-        {
-            BusinessName = "Test",
-            Address = "Test",
-            Email = "email"
-        };
-
         await _factory.SeedAsync(async context =>
         {
             context.Vendors.Add(vendor);
@@ -421,4 +438,10 @@ public class OperatorIntegrationTests : IntegrationTestBase
     private Operator _operator;
 
     private Vendor _vendor;
+    public async Task InitializeAsync()
+    {
+        await _factory.ResetDatabaseAsync();
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
 }
