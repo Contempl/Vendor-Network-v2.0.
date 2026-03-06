@@ -1,13 +1,11 @@
-using System.Security.Claims;
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Enum;
 using Product.Infrastructure;
@@ -39,36 +37,16 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.
                 logging.SetMinimumLevel(LogLevel.Error); 
             });
             
-            var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+            services.RemoveAll<DbContextOptions<AppDbContext>>();
+            services.RemoveAll<IDistributedCache>();
+            services.RemoveAll<DateInterceptor>();
+            services.RemoveAll<IAuthenticationSchemeProvider>();
+            services.RemoveAll<IAuthenticationHandlerProvider>();
+            services.RemoveAll<IAuthenticationService>();
 
-            var cacheDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IDistributedCache));
-            if (cacheDescriptor != null)
-            {
-                services.Remove(cacheDescriptor);
-            }
-            
             services.AddDistributedMemoryCache();
             
-            if (descriptor != null)
-                services.Remove(descriptor);
-            
-            var interceptors = services
-                .Where(d => d.ImplementationType == typeof(DateInterceptor))
-                .ToList();
-
-            foreach (var d in interceptors)
-                services.Remove(d);
-
             services.AddDbContext<AppDbContext>(options => { options.UseNpgsql(_dbContainer.GetConnectionString()); });
-            
-            var authDescriptors = services
-                .Where(d => d.ServiceType == typeof(IAuthenticationSchemeProvider) 
-                            || d.ServiceType == typeof(IAuthenticationHandlerProvider)
-                            || d.ServiceType == typeof(IAuthenticationService))
-                .ToList();
-
-            foreach (var d in authDescriptors)
-                services.Remove(d);
             
             services.AddAuthentication(options =>
                 {
