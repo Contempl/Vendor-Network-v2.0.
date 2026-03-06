@@ -9,9 +9,7 @@ namespace Product.IntegrationTests.Tests;
 
 public class VendorIntegrationTests : IntegrationTestBase
 {
-    public VendorIntegrationTests(CustomWebApplicationFactory factory) : base(factory)
-    {
-    }
+    public VendorIntegrationTests(CustomWebApplicationFactory factory) : base(factory) { }
 
     [Fact]
     public async Task SearchOperators_ReturnsEmptyList_WhenOperatorsDoNotExist()
@@ -71,9 +69,16 @@ public class VendorIntegrationTests : IntegrationTestBase
     {
         // Arrange
         var testVendorId = 10; 
+        var vendor = new Vendor
+        {
+            Id = 10,
+            BusinessName = "Test Vendor",
+            Address = "popa",
+            Email = "mock",
+        };
 
         await _factory.ResetDatabaseAsync();
-        await SeedVendorAsync();
+        await SeedVendorAsync(vendor);
 
         // Act
         var request = await _client.GetAsync($"/Vendor/{testVendorId}"); 
@@ -88,8 +93,16 @@ public class VendorIntegrationTests : IntegrationTestBase
     public async Task UpdateVendor_UpdatesVendor_WhenVendorExists()
     {
         // Arrange
+        var vendor = new Vendor
+        {
+            Id = 10,
+            BusinessName = "Test Vendor",
+            Address = "popa",
+            Email = "mock",
+        };
+        
         await _factory.ResetDatabaseAsync();
-        await SeedVendorAsync();
+        await SeedVendorAsync(vendor);
 
         var updatedVendor = new UpdateVendorDto
         {
@@ -131,10 +144,25 @@ public class VendorIntegrationTests : IntegrationTestBase
     {
         // Arrange
         var existingVendorUserMail = "mock@";
+        var vendor = new Vendor
+        {
+            Id = 10,
+            BusinessName = "Test Vendor",
+            Address = "popa",
+            Email = "mock",
+        };
+
+        var vendorUser = new VendorUser
+        {
+            FirstName = "Test User",
+            LastName = "Test",
+            UserType = UserType.VendorUser,
+            Email = "mock@",
+        };
         
-        await _factory.ResetDatabaseAsync();
-        await SeedVendorAsync();
-        await SeedUserAsync();
+
+        await SeedVendorAsync(vendor);
+        await SeedUserAsync(vendorUser);
 
         var emailDto = new EmailForInviteDto { Email = "mock@mail.ru" };
 
@@ -152,8 +180,6 @@ public class VendorIntegrationTests : IntegrationTestBase
     public async Task InviteVendor_ReturnsError_WhenEmailCreationFails()
     {
         // Arrange
-        await _factory.ResetDatabaseAsync();
-        
         var emailDto = new EmailForInviteDto { Email = "mock@mail.ru" };
 
         // Act
@@ -164,16 +190,8 @@ public class VendorIntegrationTests : IntegrationTestBase
     }
     
 
-    private async Task SeedVendorAsync()
+    private async Task SeedVendorAsync(Vendor vendor)
     {
-        var vendor = new Vendor
-        {
-            Id = 10,
-            BusinessName = "Test Vendor",
-            Address = "popa",
-            Email = "mock",
-        };
-        
         await _factory.SeedAsync(async context =>
         {
             context.Add(vendor);
@@ -184,17 +202,11 @@ public class VendorIntegrationTests : IntegrationTestBase
 
     private Vendor _vendor;
     
-    private async Task SeedUserAsync()
+    private async Task SeedUserAsync(VendorUser vendorUser)
     {
         await _factory.SeedAsync(async context =>
         {
-            context.Add(new VendorUser
-            {
-                FirstName = "Test User",
-                LastName =  "Test",
-                UserType = UserType.VendorUser,
-                Email = "mock@",
-            });
+            context.Add(vendorUser);
             await context.SaveChangesAsync();
         });
     }

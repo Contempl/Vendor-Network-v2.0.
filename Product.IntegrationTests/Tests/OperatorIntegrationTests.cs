@@ -189,8 +189,16 @@ public class OperatorIntegrationTests : IntegrationTestBase
     public async Task GetOperator_ReturnsOperator_WhenInputIsValid()
     {
         // Arrange
+        var @operator = new Operator
+        {
+            Id = 10, // value for our IUserPrincipalService
+            BusinessName = "Mock",
+            Address = "Mock",
+            Email = "moockmail@"
+        };
+        
         await _factory.ResetDatabaseAsync();
-        await SeedOperator();
+        await SeedOperator(@operator);
 
         // Act
         var request = await _client.GetAsync($"/Operator");
@@ -218,8 +226,16 @@ public class OperatorIntegrationTests : IntegrationTestBase
     public async Task UpdateOperator_UpdatesOperatorSuccessfully_WhenInputIsValid()
     {
         // Arrange
+        var @operator = new Operator
+        {
+            Id = 10, // value for our IUserPrincipalService
+            BusinessName = "Mock",
+            Address = "Mock",
+            Email = "moockmail@"
+        };
+        
         await _factory.ResetDatabaseAsync(); 
-        await SeedOperator();
+        await SeedOperator(@operator);
 
         var requestDto = new UpdateOperatorDto
         {
@@ -264,9 +280,26 @@ public class OperatorIntegrationTests : IntegrationTestBase
     public async Task InviteOperatorUser_WorksSuccessfully_WithRightInput()
     {
         // Arrange
+        var @operator = new Operator
+        {
+            Id = 10, // value for our IUserPrincipalService
+            BusinessName = "Mock",
+            Address = "Mock",
+            Email = "moockmail@"
+        };
+        
+        var operatorUser = new OperatorUser
+        {
+            FirstName = "Test",
+            LastName = "User",
+            UserType = UserType.OperatorUser,
+            Email = "mock@",
+            OperatorId = _operator.Id
+        };
+        
         await _factory.ResetDatabaseAsync();
-        await SeedOperator();
-        await SeedOperatorUser();
+        await SeedOperator(@operator);
+        await SeedOperatorUser(operatorUser);
 
         var emailDto = new EmailForInviteDto { Email = "testing@mail" };
 
@@ -279,18 +312,10 @@ public class OperatorIntegrationTests : IntegrationTestBase
         Assert.Contains(emailDto.Email, response!.Body);
     }
 
-    private async Task SeedOperatorUser()
+    private async Task SeedOperatorUser(OperatorUser operatorUser)
     {
         await _factory.SeedAsync(async context =>
         {
-            var operatorUser = new OperatorUser
-            {
-                FirstName = "Test",
-                LastName = "User",
-                UserType = UserType.OperatorUser,
-                Email = "mock@",
-                OperatorId = _operator.Id
-            };
             await context.AddAsync(operatorUser);
             await context.SaveChangesAsync();
         });
@@ -381,17 +406,10 @@ public class OperatorIntegrationTests : IntegrationTestBase
         });
     }
 
-    private async Task SeedOperator()
+    private async Task SeedOperator(Operator @operator)
     {
         await _factory.SeedAsync(async context =>
         {
-            var @operator = new Operator
-            {
-                Id = 10, // value for our IUserPrincipalService
-                BusinessName = "Mock",
-                Address = "Mock",
-                Email = "moockmail@"
-            };
             await context.AddAsync(@operator);
             await context.SaveChangesAsync();
             _operator = @operator;
