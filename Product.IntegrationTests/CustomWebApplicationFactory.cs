@@ -83,7 +83,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.
         await _dbContainer.StartAsync();
         
         var client = CreateClient();
-
+        
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
