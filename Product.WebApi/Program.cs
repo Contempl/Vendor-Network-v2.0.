@@ -58,13 +58,13 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-        { securityScheme, new string[] {} }
+        { securityScheme, new string[] { } }
     });
 });
 
 var app = builder.Build();
 
-app.UseMiddleware<MyExceptionHandlingMiddleware>(); 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -81,3 +81,9 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+namespace Product.WebApi
+{
+    public partial class Program;
+}

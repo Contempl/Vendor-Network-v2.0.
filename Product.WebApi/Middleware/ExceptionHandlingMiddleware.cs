@@ -3,12 +3,12 @@ using Product.Infrastructure.Helper_Classes;
 
 namespace Product.WebApi.Middleware;
 
-public class MyExceptionHandlingMiddleware
+public class ExceptionHandlingMiddleware
 {
 	private readonly RequestDelegate _next;
-	private readonly ILogger<MyExceptionHandlingMiddleware> _logger;
+	private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-	public MyExceptionHandlingMiddleware(RequestDelegate next, ILogger<MyExceptionHandlingMiddleware> logger)
+	public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 	{
 		_next = next;
 		_logger = logger;
