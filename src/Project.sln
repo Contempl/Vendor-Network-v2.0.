@@ -9,11 +9,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Product.WebApi", "Product.WebApi\Product.WebApi.csproj", "{846F2ED3-DBD6-40D4-9BE9-8037EAD5D96C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DD854981-5CBE-4E90-8F0B-8020511E315F}"
-	ProjectSection(SolutionItems) = preProject
-		docker-compose.yml = docker-compose.yml
-		.github\workflows\build-and-deploy.yaml = .github\workflows\build-and-deploy.yaml
-		.env = .env
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Product.Seeder", "Product.Seeder\Product.Seeder.csproj", "{7A1F24C4-A6DF-4D26-BE78-B006E6154941}"
 EndProject
@@ -22,6 +17,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{6B24A229-156E-47FF-804F-E7B160B289E9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Product.IntegrationTests", "Product.IntegrationTests\Product.IntegrationTests.csproj", "{6F550575-6F5F-4546-B5C7-41892ABFB6F2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{58C4E91C-D886-4C25-9B18-4FF0C556D279}"
+	ProjectSection(SolutionItems) = preProject
+		..\.env = ..\.env
+		..\.github\workflows\build-and-deploy.yaml = ..\.github\workflows\build-and-deploy.yaml
+		..\docker-compose.yml = ..\docker-compose.yml
+		..\Dockerfile = ..\Dockerfile
+		..\.dockerignore = ..\.dockerignore
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

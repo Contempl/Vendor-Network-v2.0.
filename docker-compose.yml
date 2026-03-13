@@ -21,7 +21,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Product.WebApi/Dockerfile
+      dockerfile: src/Product.WebApi/Dockerfile
     restart: always
     depends_on:
       - db
