@@ -21,7 +21,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: src/Product.WebApi/Dockerfile
+      dockerfile: Dockerfile
     restart: always
     depends_on:
       - db
@@ -37,7 +37,7 @@ services:
   seeder:
     build:
       context: .
-      dockerfile: Product.WebApi/Dockerfile
+      dockerfile: Dockerfile
     depends_on:
       - db
     restart: "no"
