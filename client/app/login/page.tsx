@@ -5,7 +5,7 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useState } from "react";
-import { login } from "@/features/auth/auth-api";
+import { login } from "@/entities/auth/auth-api";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
