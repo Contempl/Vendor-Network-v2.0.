@@ -98,6 +98,7 @@ export default function VendorPage() {
           {/* Business Name */}
           <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
             <BusinessIcon sx={{ color: "#e94560", mt: 0.5 }} />
+              <Typography variant="caption" color="rgba(255,255,255,0.3)">Business Name</Typography>
               {isEditing 
                 ? <TextField value={form?.businessName || ""} onChange={(e) => setForm({...form!, businessName: e.target.value})} sx={{
                     "& .MuiOutlinedInput-root": {
@@ -114,6 +115,7 @@ export default function VendorPage() {
           {/* Address */}
           <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
             <LocationOnIcon sx={{ color: "#e94560", mt: 0.5 }} />
+            <Typography variant="caption" color="rgba(255,255,255,0.3)">Address</Typography>
             {isEditing 
               ? <TextField value={form?.address || ""} onChange={(e) => setForm({...form!, address: e.target.value})} sx={{
                     "& .MuiOutlinedInput-root": {
@@ -127,20 +129,7 @@ export default function VendorPage() {
             }
           </Box>
 
-          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-            <EmailIcon sx={{ color: "#e94560", mt: 0.5 }} />
-            {isEditing 
-              ? <TextField value={form?.email || ""} onChange={(e) => setForm({...form!, email: e.target.value})} sx={{
-                  "& .MuiOutlinedInput-root": {
-                    color: "white",
-                    "& fieldset": { borderColor: "rgba(255,255,255,0.2)" },
-                    "&:hover fieldset": { borderColor: "#e94560" },
-                  },
-                  "& .MuiInputLabel-root": { color: "rgba(255,255,255,0.5)" },
-                }} />
-              : <Typography color="white" fontWeight={600}>{"email"}</Typography>
-            }
-          </Box>
+          
         </Box>
       </Paper>
     </Box>
