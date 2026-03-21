@@ -77,4 +77,13 @@ public static class UserMappingExtensions
         Email = registrationData.Email,
         UserType = UserType.OperatorUser,
     };
+    
+    public static VendorUser MapToVendorUser(this VendorUserCreationDto vendorUserCreationDto) =>
+        new VendorUser
+        {
+            Email = vendorUserCreationDto.Email,
+            VendorId = vendorUserCreationDto.VendorId,
+            UserType = vendorUserCreationDto.UserType,
+            CreatedBy = vendorUserCreationDto.CreatedBy
+        };
 }
