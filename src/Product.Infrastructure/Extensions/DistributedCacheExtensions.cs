@@ -36,7 +36,7 @@ public static class DistributedCacheExtensions
         }
     }
 
-    public static void RefreshObjecti<T>(this IDistributedCache cache, string key,
+    public static void RefreshObject<T>(this IDistributedCache cache, string key,
         DistributedCacheEntryOptions? ops = null)
     {
         var isObj = cache.GetObject<T>(key);
