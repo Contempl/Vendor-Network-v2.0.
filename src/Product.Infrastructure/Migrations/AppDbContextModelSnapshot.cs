@@ -200,7 +200,7 @@ namespace Product.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Product.Domain.Entity.User", b =>
@@ -260,7 +260,7 @@ namespace Product.DAL.Migrations
 
                     b.HasIndex("BusinessId");
 
-                    b.ToTable("User", (string)null);
+                    b.ToTable("User");
 
                     b.UseTptMappingStrategy();
                 });
