@@ -29,13 +29,12 @@ public class AccountController : ControllerBase
 
 	[HttpGet("Register/User/{inviteId}")]
 	[EnsureInviteExists]
-	public async Task<ActionResult<OneOf<InviteIdToFrontEnd, ValidationError, Error>>> RegisterUser (int inviteId, CancellationToken cancellationToken)
+	public async Task<ActionResult<OneOf<InviteIdToFrontEnd, Error>>> GetInviteById (int inviteId, CancellationToken cancellationToken)
 	{
-		var response = await _inviteService.RegisterUser(inviteId, cancellationToken);
+		var response = await _inviteService.GetInviteById(inviteId, cancellationToken);
 		
 		return response.Match<ActionResult>(
 			dto => Ok(dto),
-			validationError => BadRequest(validationError),
 			error => StatusCode(500, error));
 	}
 
