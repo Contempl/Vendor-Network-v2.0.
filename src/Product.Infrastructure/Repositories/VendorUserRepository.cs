@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
+using Product.Application.Mapping;
 using Product.Domain.Entity;
-using Product.Infrastructure.Extensions;
 
 namespace Product.Infrastructure.Repositories;
 

@@ -23,10 +23,10 @@ public class RedisCacheService : IRedisCacheService
         return JsonSerializer.Deserialize<T>(value, CacheJsonSerializerSettings.Options);
     }
 
-    public Task SetAsync<T>(string key, T? value, DistributedCacheEntryOptions? options = null)
+    public async Task SetAsync<T>(string key, T? value, DistributedCacheEntryOptions? options = null)
     {
         var serializedValue = JsonSerializer.Serialize<T>(value, CacheJsonSerializerSettings.Options);
-        return SetInCache(key, serializedValue, options);
+        await SetInCache(key, serializedValue, options);
     }
 
     public Task RemoveAsync(string key)

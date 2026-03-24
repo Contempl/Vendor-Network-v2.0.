@@ -15,6 +15,8 @@ internal class InviteConfiguration : IEntityTypeConfiguration<Invite>
 		builder.Property(invite => invite.CreatedAt)
 			.HasColumnName("CreatedAt");
 
+		builder.Property(invite => invite.Status).HasConversion<string>();
+
 		builder.Property(invite => invite.ExpiresAt)
 			.HasColumnName("ExpiresAt");
 
