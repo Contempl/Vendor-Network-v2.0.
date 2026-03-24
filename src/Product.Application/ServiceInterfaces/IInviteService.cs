@@ -12,6 +12,6 @@ public interface IInviteService
 	Invite CreateInvite(User user, User sender);
 
 	Invite CreateInviteByAdmin(User user, Administrator sender);
-	Task<OneOf<InviteIdToFrontEnd, ValidationError, Error>> RegisterUser(int inviteId, CancellationToken cancellationToken);
+	Task<OneOf<InviteDtoWithStatus, Error>> GetInviteById(int inviteId, CancellationToken cancellationToken);
 	Task<OneOf<UserDtoToFrontEnd, ValidationError, NotFoundError, Error>> RegisterByInvite(int inviteId, UserRegistrationByInviteDto registrationData, CancellationToken cancellationToken);
 }

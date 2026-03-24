@@ -53,22 +53,14 @@ public class InviteService : IInviteService
 	};
 
 
-	public async Task<OneOf<InviteIdToFrontEnd, ValidationError, Error>> RegisterUser(int inviteId, 
+	public async Task<OneOf<InviteDtoWithStatus, Error>> GetInviteById(int inviteId, 
 		CancellationToken cancellationToken = default)
 	{
 		try
 		{
 			var invite = await _inviteRepository.GetByIdAsync(inviteId, cancellationToken);
 		
-			var inviteIsValid = Invite.ValidateInvite(invite);
-
-			if (!inviteIsValid)
-			{
-				_logger.LogWarning("Invalid invitation. Invite id: {invite.Id}.", invite.Id);
-				return new ValidationError();
-			}
-		
-			var newUser = new InviteIdToFrontEnd { InviteId = inviteId };
+			var newUser = new InviteDtoWithStatus { InviteId = inviteId, Status = invite.Status.ToString() };
 			return newUser;
 		}
 		catch (Exception ex)

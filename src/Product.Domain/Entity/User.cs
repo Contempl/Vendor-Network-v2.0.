@@ -6,6 +6,7 @@ namespace Product.Domain.Entity;
 
 [JsonDerivedType(typeof(VendorUser), "vendorUser")]
 [JsonDerivedType(typeof(OperatorUser), "operatorUser")]
+[JsonDerivedType(typeof(Administrator), "Admin")]
 public abstract class User : IEntityId<int>, IAuditable
 {
 	public int Id { get; set; }

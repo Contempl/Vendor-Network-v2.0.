@@ -30,15 +30,15 @@ public class AdministratorRepository : IAdministratorRepository
 	public IQueryable<Administrator> GetAll() => _administrators;
 	public Task<Administrator?> GetByIdOrDefaultAsync(int adminId) =>  _administrators.SingleOrDefaultAsync(admin => admin.Id == adminId);
 	public Task<Administrator> GetByIdAsync(int adminId, CancellationToken cancellationToken = default) =>  _administrators.SingleAsync(admin => admin.Id == adminId, cancellationToken);
-	public Task<Administrator?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+	public async Task<Administrator?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
 	{
-		var admin =  _administrators.Where(u => u.Email.Trim() == email.Trim())
+		var admin = await _administrators.Where(u => u.Email.Trim() == email.Trim())
 			.SingleOrDefaultAsync(cancellationToken);
 		if (admin == null)
 			return null;
 		
 		var cacheKey = $"{CachePrefix}{admin.Id}";
-		_redisCacheService.SetAsync(cacheKey, admin);
+		await _redisCacheService.SetAsync(cacheKey, admin);
 		
 		return admin; 
 	}

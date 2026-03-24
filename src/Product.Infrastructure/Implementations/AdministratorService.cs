@@ -204,28 +204,30 @@ public class AdministratorService : IAdministratorService
 	private async Task<OneOf<Success, Error>> CreateBusinessWithUserResult (BusinessInvitationData invitationData, 
 		CancellationToken cancellationToken = default)
 	{
-		if (invitationData.BusinessIsVendor)
+		try
 		{
-			var vendor = new Vendor
+			if (invitationData.BusinessIsVendor)
 			{
-				BusinessName = invitationData.BusinessName,
-				Address = invitationData.BusinessAddress,
-				Email = invitationData.BusinessEmail
-			};
+				var vendor = new Vendor
+				{
+					BusinessName = invitationData.BusinessName,
+					Address = invitationData.BusinessAddress,
+					Email = invitationData.BusinessEmail
+				};
 
-			await _vendorRepository.CreateAsync(vendor, cancellationToken);
+				await _vendorRepository.CreateAsync(vendor, cancellationToken);
 
-			var vendorUser = new VendorUser
-			{
-				Email = invitationData.UserEmail,
-				FirstName = invitationData.FirstName,
-				LastName = invitationData.LastName,
-			};
+				var vendorUser = new VendorUser
+				{
+					Email = invitationData.UserEmail,
+					FirstName = invitationData.FirstName,
+					LastName = invitationData.LastName,
+					VendorId = vendor.Id
+				};
 
-			await _userRepository.CreateAsync(vendorUser, cancellationToken);
-		}
-		else 
-		{
+				await _userRepository.CreateAsync(vendorUser, cancellationToken);
+			}
+
 			var @operator = new Operator
 			{
 				BusinessName = invitationData.BusinessName,
@@ -240,11 +242,16 @@ public class AdministratorService : IAdministratorService
 				Email = invitationData.UserEmail,
 				FirstName = invitationData.FirstName,
 				LastName = invitationData.LastName,
+				OperatorId = @operator.Id
 			};
 			await _userRepository.CreateAsync(operatorUser, cancellationToken);
-		}
 
-		return new Success();
+			return new Success();
+		}
+		catch (Exception e)
+		{
+			return new Error();
+		}
 	}
 
 	private bool ValidateUserInviteData(DataForInviteDto userInvitationData) =>

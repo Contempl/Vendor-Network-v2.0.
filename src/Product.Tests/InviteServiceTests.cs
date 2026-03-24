@@ -74,17 +74,18 @@ public class InviteServiceTests
 		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, CancellationToken.None)).ReturnsAsync(invite);
 		
 		// Act
-		var result = await _inviteService.RegisterUser(invite.Id, CancellationToken.None);
+		var result = await _inviteService.GetInviteById(invite.Id, CancellationToken.None);
 		
 		// Assert
-		Assert.True(result.Value is InviteIdToFrontEnd);
-		var resultDto = result.Value as InviteIdToFrontEnd;
+		Assert.True(result.Value is InviteDtoWithStatus);
+		var resultDto = result.Value as InviteDtoWithStatus;
 		Assert.Equal(invite.Id, resultDto!.InviteId);
+		Assert.Equal(invite.Status.ToString(), resultDto!.Status);
 		_inviteRepositoryMock.Verify(r => r.GetByIdAsync(invite.Id, CancellationToken.None), Times.Once);	
 	}
 	
 	[Fact]
-	public async Task RegisterUser_InvitationExpired_ReturnsErrorResponse()
+	public async Task RegisterUser_InvitationExpired_ReturnsExpiredInvite()
 	{
 		// Arrange
 		var user = new VendorUser { Id = 10, Email = "user@test.com" };
@@ -103,10 +104,12 @@ public class InviteServiceTests
 		_inviteRepositoryMock.Setup(r => r.GetByIdAsync(invite.Id, CancellationToken.None)).ReturnsAsync(invite);
 		
 		// Act
-		var result = await _inviteService.RegisterUser(invite.Id, CancellationToken.None);
+		var result = await _inviteService.GetInviteById(invite.Id, CancellationToken.None);
 		
 		// Assert
-		Assert.True(result.Value is ValidationError);
+		Assert.True(result.Value is InviteDtoWithStatus);
+		var resultDto = result.Value as InviteDtoWithStatus;
+		Assert.Equal(nameof(InvitationStatus.Expired), resultDto!.Status);
 	}
 
 	[Fact]
