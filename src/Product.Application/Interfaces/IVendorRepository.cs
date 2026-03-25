@@ -10,4 +10,5 @@ public interface IVendorRepository : IRepository<Vendor>
 	Task<List<Vendor>> GetVendorsWithService(string serviceType, CancellationToken cancellationToken);
 	Task<PagedResult<Vendor>> GetVendorsQuery(string searchName, SortOrder sortOrder,
 	int pageSize, int pageNumber, CancellationToken cancellationToken);
+	Task<List<VendorFacility>> GetVendorFacilitiesAsync(int businessId, CancellationToken cancellationToken);
 }

@@ -72,5 +72,17 @@ namespace Product.WebApi.Controllers
 				mailMsg => Ok(mailMsg),
 				error => StatusCode(500, error));
 		}
+
+		[HttpGet("{vendorId}/facilities")]
+		[Authorize(policy: "VendorUser")]
+		public async Task<ActionResult<OneOf<IEnumerable<VendorFacilityDto>, Error>>> GetVendorFacilities(
+			CancellationToken cancellationToken)
+		{
+			var response = await _vendorService.GetVendorFacilitiesAsync(cancellationToken);
+			
+			return response.Match<ActionResult>(
+				facilities => Ok(facilities),
+				error => BadRequest(error));
+		}
 	}
 }
