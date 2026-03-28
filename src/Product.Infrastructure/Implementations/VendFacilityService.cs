@@ -71,7 +71,7 @@ public class VendFacilityService : IVendFacilityService
 		}
 	}
 
-	public async Task<OneOf<VendorFacility, Error>> UpdateFacilityAsync(int facilityId, UpdateVendorFacilityDto facilityData, 
+	public async Task<OneOf<VendorGetFacilitiesDto, Error>> UpdateFacilityAsync(int facilityId, UpdateVendorFacilityDto facilityData, 
 		CancellationToken cancellationToken = default)
 	{
 		try
@@ -83,7 +83,8 @@ public class VendFacilityService : IVendFacilityService
 		
 			await _vendorFacilityRepository.UpdateAsync(facility,cancellationToken);
 
-			return facility;
+			var result = facility.MapFacilityToFrontDto();
+			return result;
 		}
 		catch (Exception ex)
 		{

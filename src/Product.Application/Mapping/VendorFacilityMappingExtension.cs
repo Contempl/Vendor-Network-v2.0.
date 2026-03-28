@@ -5,7 +5,7 @@ namespace Product.Application.Mapping;
 
 public static class VendorFacilityMappingExtension
 {
-    public static  void MapAndUpdateVendorFacility(this VendorFacility facility, UpdateVendorFacilityDto facilityData)
+    public static void MapAndUpdateVendorFacility(this VendorFacility facility, UpdateVendorFacilityDto facilityData)
     {
         facility.Name = facilityData.Name ?? facility.Name;
         facility.Location = facilityData.Location ?? facility.Location;
@@ -39,5 +39,21 @@ public static class VendorFacilityMappingExtension
             facility.Services.Clear();
             facility.Services.AddRange(updatedServices);
         }
+    }
+
+    public static VendorGetFacilitiesDto MapFacilityToFrontDto(this VendorFacility facility)
+    {
+        var result = new VendorGetFacilitiesDto
+        {
+            Id = facility.Id,
+            Location = facility.Location,
+            Latitude = facility.Latitude,
+            Longitude = facility.Longitude,
+            Name = facility.Name ?? nameof(VendorFacility),
+            RadiusOfWork = facility.RadiusOfWork,
+            Services = facility.Services.Select(fs => fs.Name).ToList()
+        };
+        
+        return result;
     }
 }

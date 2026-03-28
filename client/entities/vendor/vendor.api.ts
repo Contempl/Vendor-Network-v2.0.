@@ -1,6 +1,6 @@
 import { BusinessFrontEndDto, EmailForInviteDto, OperatorSearchDto, UpdateVendorDto } from "@/entities/vendor/vendor-types";
 import { apiClient } from "../../shared/api/axiosInstance";
-import { UpdateVendorFacilityDto, VendorFacility, VendorFacilityDto, VendorFacilityService } from "./vendor-facility-types";
+import { UpdateVendorFacilityDto, VendorFacility, VendorFacilityDto, VendorFacilityService, VendorGetFacilitiesDto } from "./vendor-facility-types";
 
 export const getVendor = async (vendorId: number) => {
     const response = await apiClient.get<BusinessFrontEndDto>(`/Vendor/${vendorId}`);
@@ -28,12 +28,12 @@ export const getFacility = async (facilityId: number) => {
 }
 
 export const createFacility = async (facilityData: VendorFacilityDto) => {
-    const response = await apiClient.post<VendorFacility>('/vendor/facility', facilityData);
+    const response = await apiClient.post<VendorGetFacilitiesDto>('/vendor/facility', facilityData);
     return response.data;
 }
 
 export const updateFacility = async (facilityId: number, facilityData: UpdateVendorFacilityDto) => {
-    const response = await apiClient.put<VendorFacility>(`/vendor/facility/${facilityId}`, facilityData);
+    const response = await apiClient.put<VendorGetFacilitiesDto>(`/vendor/facility/${facilityId}`, facilityData);
     return response.data;
 }
 
@@ -44,5 +44,10 @@ export const deleteFacility = async (vendorId: number, facilityId: number) => {
 
 export const getFacilityServices = async (facilityId: number) => {
     const response = await apiClient.get<VendorFacilityService[]>(`/vendor/facility/${facilityId}/services`);
+    return response.data;
+}
+
+export const getVendorFacilities = async () => {
+    const response = await apiClient.get<VendorGetFacilitiesDto[]>(`/Vendor/facilities`);
     return response.data;
 }

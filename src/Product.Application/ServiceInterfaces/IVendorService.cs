@@ -12,5 +12,5 @@ public interface IVendorService
 	Task<OneOf<BusinessFrontEndDto, Error>> GetVendorByIdAsync(int vendorId, CancellationToken cancellationToken);
 	Task<OneOf<BusinessFrontEndDto, Error>> UpdateVendorAsync(UpdateVendorDto vendorData, CancellationToken cancellationToken);
 	Task<OneOf<MailMsg, Error>> InviteVendorUserAsync(EmailForInviteDto email, CancellationToken cancellationToken);
-	Task<OneOf<List<VendorFacilityDto>, Error>> GetVendorFacilitiesAsync(CancellationToken cancellationToken);
+	Task<OneOf<List<VendorGetFacilitiesDto>, Error>> GetVendorFacilitiesAsync(CancellationToken cancellationToken);
 }

@@ -75,7 +75,7 @@ namespace Product.WebApi.Controllers
 
 		[HttpGet("facilities")]
 		[Authorize(policy: "VendorUser")]
-		public async Task<ActionResult<OneOf<IEnumerable<VendorFacilityDto>, Error>>> GetVendorFacilities(
+		public async Task<ActionResult<OneOf<IEnumerable<VendorGetFacilitiesDto>, Error>>> GetVendorFacilities(
 			CancellationToken cancellationToken)
 		{
 			var response = await _vendorService.GetVendorFacilitiesAsync(cancellationToken);

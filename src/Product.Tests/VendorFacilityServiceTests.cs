@@ -1,12 +1,9 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
-using Product.Domain.Enum;
 using Product.Domain.Result;
 using Product.Infrastructure.Implementations;
 using Xunit;
@@ -125,7 +122,7 @@ public class VendorFacilityServiceTests
             .UpdateFacilityAsync(vendFacility.Id, updateDto, CancellationToken.None);
 
         // Assert
-        Assert.True(result.Value is VendorFacility);
+        Assert.True(result.Value is VendorGetFacilitiesDto);
         _vendorFacilityRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<VendorFacility>(), CancellationToken.None), Times.Once);
     }
     
@@ -151,10 +148,10 @@ public class VendorFacilityServiceTests
             .UpdateFacilityAsync(vendFacility.Id, updateDto, CancellationToken.None);
 
         // Assert
-        Assert.True(result.Value is VendorFacility);
-        var facility = result.Value as VendorFacility;
+        Assert.True(result.Value is VendorGetFacilitiesDto);
+        var facility = result.Value as VendorGetFacilitiesDto;
         _vendorFacilityRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<VendorFacility>(), CancellationToken.None), Times.Once);
-        Assert.Equal(updateDto.Services[0], facility!.Services[0].Name);
+        Assert.Equal(updateDto.Services[0], facility!.Services?[0]);
     }
     
     
