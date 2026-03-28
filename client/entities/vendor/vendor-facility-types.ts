@@ -32,3 +32,13 @@ export interface VendorFacilityDto {
     radiusOfWork: number;
     services: string[] | null;
 }
+
+export interface VendorGetFacilitiesDto {
+    id: number;
+    name: string;
+    location: string;
+    longitude: number;
+    latitude: number;
+    radiusOfWork: number;
+    services: string[] | null;
+}
