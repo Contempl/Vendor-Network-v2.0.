@@ -73,7 +73,7 @@ namespace Product.WebApi.Controllers
 				error => StatusCode(500, error));
 		}
 
-		[HttpGet("{vendorId}/facilities")]
+		[HttpGet("facilities")]
 		[Authorize(policy: "VendorUser")]
 		public async Task<ActionResult<OneOf<IEnumerable<VendorFacilityDto>, Error>>> GetVendorFacilities(
 			CancellationToken cancellationToken)

@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Product.Infrastructure;
 
 #nullable disable
 
-namespace Product.DAL.Migrations
+namespace Product.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260323105724_Invite status stirng value instead of enum int")]
+    partial class Invitestatusstirngvalueinsteadofenumint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -200,7 +203,7 @@ namespace Product.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Product.Domain.Entity.User", b =>
@@ -260,7 +263,7 @@ namespace Product.DAL.Migrations
 
                     b.HasIndex("BusinessId");
 
-                    b.ToTable("User", (string)null);
+                    b.ToTable("User");
 
                     b.UseTptMappingStrategy();
                 });
