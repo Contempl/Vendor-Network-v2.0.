@@ -154,7 +154,7 @@ public class VendorService : IVendorService
         }
     }
 
-    public async Task<OneOf<List<VendorFacilityDto>, Error>> GetVendorFacilitiesAsync(CancellationToken cancellationToken)
+    public async Task<OneOf<List<VendorGetFacilitiesDto>, Error>> GetVendorFacilitiesAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -168,8 +168,9 @@ public class VendorService : IVendorService
             var vendorFacilities = await _vendorRepository
                 .GetVendorFacilitiesAsync(vendorId.Value, cancellationToken);
 
-            var resultFacilities = vendorFacilities.Select(vf => new VendorFacilityDto
+            var resultFacilities = vendorFacilities.Select(vf => new VendorGetFacilitiesDto
             {
+                Id = vf.Id,
                 Name = vf.Name ?? "unknown facility name",
                 Location = vf.Location,
                 Longitude = vf.Longitude,
