@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using OneOf;
 using OneOf.Types;
 using Product.Application.Dto;
@@ -150,6 +151,39 @@ public class VendorService : IVendorService
             
             _logger.LogError(ex, "Failed to create an invite for vendor user");
             return new Error();
+        }
+    }
+
+    public async Task<OneOf<List<VendorFacilityDto>, Error>> GetVendorFacilitiesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var vendorId = _userPrincipalService.BusinessId;
+            if (vendorId is null)
+            {
+                _logger.LogInformation("Vendor Id missing in current context.");
+                return new Error();
+            }
+
+            var vendorFacilities = await _vendorRepository
+                .GetVendorFacilitiesAsync(vendorId.Value, cancellationToken);
+
+            var resultFacilities = vendorFacilities.Select(vf => new VendorFacilityDto
+            {
+                Name = vf.Name ?? "unknown facility name",
+                Location = vf.Location,
+                Longitude = vf.Longitude,
+                Latitude = vf.Latitude,
+                RadiusOfWork = vf.RadiusOfWork,
+                Services = vf.Services.Select(s => s.Name).ToList(),
+            }).ToList();
+
+            return resultFacilities;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error while fetching vendor facility. {ex}", ex);
+            return  new Error();
         }
     }
 }

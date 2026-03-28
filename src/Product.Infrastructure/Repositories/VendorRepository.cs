@@ -101,6 +101,18 @@ public class VendorRepository : IVendorRepository
 			TotalCount = totalCount
 		};
 	}
+
+	public async Task<List<VendorFacility>> GetVendorFacilitiesAsync(int businessId, 
+		CancellationToken cancellationToken)
+	{
+		var facilities = await _context.VendorFacilities
+			.Where(vf => vf.VendorId == businessId)
+			.Include(vf => vf.Services)
+			.ToListAsync(cancellationToken);
+		
+		return facilities;
+	}
+	
 	private Task SaveAsync(CancellationToken cancellationToken = default) => 
 		_context.SaveChangesAsync(cancellationToken);
 }
