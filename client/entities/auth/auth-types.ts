@@ -9,3 +9,14 @@ export interface TokenPayload {
     role: string;
     businessId: string;
 }
+
+export interface InviteIdToFrontEnd {
+    inviteId: number;
+}
+
+export interface UserRegistrationByInviteDto {
+    userName: string;
+    firstName: string;
+    lastName: string;
+    password: string;
+}
