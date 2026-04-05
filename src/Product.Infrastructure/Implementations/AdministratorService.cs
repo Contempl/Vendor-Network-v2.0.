@@ -227,24 +227,27 @@ public class AdministratorService : IAdministratorService
 
 				await _userRepository.CreateAsync(vendorUser, cancellationToken);
 			}
-
-			var @operator = new Operator
+			
+			else
 			{
-				BusinessName = invitationData.BusinessName,
-				Address = invitationData.BusinessAddress,
-				Email = invitationData.BusinessEmail
-			};
+				var @operator = new Operator
+				{
+					BusinessName = invitationData.BusinessName,
+					Address = invitationData.BusinessAddress,
+					Email = invitationData.BusinessEmail
+				};
 
-			await _operatorRepository.CreateAsync(@operator, cancellationToken);
+				await _operatorRepository.CreateAsync(@operator, cancellationToken);
 
-			var operatorUser = new OperatorUser
-			{
-				Email = invitationData.UserEmail,
-				FirstName = invitationData.FirstName,
-				LastName = invitationData.LastName,
-				OperatorId = @operator.Id
-			};
-			await _userRepository.CreateAsync(operatorUser, cancellationToken);
+				var operatorUser = new OperatorUser
+				{
+					Email = invitationData.UserEmail,
+					FirstName = invitationData.FirstName,
+					LastName = invitationData.LastName,
+					OperatorId = @operator.Id
+				};
+				await _userRepository.CreateAsync(operatorUser, cancellationToken);
+			}
 
 			return new Success();
 		}
