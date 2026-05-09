@@ -13,6 +13,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
 import { useVendorStore } from "@/entities/vendor/vendor-store";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getBusinessIdFromToken } from "@/entities/auth/auth-utils";
 import { createFacility, deleteFacility, getVendorFacilities, updateFacility } from "@/entities/vendor/vendor.api";
 import { VendorFacilityDto, VendorGetFacilitiesDto } from "@/entities/vendor/vendor-facility-types";
@@ -28,6 +29,7 @@ const emptyForm: VendorFacilityDto = {
 
 export default function FacilitiesPage() {
   const { facilities, setFacilities } = useVendorStore();
+  const router = useRouter();
   const [openDialog, setOpenDialog] = useState(false);
   const [form, setForm] = useState<VendorFacilityDto>(emptyForm);
   const [editingFacility, setEditingFacility] = useState<VendorGetFacilitiesDto  | null>(null);
@@ -108,11 +110,13 @@ export default function FacilitiesPage() {
       ) : (
         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 2 }}>
           {facilities?.map((facility) => (
-            <Card key={facility.id} sx={{
+            <Card key={facility.id} onClick={() => router.push(`/vendor/facilities/${facility.id}`)} sx={{
               bgcolor: "#161616",
               border: "1px solid rgba(255,255,255,0.07)",
               borderRadius: 3,
               color: "white",
+              cursor: "pointer",
+              "&:hover": { border: "1px solid rgba(233,69,96,0.4)" },
             }}>
               <CardContent>
                 <Typography fontWeight={700} fontSize={18} mb={1}>
@@ -138,13 +142,13 @@ export default function FacilitiesPage() {
                 </Box>
               </CardContent>
               <CardActions sx={{ justifyContent: "flex-end", px: 2, pb: 2 }}>
-                <IconButton size="small" sx={{ color: "rgba(255,255,255,0.3)" }} onClick={() => handleEditOpen(facility)}>
+                <IconButton size="small" sx={{ color: "rgba(255,255,255,0.3)" }} onClick={(e) => { e.stopPropagation(); handleEditOpen(facility); }}>
                   <EditIcon fontSize="small" />
                 </IconButton>
                 <IconButton
                   size="small"
                   sx={{ color: "rgba(255,255,255,0.3)", "&:hover": { color: "#e94560" } }}
-                  onClick={async () => await handleDelete(Number(getBusinessIdFromToken()), facility.id)}
+                  onClick={async (e) => { e.stopPropagation(); await handleDelete(Number(getBusinessIdFromToken()), facility.id); }}
                 >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
