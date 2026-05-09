@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Box, Button, Container, TextField, Typography, Paper
+  Box, Button, Container, TextField, Typography, Paper, Alert
 } from "@mui/material";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import { useEffect, useState } from "react";
@@ -18,6 +18,8 @@ export default function RegisterPage({ params }: { params: Promise<{ inviteId: s
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const checkInvite = async () => {
@@ -31,8 +33,16 @@ export default function RegisterPage({ params }: { params: Promise<{ inviteId: s
   }, []);
 
   const handleRegister = async () => {
-    await registerByInvite(Number(inviteId), { userName, firstName, lastName, password });
-    router.push("/login");
+    setLoading(true);
+    setError(null);
+    try {
+      await registerByInvite(Number(inviteId), { userName, firstName, lastName, password });
+      router.push("/login");
+    } catch {
+      setError("Не удалось зарегистрироваться. Проверьте данные и попробуйте снова.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,6 +71,12 @@ export default function RegisterPage({ params }: { params: Promise<{ inviteId: s
               Заполните данные для создания аккаунта
             </Typography>
           </Box>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          )}
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {[
@@ -91,6 +107,7 @@ export default function RegisterPage({ params }: { params: Promise<{ inviteId: s
               variant="contained"
               fullWidth
               onClick={handleRegister}
+              disabled={loading}
               sx={{
                 mt: 1, py: 1.5,
                 bgcolor: "#e94560",
