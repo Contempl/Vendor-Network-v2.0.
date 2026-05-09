@@ -133,17 +133,22 @@ export default function OperatorPage() {
             )}
           </Box>
 
-          {isEditing && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <WorkIcon sx={{ color: "#e94560" }} />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <WorkIcon sx={{ color: "#e94560" }} />
+            {isEditing ? (
               <TextField
                 label="Occupation"
                 value={form?.occupation ?? ""}
                 onChange={(e) => setForm({ ...form!, occupation: e.target.value })}
                 sx={fieldSx}
               />
-            </Box>
-          )}
+            ) : (
+              <Box>
+                <Typography variant="caption" color="rgba(255,255,255,0.3)">Occupation</Typography>
+                <Typography color="white" fontWeight={600}>{operator.occupation}</Typography>
+              </Box>
+            )}
+          </Box>
         </Box>
       </Paper>
     </Box>
