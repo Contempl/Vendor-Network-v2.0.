@@ -7,11 +7,12 @@ import HowToRegIcon from "@mui/icons-material/HowToReg";
 import { useEffect, useState } from "react";
 import { getInvite, registerByInvite } from "@/entities/auth/auth-api";
 import React from "react";
-import router from "next/navigation";
+import { useRouter } from "next/navigation";
 
 
 export default function RegisterPage({ params }: { params: Promise<{ inviteId: string }> }) {
   const { inviteId } = React.use(params);
+  const router = useRouter();
 
   const [userName, setUserName] = useState<string>("");
   const [firstName, setFirstName] = useState<string>("");
@@ -23,7 +24,7 @@ export default function RegisterPage({ params }: { params: Promise<{ inviteId: s
       try {
         await getInvite(Number(inviteId));
       } catch {
-        router.redirect("/login");
+        router.push("/login");
       }
     };
     checkInvite();
@@ -31,7 +32,7 @@ export default function RegisterPage({ params }: { params: Promise<{ inviteId: s
 
   const handleRegister = async () => {
     await registerByInvite(Number(inviteId), { userName, firstName, lastName, password });
-    router.redirect("/login");
+    router.push("/login");
   };
 
   return (
