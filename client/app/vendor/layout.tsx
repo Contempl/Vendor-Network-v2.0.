@@ -10,7 +10,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const DRAWER_WIDTH = 260;
 
@@ -24,10 +24,13 @@ const navItems = [
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem("tkn-tko")) {
       router.push("/login");
+    } else {
+      setChecked(true);
     }
   }, []);
 
@@ -37,6 +40,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
     router.push("/login");
   }
 
+  if (!checked) return null;
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#0d0d0d" }}>
       <Drawer
