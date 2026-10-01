@@ -1,7 +1,29 @@
 import { TokenDto } from "@/entities/auth/auth-types";
+import { clearAuthTokens } from "@/entities/auth/auth-utils";
 import axios from "axios";
+import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5227"; 
+
+let refreshPromise: Promise<TokenDto> | null = null;
+
+export const refreshAccessToken = async (): Promise<TokenDto> => {
+  if (refreshPromise) return refreshPromise;
+  const refreshToken = localStorage.getItem("refreshToken");
+  if (!refreshToken) throw new Error("No refresh token is available");
+
+  refreshPromise = axios.post<TokenDto>(`${API_BASE_URL}/refresh`, { refreshToken })
+    .then(({ data }) => {
+      localStorage.setItem("tkn-tko", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      return data;
+    })
+    .finally(() => { refreshPromise = null; });
+
+  return refreshPromise;
+};
+
+type RetriableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
 
 
 export const apiClient = axios.create({
@@ -24,22 +46,22 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
     (response) => response, 
-    async (error) => {
-       const status = error.response?.status
-       if (status === 401)
-       {
-          try {
-            const refreshToken = localStorage.getItem("refreshToken");
-            const response = await apiClient.post<TokenDto>("/auth/refresh", { refreshToken });
-            localStorage.setItem("tkn-tko", response.data.accessToken);
-            localStorage.setItem("refreshToken", response.data.refreshToken);
-            return apiClient(error.config);
-          }
-            catch (refreshError) {
-                console.error("Token refresh failed", refreshError);
-                return Promise.reject(error);
-            }
+    async (error: AxiosError) => {
+       const request = error.config as RetriableRequest | undefined;
+       const isLogin = request?.url === "/Account/Login" || request?.url === "/Admin/Login";
+       if (error.response?.status !== 401 || !request || request._retry || isLogin || !localStorage.getItem("refreshToken")) {
+         return Promise.reject(error);
        }
-       return Promise.reject(error);
+
+       request._retry = true;
+       try {
+         const tokens = await refreshAccessToken();
+         request.headers.Authorization = `Bearer ${tokens.accessToken}`;
+         return apiClient(request);
+       } catch {
+         clearAuthTokens();
+         window.location.assign(window.location.pathname.startsWith("/admin") ? "/admin/login" : "/login");
+         return Promise.reject(error);
+       }
     }
 );

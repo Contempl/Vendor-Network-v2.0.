@@ -10,6 +10,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useRouter, usePathname } from "next/navigation";
+import ProtectedRoute from "@/entities/auth/ProtectedRoute";
+import { clearAuthTokens } from "@/entities/auth/auth-utils";
 
 const DRAWER_WIDTH = 260;
 
@@ -25,12 +27,12 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
 
   const handleLogout = () => {
-    localStorage.removeItem("tkn-tko");
-    localStorage.removeItem("refreshToken");
-    router.push("/login");
+    clearAuthTokens();
+    router.replace("/login");
   }
 
   return (
+    <ProtectedRoute allowedRole="VendorUser">
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#0d0d0d" }}>
       <Drawer
         variant="permanent"
@@ -111,5 +113,6 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
         {children}
       </Box>
     </Box>
+    </ProtectedRoute>
   );
 }

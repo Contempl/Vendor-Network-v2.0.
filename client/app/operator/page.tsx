@@ -30,7 +30,7 @@ export default function OperatorPage() {
       address: operator?.address ?? "",
       email: null,
       logoUrl: null,
-      occupation: operator?.occupation ?? "",
+      occupation: null,
     });
   };
 

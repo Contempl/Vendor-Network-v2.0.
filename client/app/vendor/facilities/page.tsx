@@ -13,6 +13,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
 import { useVendorStore } from "@/entities/vendor/vendor-store";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getBusinessIdFromToken } from "@/entities/auth/auth-utils";
 import { createFacility, deleteFacility, getVendorFacilities, updateFacility } from "@/entities/vendor/vendor.api";
 import { VendorFacilityDto, VendorGetFacilitiesDto } from "@/entities/vendor/vendor-facility-types";
@@ -138,6 +139,9 @@ export default function FacilitiesPage() {
                 </Box>
               </CardContent>
               <CardActions sx={{ justifyContent: "flex-end", px: 2, pb: 2 }}>
+                <Button component={Link} href={`/vendor/facilities/${facility.id}`} size="small" sx={{ color: "#e94560" }}>
+                  Details
+                </Button>
                 <IconButton size="small" sx={{ color: "rgba(255,255,255,0.3)" }} onClick={() => handleEditOpen(facility)}>
                   <EditIcon fontSize="small" />
                 </IconButton>

@@ -25,6 +25,9 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
+        if (Request.Headers.ContainsKey("X-Test-Anonymous"))
+            return Task.FromResult(AuthenticateResult.NoResult());
+
         if (Request.Headers.TryGetValue("X-Test-UserId", out var userIdVal) &&
             int.TryParse(userIdVal, out var userId))
             ((FakeUserPrincipalService)_userPrincipalService).UserId = userId;
