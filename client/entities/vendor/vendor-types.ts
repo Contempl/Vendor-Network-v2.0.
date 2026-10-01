@@ -2,6 +2,7 @@ export interface BusinessFrontEndDto {
     id: number;
     businessName: string;
     address: string;
+    occupation?: string | null;
 }
 
 export interface UpdateVendorDto {

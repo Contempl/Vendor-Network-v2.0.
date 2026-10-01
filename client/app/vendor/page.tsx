@@ -72,19 +72,25 @@ export default function VendorPage() {
             </Typography>
             <Chip label="Vendor" size="small" sx={{ bgcolor: "rgba(233,69,96,0.15)", color: "#e94560", fontWeight: 700, mt: 0.5 }} />
           </Box>
-          {isEditing 
-          ? <Button onClick={handleSave}>Save</Button> 
-          : <Button onClick={handleEdit}>Edit</Button>
-}
         </Box>
-        <Button
-          variant="outlined"
-          startIcon={<EditIcon />}
-          onClick={handleEdit}
-          sx={{ borderColor: "#e94560", color: "#e94560", "&:hover": { bgcolor: "rgba(233,69,96,0.1)", borderColor: "#e94560" } }}
-        >
-          Редактировать
-        </Button>
+        {isEditing
+          ? <Button
+              variant="outlined"
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+              sx={{ borderColor: "#e94560", color: "#e94560", "&:hover": { bgcolor: "rgba(233,69,96,0.1)", borderColor: "#e94560" } }}
+            >
+              Сохранить
+            </Button>
+          : <Button
+              variant="outlined"
+              startIcon={<EditIcon />}
+              onClick={handleEdit}
+              sx={{ borderColor: "#e94560", color: "#e94560", "&:hover": { bgcolor: "rgba(233,69,96,0.1)", borderColor: "#e94560" } }}
+            >
+              Редактировать
+            </Button>
+        }
       </Box>
       <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", mb: 4 }} />
 

@@ -10,11 +10,22 @@ import { inviteUserToOperator } from "@/entities/operator/operators.api";
 export default function InvitePage() {
   const [email, setEmail] = useState("");
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleInvite = async () => {
-    await inviteUserToOperator(email);
-    setSuccess(true);
-    setEmail("");
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      await inviteUserToOperator(email);
+      setSuccess(true);
+      setEmail("");
+    } catch {
+      setError("Не удалось отправить приглашение. Проверьте email и попробуйте снова.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,8 +46,13 @@ export default function InvitePage() {
         </Box>
 
         {success && (
-          <Alert severity="success" sx={{ mb: 3, bgcolor: "rgba(46,125,50,0.15)", color: "#81c784" }}>
+          <Alert severity="success" sx={{ mb: 3, bgcolor: "rgba(46,125,50,0.15)", color: "#81c784" }} onClose={() => setSuccess(false)}>
             Приглашение отправлено!
+          </Alert>
+        )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+            {error}
           </Alert>
         )}
 
@@ -59,9 +75,10 @@ export default function InvitePage() {
           <Button
             variant="contained"
             onClick={handleInvite}
+            disabled={loading || !email}
             sx={{ bgcolor: "#e94560", "&:hover": { bgcolor: "#c73652" }, borderRadius: 2, fontWeight: 700, py: 1.5 }}
           >
-            Отправить приглашение
+            {loading ? "Отправка..." : "Отправить приглашение"}
           </Button>
         </Box>
       </Paper>

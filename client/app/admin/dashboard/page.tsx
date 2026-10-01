@@ -22,6 +22,8 @@ const inputSx = {
 export default function AdminDashboard() {
   const [tab, setTab] = useState(0);
   const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Invite Business
   const [businessForm, setBusinessForm] = useState<BusinessInvitationData>({
@@ -46,24 +48,38 @@ export default function AdminDashboard() {
   const [removeIsVendor, setRemoveIsVendor] = useState(true);
 
   const handleInviteBusiness = async () => {
-    const response = await inviteBusiness(businessForm);
-    setSuccess("Business is invited.");
+    setLoading(true); setError(null);
+    try {
+      await inviteBusiness(businessForm);
+      setSuccess("Business is invited.");
+    } catch {
+      setError("Не удалось пригласить бизнес.");
+    } finally { setLoading(false); }
   };
 
-
   const handleInviteUser = async () => {
-    const response = inviteIsVendor 
+    setLoading(true); setError(null);
+    try {
+      inviteIsVendor
         ? await inviteVendorUser(userInviteForm)
         : await inviteOperatorUser(userInviteForm);
-    setSuccess("User was invited.");
-  }
+      setSuccess("User was invited.");
+    } catch {
+      setError("Не удалось пригласить пользователя.");
+    } finally { setLoading(false); }
+  };
 
   const handleRemove = async () => {
-    removeIsVendor 
+    setLoading(true); setError(null);
+    try {
+      removeIsVendor
         ? await removeVendor(Number(removeId))
         : await removeOperator(Number(removeId));
-    setSuccess("Deleted!");
-  }
+      setSuccess("Deleted!");
+    } catch {
+      setError("Не удалось удалить бизнес.");
+    } finally { setLoading(false); }
+  };
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#0d0d0d", p: 4 }}>
@@ -77,6 +93,11 @@ export default function AdminDashboard() {
       {success && (
         <Alert severity="success" sx={{ mb: 3, bgcolor: "rgba(46,125,50,0.15)", color: "#81c784" }} onClose={() => setSuccess(null)}>
           {success}
+        </Alert>
+      )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          {error}
         </Alert>
       )}
 
@@ -106,9 +127,9 @@ export default function AdminDashboard() {
                 onChange={(e) => setBusinessForm({ ...businessForm, [field]: e.target.value })}
                 sx={inputSx} />
             ))}
-            <Button variant="contained" onClick={handleInviteBusiness}
+            <Button variant="contained" onClick={handleInviteBusiness} disabled={loading}
               sx={{ bgcolor: "#e94560", "&:hover": { bgcolor: "#c73652" }, borderRadius: 2, fontWeight: 700, py: 1.5 }}>
-              Отправить приглашение
+              {loading ? "Отправка..." : "Отправить приглашение"}
             </Button>
           </Box>
         </Paper>
@@ -128,9 +149,9 @@ export default function AdminDashboard() {
               onChange={(e) => setUserInviteForm({ ...userInviteForm, email: e.target.value })} sx={inputSx} />
             <TextField label="Business ID" type="number" value={userInviteForm.businessId}
               onChange={(e) => setUserInviteForm({ ...userInviteForm, businessId: Number(e.target.value) })} sx={inputSx} />
-            <Button variant="contained" onClick={handleInviteUser}
+            <Button variant="contained" onClick={handleInviteUser} disabled={loading}
               sx={{ bgcolor: "#e94560", "&:hover": { bgcolor: "#c73652" }, borderRadius: 2, fontWeight: 700, py: 1.5 }}>
-              Пригласить
+              {loading ? "Отправка..." : "Пригласить"}
             </Button>
           </Box>
         </Paper>
@@ -148,9 +169,9 @@ export default function AdminDashboard() {
             />
             <TextField label="ID бизнеса" type="number" value={removeId}
               onChange={(e) => setRemoveId(e.target.value)} sx={inputSx} />
-            <Button variant="contained" onClick={handleRemove}
+            <Button variant="contained" onClick={handleRemove} disabled={loading}
               sx={{ bgcolor: "#c62828", "&:hover": { bgcolor: "#b71c1c" }, borderRadius: 2, fontWeight: 700, py: 1.5 }}>
-              Удалить
+              {loading ? "Удаление..." : "Удалить"}
             </Button>
           </Box>
         </Paper>

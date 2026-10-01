@@ -38,7 +38,7 @@ public class AdministratorRepository : IAdministratorRepository
 			return null;
 		
 		var cacheKey = $"{CachePrefix}{admin.Id}";
-		await _redisCacheService.SetAsync(cacheKey, admin);
+		await _redisCacheService.SetAsync<User>(cacheKey, admin);
 		
 		return admin; 
 	}
