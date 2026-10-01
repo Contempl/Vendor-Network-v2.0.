@@ -161,13 +161,16 @@ public class AuthServiceTests
         _passwordHasherMock.Setup(h => h.ValidatePassword(adminLoginData.Password, admin.PasswordHash))
             .Returns(true);
         _jwtTokenServiceMock.Setup(j => j.GenerateToken(It.IsAny<UserClaimDto>()))
-            .Returns(new TokenDto { AccessToken = "fake_token" });
+            .Returns(new TokenDto { AccessToken = "fake_token", RefreshToken = "admin_refresh_token" });
         
         // Act
         var result = await _authService.LoginAdministrator(adminLoginData, CancellationToken.None);
 
         // Assert
         Assert.True(result.Value is TokenDto);
+        _refreshTokenRepositoryMock.Verify(r => r.CreateAsync(
+            It.Is<RefreshToken>(token => token.UserId == admin.Id && token.Token == "admin_refresh_token"),
+            CancellationToken.None), Times.Once);
     }
     
     [Fact]

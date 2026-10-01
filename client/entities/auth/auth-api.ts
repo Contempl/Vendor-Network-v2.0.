@@ -15,3 +15,8 @@ export async function registerByInvite(inviteId: number, data: UserRegistrationB
     const response = await apiClient.post(`/Account/Register/User/${inviteId}`, data);
     return response.data;
 }
+
+export async function loginAdmin(email: string, password: string) {
+    const response = await apiClient.post<TokenDto>("/Admin/Login", { email, password });
+    return response.data;
+}

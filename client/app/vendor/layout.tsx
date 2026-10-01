@@ -10,7 +10,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import ProtectedRoute from "@/entities/auth/ProtectedRoute";
+import { clearAuthTokens } from "@/entities/auth/auth-utils";
 
 const DRAWER_WIDTH = 260;
 
@@ -24,24 +25,14 @@ const navItems = [
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [checked, setChecked] = useState(false);
-
-  useEffect(() => {
-    if (!localStorage.getItem("tkn-tko")) {
-      router.push("/login");
-    } else {
-      setChecked(true);
-    }
-  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("tkn-tko");
-    localStorage.removeItem("refreshToken");
-    router.push("/login");
+    clearAuthTokens();
+    router.replace("/login");
   }
 
-  if (!checked) return null;
   return (
+    <ProtectedRoute allowedRole="VendorUser">
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#0d0d0d" }}>
       <Drawer
         variant="permanent"
@@ -122,5 +113,6 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
         {children}
       </Box>
     </Box>
+    </ProtectedRoute>
   );
 }

@@ -1,20 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import ProtectedRoute from "@/entities/auth/ProtectedRoute";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const [checked, setChecked] = useState(false);
-
-  useEffect(() => {
-    if (!localStorage.getItem("tkn-tko")) {
-      router.push("/admin/login");
-    } else {
-      setChecked(true);
-    }
-  }, []);
-
-  if (!checked) return null;
-  return <>{children}</>;
+    const pathname = usePathname();
+    if (pathname === "/admin/login") return <>{children}</>;
+    return <ProtectedRoute allowedRole="Admin">{children}</ProtectedRoute>;
 }

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Box, Typography, Chip, CircularProgress, Paper,
+  Alert, Box, Typography, Chip, CircularProgress, Paper,
   Button, Divider, IconButton, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField
 } from "@mui/material";
@@ -13,8 +13,8 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useRouter } from "next/navigation";
-import { getFacility, getFacilityServices, updateFacility, deleteFacility } from "@/entities/vendor/vendor.api";
-import { VendorFacility, VendorFacilityService, UpdateVendorFacilityDto } from "@/entities/vendor/vendor-facility-types";
+import { getFacility, updateFacility, deleteFacility } from "@/entities/vendor/vendor.api";
+import { VendorFacility, UpdateVendorFacilityDto } from "@/entities/vendor/vendor-facility-types";
 import { getBusinessIdFromToken } from "@/entities/auth/auth-utils";
 
 const fieldSx = {
@@ -28,25 +28,30 @@ const fieldSx = {
 
 export default function FacilityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
+  const facilityId = Number(id);
+  const invalidId = !Number.isInteger(facilityId) || facilityId <= 0;
   const router = useRouter();
 
   const [facility, setFacility] = useState<VendorFacility | null>(null);
-  const [services, setServices] = useState<VendorFacilityService[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState<UpdateVendorFacilityDto | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
+    if (invalidId) return;
+    let active = true;
     const load = async () => {
-      const [f, s] = await Promise.all([
-        getFacility(Number(id)),
-        getFacilityServices(Number(id)),
-      ]);
-      setFacility(f);
-      setServices(s);
+      try {
+        const result = await getFacility(facilityId);
+        if (active) setFacility(result);
+      } catch {
+        if (active) setError("Could not load this facility.");
+      }
     };
-    load();
-  }, [id]);
+    void load();
+    return () => { active = false; };
+  }, [facilityId, invalidId]);
 
   const handleEditOpen = () => {
     if (!facility) return;
@@ -63,17 +68,28 @@ export default function FacilityDetailPage({ params }: { params: Promise<{ id: s
 
   const handleEditSave = async () => {
     if (!editForm) return;
-    const updated = await updateFacility(Number(id), editForm);
-    setFacility({ ...facility!, ...updated });
-    setEditOpen(false);
+    try {
+      await updateFacility(Number(id), editForm);
+      setFacility(await getFacility(Number(id)));
+      setEditOpen(false);
+    } catch {
+      setError("Could not save this facility.");
+    }
   };
 
   const handleDelete = async () => {
     const vendorId = getBusinessIdFromToken();
-    await deleteFacility(Number(vendorId), Number(id));
-    router.push("/vendor/facilities");
+    try {
+      await deleteFacility(Number(vendorId), Number(id));
+      router.push("/vendor/facilities");
+    } catch {
+      setError("Could not delete this facility.");
+      setDeleteOpen(false);
+    }
   };
 
+  if (invalidId) return <Alert severity="error">Invalid facility ID.</Alert>;
+  if (error && !facility) return <Alert severity="error">{error}</Alert>;
   if (!facility) return (
     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", bgcolor: "#0d0d0d" }}>
       <CircularProgress sx={{ color: "#e94560" }} />
@@ -82,6 +98,7 @@ export default function FacilityDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#0d0d0d", p: 4 }}>
+      {error && <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>{error}</Alert>}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Button
           startIcon={<ArrowBackIcon />}
@@ -144,10 +161,10 @@ export default function FacilityDetailPage({ params }: { params: Promise<{ id: s
           Услуги
         </Typography>
         <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
-          {services.length === 0 ? (
+          {!facility.services?.length ? (
             <Typography color="rgba(255,255,255,0.2)">Нет услуг</Typography>
           ) : (
-            services.map((s) => (
+            facility.services.map((s) => (
               <Chip
                 key={s.id}
                 label={s.name}

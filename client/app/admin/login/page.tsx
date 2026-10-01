@@ -5,8 +5,9 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useState } from "react";
-import { login } from "@/entities/auth/auth-api";
+import { loginAdmin } from "@/entities/auth/auth-api";
 import { useRouter } from "next/navigation";
+import { getRoleFromToken } from "@/entities/auth/auth-utils";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -14,13 +15,14 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = async (_e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleSubmit = async () => {
         try {
-            const response = await login(email, password);
+            const response = await loginAdmin(email, password);
+            if (getRoleFromToken(response.accessToken) !== "Admin") throw new Error("Administrator role required");
             localStorage.setItem("tkn-tko", response.accessToken);
             localStorage.setItem("refreshToken", response.refreshToken);
-            router.push("/admin/dashboard");
-        } catch (err) {
+            router.replace("/admin/dashboard");
+        } catch {
             setError("Неверный email или пароль");
         }
     };

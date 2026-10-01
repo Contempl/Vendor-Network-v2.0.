@@ -23,7 +23,7 @@ export const getOperators = async (operatorData: OperatorSearchDto) => {
 }
 
 export const getFacility = async (facilityId: number) => {
-    const response = await apiClient.get<VendorFacility>(`/vendor/facility/${facilityId}`);
+    const response = await apiClient.get<VendorFacility>(`/facility/${facilityId}`);
     return response.data;
 }
 

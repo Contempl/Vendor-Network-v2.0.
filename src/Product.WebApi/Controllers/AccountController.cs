@@ -117,7 +117,7 @@ public class AccountController : ControllerBase
 	}
 
 	[HttpPost("/refresh")]
-	[Authorize(policy: "All")]
+	[AllowAnonymous]
 	public async Task<ActionResult<OneOf<TokenDto, ValidationError, Error>>> RefreshToken([FromBody] RefreshTokenRequestDto tokenRequestDto,
 		CancellationToken cancellationToken)
 	{

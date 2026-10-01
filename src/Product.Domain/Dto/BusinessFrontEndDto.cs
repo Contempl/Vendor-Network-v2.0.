@@ -5,4 +5,5 @@ public class BusinessFrontEndDto
     public int Id { get; set; }
     public string BusinessName { get; set; }
     public string Address { get; set; }
+    public string? Occupation { get; set; }
 }

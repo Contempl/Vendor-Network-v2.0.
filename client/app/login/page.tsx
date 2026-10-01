@@ -7,6 +7,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useState } from "react";
 import { login } from "@/entities/auth/auth-api";
 import { useRouter } from "next/navigation";
+import { getHomeForRole, getRoleFromToken } from "@/entities/auth/auth-utils";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -14,13 +15,15 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = async (_e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleSubmit = async () => {
         try {
             const response = await login(email, password);
+            const role = getRoleFromToken(response.accessToken);
+            if (!role) throw new Error("Login returned a token without a supported role");
             localStorage.setItem("tkn-tko", response.accessToken);
             localStorage.setItem("refreshToken", response.refreshToken);
-            router.push("/vendor");
-        } catch (err) {
+            router.replace(getHomeForRole(role));
+        } catch {
             setError("Неверный email или пароль");
         }
     };

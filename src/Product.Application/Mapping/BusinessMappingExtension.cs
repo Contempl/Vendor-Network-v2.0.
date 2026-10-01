@@ -12,7 +12,8 @@ public static class BusinessMappingExtension
         {
             Id = business.Id,
             BusinessName = business.BusinessName,
-            Address = business.Address
+            Address = business.Address,
+            Occupation = (business as Operator)?.Occupation
         };
     }
 

@@ -66,6 +66,13 @@ public class AuthService : IAuthService
             var userClaims = admin.MapAdminToClaimDto();
             var token = _jwtTokenService.GenerateToken(userClaims);
 
+            await _refreshTokenRepository.CreateAsync(new RefreshToken
+            {
+                Token = token.RefreshToken,
+                UserId = admin.Id,
+                ExpiresAt = DateTime.UtcNow.AddDays(7)
+            }, cancellationToken);
+
             return token;
         }
         catch (Exception ex)
