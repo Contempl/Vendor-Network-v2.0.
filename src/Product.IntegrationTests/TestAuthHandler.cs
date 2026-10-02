@@ -16,9 +16,8 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
-        ISystemClock clock,
         IUserPrincipalService userPrincipalService)
-        : base(options, logger, encoder, clock)
+        : base(options, logger, encoder)
     {
         _userPrincipalService = userPrincipalService;
     }

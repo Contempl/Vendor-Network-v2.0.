@@ -18,13 +18,20 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          global-json-file: global.json
           
       - name: Restore dependencies
         run: dotnet restore src/Project.sln
+
+      - name: Restore EF Core tools
+        run: dotnet tool restore
         
       - name: Build solution
         run: dotnet build src/Project.sln --configuration Release --no-restore
+
+      - name: Check migration snapshot
+        working-directory: src/Product.WebApi
+        run: dotnet ef migrations has-pending-model-changes --project ../Product.Infrastructure/Product.Infrastructure.csproj --startup-project Product.WebApi.csproj --configuration Release --no-build
           
       - name: Run tests
         run: dotnet test src/Project.sln --no-build --configuration Release --verbosity normal
