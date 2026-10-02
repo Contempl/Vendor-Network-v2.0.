@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
@@ -17,6 +19,41 @@ public class AccountIntegrationTests : IClassFixture<CustomWebApplicationFactory
     {
         _factory = factory;
         _client = factory.CreateClient();
+    }
+
+    [Theory]
+    [InlineData("/Admin/Login")]
+    [InlineData("/Account/Login")]
+    public async Task Login_UpgradesLegacyPasswordHash(string route)
+    {
+        var email = $"legacy-{Guid.NewGuid():N}".Substring(0, 23) + "@example.com";
+        var legacyHash = SHA512.HashData(Encoding.UTF8.GetBytes("test-password"));
+        await _factory.SeedAsync(async context =>
+        {
+            context.Administrators.Add(new Administrator
+            {
+                Email = email,
+                UserType = UserType.SuperAdmin,
+                PasswordHash = legacyHash
+            });
+            await context.SaveChangesAsync();
+        });
+
+        using var response = await _client.PostAsJsonAsync(route,
+            new { email, password = "test-password" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await _factory.SeedAsync(async context =>
+        {
+            var storedHash = await context.Administrators
+                .Where(admin => admin.Email == email)
+                .Select(admin => admin.PasswordHash)
+                .SingleAsync();
+            Assert.NotNull(storedHash);
+            Assert.NotEqual(legacyHash, storedHash);
+            Assert.True(new PasswordHasher().ValidatePassword("test-password", storedHash));
+            Assert.False(new PasswordHasher().NeedsRehash(storedHash));
+        });
     }
 
     [Fact]

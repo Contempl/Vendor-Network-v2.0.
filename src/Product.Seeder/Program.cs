@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,6 +6,7 @@ using Product.Application.Interfaces;
 using Product.Domain.Entity;
 using Product.Infrastructure;
 using Product.Infrastructure.Repositories;
+using Product.Infrastructure.Implementations.Account;
 
 namespace Product.Seeder;
 
@@ -48,17 +47,9 @@ class Program
             Email = email.Trim(),
             SentInvites = new List<Invite>(),
             UserType = Product.Domain.Enum.UserType.SuperAdmin,
-            PasswordHash = HashThePassword(password)
+            PasswordHash = new PasswordHasher().HashThePassword(password)
         });
 
         dbContext.SaveChanges();
-    }
-    private static byte[] HashThePassword(string password)
-    {
-        using (var sha = SHA512.Create())
-        {
-            var passwordHash = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return passwordHash;
-        }
     }
 }

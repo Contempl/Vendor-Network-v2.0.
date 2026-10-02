@@ -64,6 +64,11 @@ public class AuthService : IAuthService
             }
 
             var userClaims = admin.MapAdminToClaimDto();
+            if (_passwordHasher.NeedsRehash(admin.PasswordHash!))
+            {
+                admin.PasswordHash = _passwordHasher.HashThePassword(userData.Password);
+                await _adminRepository.UpdateAsync(admin, cancellationToken);
+            }
             var token = _jwtTokenService.GenerateToken(userClaims);
 
             await _refreshTokenRepository.CreateAsync(new RefreshToken
@@ -144,6 +149,12 @@ public class AuthService : IAuthService
             }
 
             var userClaims = user.MapUserToClaimDto();
+
+            if (_passwordHasher.NeedsRehash(user.PasswordHash!))
+            {
+                user.PasswordHash = _passwordHasher.HashThePassword(userData.Password);
+                await _userRepository.UpdateAsync(user, cancellationToken);
+            }
 
             var token = _jwtTokenService.GenerateToken(userClaims);
 

@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Product.Application.Interfaces;
-using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Entity;
 
@@ -58,16 +57,12 @@ public class UserRepository : IUserRepository
 		return user;
 	}
 
-	public Task UpdateAsync(User entity, CancellationToken cancellationToken = default)
+	public async Task UpdateAsync(User entity, CancellationToken cancellationToken = default)
 	{
 		var cacheKey = $"{CachePrefix}{entity.Id}";
-		_redisCacheService.RemoveAsync(cacheKey);
-		
 		_users.Update(entity);
-		
-		_redisCacheService.SetAsync(cacheKey, entity.MapToFrontEndDto());
-		
-		return SaveAsync(cancellationToken);
+		await SaveAsync(cancellationToken);
+		await _redisCacheService.RemoveAsync(cacheKey);
 	}
 
 	private Task SaveAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
