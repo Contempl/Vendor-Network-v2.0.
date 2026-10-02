@@ -22,11 +22,13 @@
 
     <ItemGroup>
         <Using Include="Xunit"/>
+        <EmbeddedResource Include="Fixtures/sql-server-baseline.sql" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Product.Infrastructure\Product.Infrastructure.csproj" />
       <ProjectReference Include="..\Product.WebApi\Product.WebApi.csproj" />
+      <ProjectReference Include="..\Product.DataMigration\Product.DataMigration.csproj" />
     </ItemGroup>
 
 </Project>
