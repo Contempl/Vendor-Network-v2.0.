@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -17,8 +18,7 @@ namespace Product.IntegrationTests;
 public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _dbContainer =
-        new PostgreSqlBuilder()
-            .WithImage("postgres:15")
+        new PostgreSqlBuilder("postgres:15")
             .WithDatabase("testdb")
             .WithUsername("postgres")
             .WithPassword("postgres")
@@ -38,6 +38,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.
             });
             
             services.RemoveAll<DbContextOptions<AppDbContext>>();
+            services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
             services.RemoveAll<IDistributedCache>();
             services.RemoveAll<DateInterceptor>();
             services.RemoveAll<IAuthenticationSchemeProvider>();

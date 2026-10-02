@@ -1,8 +1,16 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Entity;
 using Product.Domain.Enum;
@@ -19,6 +27,77 @@ public class AccountIntegrationTests : IClassFixture<CustomWebApplicationFactory
     {
         _factory = factory;
         _client = factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task Swagger_PreservesEndpointsAndBearerSecurityDefinition()
+    {
+        using var response = await _client.GetAsync("/swagger/v1/swagger.json");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = document.RootElement;
+        Assert.True(root.GetProperty("paths").TryGetProperty("/Admin/Login", out _));
+        Assert.True(root.GetProperty("paths").TryGetProperty("/Account/Login", out _));
+        var bearer = root.GetProperty("components").GetProperty("securitySchemes").GetProperty("Bearer");
+        Assert.Equal("http", bearer.GetProperty("type").GetString());
+        Assert.Equal("bearer", bearer.GetProperty("scheme").GetString());
+        Assert.True(root.GetProperty("security")[0].TryGetProperty("Bearer", out _));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task LoginToken_AuthenticatesWithRealJwtBearerHandler(bool useCookie)
+    {
+        using var realAuthFactory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services =>
+            {
+                services.PostConfigure<AuthenticationOptions>(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
+                });
+                services.RemoveAll<IUserPrincipalService>();
+                services.AddScoped<IUserPrincipalService, UserPrincipalService>();
+            }));
+        using var client = realAuthFactory.CreateClient();
+        var email = $"jwt-{Guid.NewGuid():N}@test.local";
+        var adminId = 0;
+        await _factory.SeedAsync(async context =>
+        {
+            var admin = new Administrator
+            {
+                Email = email,
+                UserType = UserType.SuperAdmin,
+                PasswordHash = new PasswordHasher().HashThePassword("test-password")
+            };
+            context.Administrators.Add(admin);
+            await context.SaveChangesAsync();
+            adminId = admin.Id;
+        });
+
+        var profileUrl = $"/Account/User/{adminId}";
+        using var anonymousResponse = await client.GetAsync(profileUrl);
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymousResponse.StatusCode);
+        using var loginResponse = await client.PostAsJsonAsync("/Admin/Login",
+            new { email, password = "test-password" });
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+        var tokens = await loginResponse.Content.ReadFromJsonAsync<TokenDto>();
+        Assert.NotNull(tokens);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, profileUrl);
+        if (useCookie)
+            request.Headers.Add("Cookie", $"tkn-tko={tokens.AccessToken}");
+        else
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        using var profileResponse = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, profileResponse.StatusCode);
+
+        using var invalidRequest = new HttpRequestMessage(HttpMethod.Get, profileUrl);
+        invalidRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "invalid-token");
+        using var invalidResponse = await client.SendAsync(invalidRequest);
+        Assert.Equal(HttpStatusCode.Unauthorized, invalidResponse.StatusCode);
     }
 
     [Theory]

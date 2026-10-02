@@ -1,4 +1,4 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.OpenApi;
 
 namespace Product.WebApi.Configuration;
 
@@ -18,20 +18,14 @@ public static class SwaggerConfiguration
                 Scheme = "bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "JWT Authorization header using the Bearer scheme.",
-
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Description = "JWT Authorization header using the Bearer scheme."
             };
 
             c.AddSecurityDefinition("Bearer", securityScheme);
 
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
-                { securityScheme, new string[] { } }
+                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
             });
         });
 

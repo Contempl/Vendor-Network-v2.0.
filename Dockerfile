@@ -1,11 +1,13 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0.12 AS base
 WORKDIR /app
+ENV ASPNETCORE_HTTP_PORTS=80
 EXPOSE 80
 EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.401 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+COPY global.json .
 COPY ["src/Product.WebApi/Product.WebApi.csproj", "Product.WebApi/"]
 COPY ["src/Product.Application/Product.Application.csproj", "Product.Application/"]
 COPY ["src/Product.Domain/Product.Domain.csproj", "Product.Domain/"]
