@@ -13,7 +13,8 @@ public class OperatorIntegrationTests : IntegrationTestBase, IAsyncLifetime
     public OperatorIntegrationTests(CustomWebApplicationFactory factory) : base(factory)
     {
         _client = factory.CreateClient();
-        _client.DefaultRequestHeaders.Add("X-Test-Role", UserType.OperatorUser.ToString());
+        _client.DefaultRequestHeaders.Add("X-Test-Role", UserType.Admin.ToString());
+        _client.DefaultRequestHeaders.Add("X-Test-BusinessType", "Operator");
         _client.DefaultRequestHeaders.Add("X-Test-UserId", "1");
         _client.DefaultRequestHeaders.Add("X-Test-BusinessId", "10");
     }
@@ -334,6 +335,7 @@ public class OperatorIntegrationTests : IntegrationTestBase, IAsyncLifetime
         // Assert
         Assert.Equal(HttpStatusCode.OK, request.StatusCode);
         Assert.Contains(emailDto.Email, response!.Body);
+        Assert.True(response.InviteId > 0);
     }
 
     private async Task SeedOperatorUser(OperatorUser operatorUser)

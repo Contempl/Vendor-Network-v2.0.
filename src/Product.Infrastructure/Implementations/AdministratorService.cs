@@ -160,6 +160,7 @@ public class AdministratorService : IAdministratorService
 			await _emailService.SendInvitationEmailAsync(mailMessage);
 		
 			var responseDto = existingUser.MapToFrontEndDto();
+			responseDto.InviteId = invite.Id;
 			return responseDto;
 		}
 		catch (Exception ex)
@@ -222,7 +223,8 @@ public class AdministratorService : IAdministratorService
 					Email = invitationData.UserEmail,
 					FirstName = invitationData.FirstName,
 					LastName = invitationData.LastName,
-					VendorId = vendor.Id
+					VendorId = vendor.Id,
+					UserType = UserType.Admin
 				};
 
 				await _userRepository.CreateAsync(vendorUser, cancellationToken);
@@ -244,7 +246,8 @@ public class AdministratorService : IAdministratorService
 					Email = invitationData.UserEmail,
 					FirstName = invitationData.FirstName,
 					LastName = invitationData.LastName,
-					OperatorId = @operator.Id
+					OperatorId = @operator.Id,
+					UserType = UserType.Admin
 				};
 				await _userRepository.CreateAsync(operatorUser, cancellationToken);
 			}

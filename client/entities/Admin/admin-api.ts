@@ -1,8 +1,7 @@
 import { apiClient } from "@/shared/api/axiosInstance";
 import { BusinessInvitationData, DataForInviteDto } from "../auth/auth-types";
 
-
-export async function inviteBusiness(data: BusinessInvitationData){
+export async function inviteBusiness(data: BusinessInvitationData): Promise<{ id: number; email: string; inviteId: number }> {
     const response = await apiClient.post("/Admin/inviteBusiness", data);
     return response.data;
 }

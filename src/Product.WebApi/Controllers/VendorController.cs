@@ -49,7 +49,7 @@ namespace Product.WebApi.Controllers
 
 		[HttpPut]
 		[EnsureBusinessAccess(UserType.VendorUser)]
-		[Authorize(policy: "VendorUser")]
+		[Authorize(policy: "VendorAdmin")]
 		public async Task<ActionResult<OneOf<BusinessFrontEndDto, Error>>> UpdateVendor(
 			[FromBody] UpdateVendorDto vendorData, CancellationToken cancellationToken)
 		{
@@ -62,7 +62,7 @@ namespace Product.WebApi.Controllers
 		
 		[HttpPost("invite")]
 		[EnsureBusinessAccess(UserType.VendorUser)]
-		[Authorize(policy: "VendorUser")]
+		[Authorize(policy: "VendorAdmin")]
 		public async Task<ActionResult<OneOf<MailMsg, Error>>> InviteVendorUser(
 			[FromBody] EmailForInviteDto email, CancellationToken cancellationToken)
 		{

@@ -69,7 +69,7 @@ public class OperatorController : Controller
 
 	[HttpPut]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
-	[Authorize(policy: "OperatorUser")]
+	[Authorize(policy: "OperatorAdmin")]
 	public async Task<ActionResult<OneOf<BusinessFrontEndDto, Error>>> UpdateOperator(
 		[FromBody] UpdateOperatorDto operatorData, CancellationToken cancellationToken)
 	{
@@ -82,7 +82,7 @@ public class OperatorController : Controller
 
 	[HttpPost("invite")]
 	[EnsureBusinessAccess(UserType.OperatorUser)]
-	[Authorize(policy: "OperatorUser")]
+	[Authorize(policy: "OperatorAdmin")]
 	public async Task<ActionResult<OneOf<MailMsg, Error>>> InviteOperatorUser(
 		[FromBody] EmailForInviteDto dto, CancellationToken cancellationToken)
 	{

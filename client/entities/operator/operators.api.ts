@@ -40,6 +40,6 @@ export async function getOperator() {
 }
 
 export async function inviteUserToOperator(email: string) {
-    const response = await apiClient.post("Operator/invite", { email });
+    const response = await apiClient.post<{ inviteId: number; body: string; sender: string }>("Operator/invite", { email });
     return response.data;
 }

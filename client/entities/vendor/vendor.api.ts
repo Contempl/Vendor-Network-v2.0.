@@ -13,7 +13,7 @@ export const updateVendor = async (vendor: UpdateVendorDto) => {
 }
 
 export const inviteVendorUser = async (emailDto: EmailForInviteDto) => {
-    const response = await apiClient.post('/Vendor/invite', emailDto);
+    const response = await apiClient.post<{ inviteId: number; body: string; sender: string }>('/Vendor/invite', emailDto);
     return response.data;
 }
 
@@ -28,7 +28,7 @@ export const getFacility = async (facilityId: number) => {
 }
 
 export const createFacility = async (facilityData: VendorFacilityDto) => {
-    const response = await apiClient.post<VendorGetFacilitiesDto>('/vendor/facility', facilityData);
+    const response = await apiClient.post<VendorFacility>('/facility', facilityData);
     return response.data;
 }
 

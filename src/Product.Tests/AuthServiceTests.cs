@@ -154,7 +154,7 @@ public class AuthServiceTests
     {
         // Arrange
         var adminLoginData = new UserLoginDto { Email = "admin@example.com", Password = "pass123" };
-        var admin = new Administrator {Id = 1, Email = "admin@example.com", PasswordHash = "hashed"u8.ToArray()};
+        var admin = new Administrator {Id = 1, Email = "admin@example.com", UserType = UserType.SuperAdmin, PasswordHash = "hashed"u8.ToArray()};
         
         _adminRepositoryMock.Setup(r => r.GetByEmailAsync(adminLoginData.Email, CancellationToken.None))
             .ReturnsAsync(admin);
@@ -191,7 +191,7 @@ public class AuthServiceTests
     {
         // Arrange
         var adminLoginData = new UserLoginDto { Email = "admin@example.com", Password = "pass123" };
-        var admin = new Administrator {Id = 1, Email = "admin@example.com", PasswordHash = "hashed"u8.ToArray()};
+        var admin = new Administrator {Id = 1, Email = "admin@example.com", UserType = UserType.SuperAdmin, PasswordHash = "hashed"u8.ToArray()};
         
         _adminRepositoryMock.Setup(r => r.GetByEmailAsync(adminLoginData.Email, CancellationToken.None))
             .ReturnsAsync(admin);

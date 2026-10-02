@@ -19,7 +19,10 @@ public class EnsureBusinessAccess : ActionFilterAttribute
     public override void OnActionExecuting(ActionExecutingContext context)
     {
         var userPrincipalService =  context.HttpContext.RequestServices.GetRequiredService<IUserPrincipalService>();
-        if (UserType != userPrincipalService.UserType!.Value)
+        var expectedBusinessType = UserType == UserType.VendorUser ? "Vendor" : "Operator";
+        var isLocalAdmin = userPrincipalService.UserType == UserType.Admin &&
+            userPrincipalService.BusinessType == expectedBusinessType && userPrincipalService.BusinessId > 0;
+        if (UserType != userPrincipalService.UserType && !isLocalAdmin)
         {
             throw new NotFoundException($"User with type {userPrincipalService.UserType} tried to access {UserType} resource. \n UserId: {userPrincipalService.UserId}. \n UserType: {UserType}");
         }

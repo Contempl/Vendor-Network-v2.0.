@@ -4,7 +4,7 @@ import {
   Box, Typography, Button, Card, CardContent,
   CardActions, Chip, IconButton,
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField
+  TextField, Alert
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -32,8 +32,10 @@ export default function FacilitiesPage() {
   const router = useRouter();
   const [openDialog, setOpenDialog] = useState(false);
   const [form, setForm] = useState<VendorFacilityDto>(emptyForm);
+  const [servicesInput, setServicesInput] = useState("");
   const [editingFacility, setEditingFacility] = useState<VendorGetFacilitiesDto  | null>(null);
   const [editForm, setEditForm] = useState<VendorFacilityDto | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
 
     useEffect(() => {
     const businessId = getBusinessIdFromToken();
@@ -45,10 +47,21 @@ export default function FacilitiesPage() {
   }, [setFacilities]);
 
   const handleCreate = async () => {
-    const newFacility = await createFacility(form);
-    setFacilities([...facilities ?? [], newFacility]);
-    setOpenDialog(false);
-    setForm(emptyForm);
+    const services = servicesInput.split(",").map(service => service.trim()).filter(Boolean);
+    if (!services.length) {
+      setCreateError("Add at least one service.");
+      return;
+    }
+    setCreateError(null);
+    try {
+      await createFacility({ ...form, services });
+      setFacilities(await getVendorFacilities());
+      setOpenDialog(false);
+      setForm(emptyForm);
+      setServicesInput("");
+    } catch {
+      setCreateError("Could not create the facility. Check the fields and try again.");
+    }
   }
 
   const handleEditOpen = (facility: VendorGetFacilitiesDto) => {
@@ -93,7 +106,7 @@ export default function FacilitiesPage() {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => setOpenDialog(true)}
+          onClick={() => { setCreateError(null); setOpenDialog(true); }}
           sx={{ bgcolor: "#e94560", "&:hover": { bgcolor: "#c73652" }, borderRadius: 2, fontWeight: 700 }}
         >
           Добавить
@@ -167,7 +180,8 @@ export default function FacilitiesPage() {
               key={field}
               label={field}
               value={editForm?.[field] ?? ""}
-              onChange={(e) => setEditForm({ ...editForm!, [field]: e.target.value })}
+              type={field === "radiusOfWork" ? "number" : "text"}
+              onChange={(e) => setEditForm({ ...editForm!, [field]: field === "radiusOfWork" ? Number(e.target.value) : e.target.value })}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   color: "white",
@@ -198,12 +212,14 @@ export default function FacilitiesPage() {
         PaperProps={{ sx: { bgcolor: "#161616", color: "white", borderRadius: 3, minWidth: 400 } }}>
         <DialogTitle fontWeight={700}>Новая Facility</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
+          {createError && <Alert severity="error">{createError}</Alert>}
           {(["name", "location", "radiusOfWork"] as const).map((field) => (
             <TextField
               key={field}
               label={field}
               value={form[field]}
-              onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+              type={field === "radiusOfWork" ? "number" : "text"}
+              onChange={(e) => setForm({ ...form, [field]: field === "radiusOfWork" ? Number(e.target.value) : e.target.value })}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   color: "white",
@@ -214,6 +230,16 @@ export default function FacilitiesPage() {
               }}
             />
           ))}
+          <TextField
+            label="Services"
+            value={servicesInput}
+            onChange={(e) => setServicesInput(e.target.value)}
+            helperText="Enter at least one service; separate multiple services with commas."
+            sx={{
+              "& .MuiOutlinedInput-root": { color: "white", "& fieldset": { borderColor: "rgba(255,255,255,0.2)" } },
+              "& .MuiInputLabel-root, & .MuiFormHelperText-root": { color: "rgba(255,255,255,0.5)" },
+            }}
+          />
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
           <Button onClick={() => setOpenDialog(false)} sx={{ color: "rgba(255,255,255,0.5)" }}>

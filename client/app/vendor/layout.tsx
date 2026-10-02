@@ -12,8 +12,11 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { useRouter, usePathname } from "next/navigation";
 import ProtectedRoute from "@/entities/auth/ProtectedRoute";
 import { clearAuthTokens } from "@/entities/auth/auth-utils";
+import { getRoleFromToken, UserRole } from "@/entities/auth/auth-utils";
+import { useState } from "react";
 
 const DRAWER_WIDTH = 260;
+const vendorRoles: UserRole[] = ["VendorUser", "Admin"];
 
 const navItems = [
   { label: "Профиль", icon: <BusinessIcon />, path: "/vendor" },
@@ -25,6 +28,8 @@ const navItems = [
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [isBusinessAdmin] = useState(() =>
+    typeof window !== "undefined" && getRoleFromToken(localStorage.getItem("tkn-tko") ?? "") === "Admin");
 
   const handleLogout = () => {
     clearAuthTokens();
@@ -32,7 +37,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   }
 
   return (
-    <ProtectedRoute allowedRole="VendorUser">
+    <ProtectedRoute allowedRole={vendorRoles} businessType="Vendor">
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#0d0d0d" }}>
       <Drawer
         variant="permanent"
@@ -60,7 +65,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
 
         {/* Nav Items */}
         <List sx={{ px: 1.5, pt: 2, flexGrow: 1 }}>
-          {navItems.map((item) => {
+          {navItems.filter(item => item.path !== "/vendor/invite" || isBusinessAdmin).map((item) => {
             const isActive = pathname === item.path;
             return (
               <ListItemButton

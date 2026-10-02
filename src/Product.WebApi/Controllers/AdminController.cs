@@ -12,7 +12,7 @@ namespace Product.WebApi.Controllers;
 
 [Route("[controller]")]
 [ApiController]
-[Authorize(policy: "Admin")]
+[Authorize(policy: "SuperAdmin")]
 public class AdminController : ControllerBase
 {
 	private readonly IAdministratorService _adminService;
@@ -78,7 +78,7 @@ public class AdminController : ControllerBase
 	
 	[HttpDelete("Vendor/{vendorId}")]
 	[EnsureVendorExists]
-	[Authorize(policy: "Admin")]
+	[Authorize(policy: "SuperAdmin")]
 	public async Task<ActionResult<OneOf<int, Error>>> RemoveVendor(int vendorId, CancellationToken cancellationToken)
 	{
 		var response = await _adminService.RemoveVendorAsync(vendorId, cancellationToken);
@@ -91,7 +91,7 @@ public class AdminController : ControllerBase
 	
 	[HttpDelete("Operator/{operatorId}")]
 	[EnsureOperatorExists]
-	[Authorize(policy: "Admin")]
+	[Authorize(policy: "SuperAdmin")]
 	public async Task<ActionResult<OneOf<int, Error>>> RemoveOperator(int operatorId, CancellationToken cancellationToken)
 	{
 		var response = await _adminService.RemoveOperatorAsync(operatorId, cancellationToken);

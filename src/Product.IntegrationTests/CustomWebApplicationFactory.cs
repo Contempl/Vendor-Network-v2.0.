@@ -102,4 +102,5 @@ public class FakeUserPrincipalService : IUserPrincipalService
     public int? UserId { get; set; } = 1;
     public UserType? UserType { get; set; } = Domain.Enum.UserType.VendorUser;
     public int? BusinessId { get; set; } = 10;
+    public string? BusinessType { get; set; }
 }

@@ -136,11 +136,11 @@ public class OperatorService : IOperatorService
             await _operatorUserRepository.CreateAsync(newOperatorUser, cancellationToken);
 
             var invite = _inviteService.CreateInvite(newOperatorUser, operatorUser);
-            var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
             await _inviteRepository.CreateAsync(invite, cancellationToken);
+            var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
             var emailBody = _emailService.GenerateEmailTemplate(dto.Email, newOperatorUser, inviteUrl);
 
-            var mailMessage = _emailService.CreateMessage(emailBody, operatorUser.Email);
+            var mailMessage = _emailService.CreateMessage(emailBody, operatorUser.Email) with { InviteId = invite.Id };
             await _emailService.SendInvitationEmailAsync(mailMessage);
 
             await transaction.CommitAsync(cancellationToken);

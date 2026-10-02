@@ -41,7 +41,7 @@ public class AccountIntegrationTests : IClassFixture<CustomWebApplicationFactory
             context.Administrators.Add(new Administrator
             {
                 Email = "refresh-test@example.com",
-                UserType = UserType.Admin,
+                UserType = UserType.SuperAdmin,
                 PasswordHash = new PasswordHasher().HashThePassword("test-password")
             });
             await context.SaveChangesAsync();

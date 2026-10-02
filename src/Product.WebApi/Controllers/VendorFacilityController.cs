@@ -18,11 +18,14 @@ public class VendorFacilityController : ControllerBase
 {
 	private readonly IVendFacilityService _vendorFacilityService;
 	private readonly IFacilityService _facilityService;
+	private readonly IUserPrincipalService _userPrincipalService;
 
-	public VendorFacilityController(IVendFacilityService vendorFacilityService, IFacilityService facilityService)
+	public VendorFacilityController(IVendFacilityService vendorFacilityService, IFacilityService facilityService,
+		IUserPrincipalService userPrincipalService)
 	{
 		_vendorFacilityService = vendorFacilityService;
 		_facilityService = facilityService;
+		_userPrincipalService = userPrincipalService;
 	}
 
 	[HttpGet("/facility/{facilityId}")]
@@ -69,10 +72,16 @@ public class VendorFacilityController : ControllerBase
 
 	[HttpDelete("{vendorId}/facilities/{facilityId}")]
 	[EnsureVendorFacilityExists] 
+	[EnsureBusinessAccess(UserType.VendorUser)]
 	[Authorize(policy: "VendorUser")] 
 	public async Task<ActionResult<OneOf<int, Error>>> DeleteFacility(int vendorId, int facilityId,
 		CancellationToken cancellationToken)
 	{
+		if (_userPrincipalService.BusinessId != vendorId)
+		{
+			return Forbid();
+		}
+
 		var response = await _vendorFacilityService.RemoveFacilityAsync(vendorId, facilityId, cancellationToken);
 		
 		return response.Match<ActionResult>(

@@ -49,7 +49,7 @@ public class AuthService : IAuthService
         {
             var admin = await _adminRepository.GetByEmailAsync(userData.Email, cancellationToken);
 
-            if (admin == null)
+            if (admin == null || admin.UserType != UserType.SuperAdmin)
             {
                 _logger.LogWarning("Admin not found.");
                 return new NotFoundError("No admin found");

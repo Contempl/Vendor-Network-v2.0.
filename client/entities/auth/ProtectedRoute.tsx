@@ -4,17 +4,20 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, CircularProgress } from "@mui/material";
 import { refreshAccessToken } from "@/shared/api/axiosInstance";
-import { clearAuthTokens, getHomeForRole, getRoleFromToken, isTokenExpired, UserRole } from "./auth-utils";
+import { clearAuthTokens, getBusinessTypeFromToken, getHomeForRole, getRoleFromToken, isTokenExpired, UserRole } from "./auth-utils";
 
 export default function ProtectedRoute({
   allowedRole,
+  businessType,
   children,
 }: {
-  allowedRole: UserRole;
+  allowedRole: UserRole | UserRole[];
+  businessType?: "Vendor" | "Operator";
   children: React.ReactNode;
 }) {
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
+  const adminRoute = allowedRole === "SuperAdmin" || (Array.isArray(allowedRole) && allowedRole.includes("SuperAdmin"));
 
   useEffect(() => {
     let active = true;
@@ -22,7 +25,7 @@ export default function ProtectedRoute({
     const checkSession = async () => {
       let token = localStorage.getItem("tkn-tko");
       if (!token && !localStorage.getItem("refreshToken")) {
-        router.replace(allowedRole === "Admin" ? "/admin/login" : "/login");
+        router.replace(adminRoute ? "/admin/login" : "/login");
         return;
       }
 
@@ -33,20 +36,21 @@ export default function ProtectedRoute({
         const role = getRoleFromToken(token);
         if (!role) throw new Error("Invalid token role");
         if (!active) return;
-        if (role !== allowedRole) {
-          router.replace(getHomeForRole(role));
+        if (!(Array.isArray(allowedRole) ? allowedRole.includes(role) : role === allowedRole) ||
+            (businessType && role === "Admin" && getBusinessTypeFromToken(token) !== businessType)) {
+          router.replace(getHomeForRole(role, token));
         } else {
           setAuthorized(true);
         }
       } catch {
         clearAuthTokens();
-        if (active) router.replace(allowedRole === "Admin" ? "/admin/login" : "/login");
+        if (active) router.replace(adminRoute ? "/admin/login" : "/login");
       }
     };
 
     void checkSession();
     return () => { active = false; };
-  }, [allowedRole, router]);
+  }, [allowedRole, adminRoute, businessType, router]);
 
   if (!authorized) {
     return <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", bgcolor: "#0d0d0d" }}>

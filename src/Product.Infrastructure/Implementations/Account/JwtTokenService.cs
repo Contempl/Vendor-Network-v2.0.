@@ -28,6 +28,7 @@ public class JwtTokenService : IJwtTokenService
             new Claim(ClaimTypes.Email, userClaim.Email!),
             new Claim(ClaimTypes.Role, userClaim.UserType.ToString()),
             new Claim("businessId", userClaim.BusinessId.ToString()),
+            new Claim("businessType", userClaim.BusinessType ?? string.Empty),
         };
 
         var credentials = new SigningCredentials(new SymmetricSecurityKey(key),

@@ -1,6 +1,6 @@
 "use client";
 
-import { getBusinessIdFromToken } from "@/entities/auth/auth-utils";
+import { getBusinessIdFromToken, getRoleFromToken } from "@/entities/auth/auth-utils";
 import { useVendorStore } from "@/entities/vendor/vendor-store";
 import { getVendor, updateVendor } from "@/entities/vendor/vendor.api";
 import { Avatar, 
@@ -13,7 +13,6 @@ import { Avatar,
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import EmailIcon from "@mui/icons-material/Email";
 import { useEffect, useState } from "react";
 import { UpdateVendorDto } from "@/entities/vendor/vendor-types";
 
@@ -22,6 +21,8 @@ export default function VendorPage() {
   const { vendor, setVendor } = useVendorStore();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isBusinessAdmin] = useState(() =>
+    typeof window !== "undefined" && getRoleFromToken(localStorage.getItem("tkn-tko") ?? "") === "Admin");
   const [form, setForm] = useState<UpdateVendorDto | null>(null)
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function VendorPage() {
       }
   };
   fetchVendor();
-  }, []);
+  }, [setVendor]);
 
 
   const handleEdit = () => {
@@ -73,7 +74,7 @@ export default function VendorPage() {
             <Chip label="Vendor" size="small" sx={{ bgcolor: "rgba(233,69,96,0.15)", color: "#e94560", fontWeight: 700, mt: 0.5 }} />
           </Box>
         </Box>
-        {isEditing
+        {isBusinessAdmin && (isEditing
           ? <Button
               variant="outlined"
               startIcon={<SaveIcon />}
@@ -90,7 +91,7 @@ export default function VendorPage() {
             >
               Редактировать
             </Button>
-        }
+        )}
       </Box>
       <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", mb: 4 }} />
 

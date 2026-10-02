@@ -19,7 +19,7 @@ class Program
         var host = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
             {
-                config.AddJsonFile("appsettings.json");
+                config.AddJsonFile("appsettings.json", optional: true);
             })
             .ConfigureServices((context, services) =>
             {
@@ -33,15 +33,22 @@ class Program
             .Build(); 
         
 
-        var dbContext = host.Services.GetService<AppDbContext>();
+        var email = host.Services.GetRequiredService<IConfiguration>()["SeedAdmin:Email"];
+        var password = host.Services.GetRequiredService<IConfiguration>()["SeedAdmin:Password"];
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            throw new InvalidOperationException("Set SeedAdmin__Email and SeedAdmin__Password before seeding a SuperAdmin.");
+
+        using var scope = host.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        if (dbContext.Administrators.Any(admin => admin.UserType == Product.Domain.Enum.UserType.SuperAdmin))
+            return;
 
         dbContext.Administrators.Add(new Administrator
         {
-            Email = "admin@gmail.com",
-            FirstName = "Ashas",
-            LastName = "Chivopats",
+            Email = email.Trim(),
             SentInvites = new List<Invite>(),
-            PasswordHash = HashThePassword("jopaPopa")
+            UserType = Product.Domain.Enum.UserType.SuperAdmin,
+            PasswordHash = HashThePassword(password)
         });
 
         dbContext.SaveChanges();

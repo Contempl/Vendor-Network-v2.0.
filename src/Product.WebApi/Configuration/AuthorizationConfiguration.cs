@@ -8,21 +8,34 @@ public static class AuthorizationConfiguration
     {
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("Admin", policy =>
-                policy.RequireRole(UserType.Admin.ToString()));
+            options.AddPolicy("SuperAdmin", policy =>
+                policy.RequireRole(UserType.SuperAdmin.ToString()));
 
             options.AddPolicy("VendorUser", policy =>
-                policy.RequireRole(UserType.VendorUser.ToString(), UserType.Admin.ToString()));
+                policy.RequireAssertion(context => context.User.IsInRole(UserType.VendorUser.ToString()) ||
+                    IsBusinessAdmin(context.User, "Vendor")));
 
             options.AddPolicy("OperatorUser", policy =>
-                policy.RequireRole(UserType.OperatorUser.ToString(), UserType.Admin.ToString()));
+                policy.RequireAssertion(context => context.User.IsInRole(UserType.OperatorUser.ToString()) ||
+                    IsBusinessAdmin(context.User, "Operator")));
+
+            options.AddPolicy("VendorAdmin", policy =>
+                policy.RequireAssertion(context => IsBusinessAdmin(context.User, "Vendor")));
+
+            options.AddPolicy("OperatorAdmin", policy =>
+                policy.RequireAssertion(context => IsBusinessAdmin(context.User, "Operator")));
 
             options.AddPolicy("All", policy =>
                 policy.RequireRole(UserType.VendorUser.ToString(),
                     UserType.OperatorUser.ToString(),
-                    UserType.Admin.ToString()));
+                    UserType.Admin.ToString(), UserType.SuperAdmin.ToString()));
         });
 
         return services;
     }
+
+    private static bool IsBusinessAdmin(System.Security.Claims.ClaimsPrincipal user, string businessType) =>
+        user.IsInRole(UserType.Admin.ToString()) &&
+        user.HasClaim("businessType", businessType) &&
+        int.TryParse(user.FindFirst("businessId")?.Value, out var businessId) && businessId > 0;
 }

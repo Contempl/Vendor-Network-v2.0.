@@ -8,6 +8,7 @@ export interface TokenPayload {
     email: string;
     role: string;
     businessId: string;
+    businessType?: "Vendor" | "Operator";
 }
 
 export interface InviteIdToFrontEnd {
