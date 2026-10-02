@@ -4,4 +4,5 @@ public interface IPasswordHasher
 {
 	byte[] HashThePassword(string password);
 	public bool ValidatePassword(string enteredPassword, byte[] storedHashedPassword);
+	bool NeedsRehash(byte[] storedHashedPassword);
 }
