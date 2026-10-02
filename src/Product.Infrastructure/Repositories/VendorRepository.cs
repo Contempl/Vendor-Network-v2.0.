@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Product.Domain.Enum;
 using Microsoft.EntityFrameworkCore;
 using Product.Application.Dto;
 using Product.Application.Interfaces;
@@ -86,7 +86,8 @@ public class VendorRepository : IVendorRepository
 	{
 		var query = _vendors.AsQueryable();
 
-		query = query.Where(v => v.BusinessName.Contains(searchName));
+		var pattern = "%" + searchName.Replace("!", "!!").Replace("%", "!%").Replace("_", "!_") + "%";
+		query = query.Where(v => EF.Functions.ILike(v.BusinessName, pattern, "!"));
 
 		query = sortOrder == SortOrder.Ascending || sortOrder == SortOrder.Unspecified
 			? query.OrderBy(v => v.BusinessName)

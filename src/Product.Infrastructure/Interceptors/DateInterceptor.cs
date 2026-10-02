@@ -8,9 +8,9 @@ namespace Product.Infrastructure.Interceptors;
 
 public class DateInterceptor : SaveChangesInterceptor
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceProvider? _serviceProvider;
 
-    public DateInterceptor(IServiceProvider serviceProvider)
+    public DateInterceptor(IServiceProvider? serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }
@@ -18,13 +18,24 @@ public class DateInterceptor : SaveChangesInterceptor
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result,
         CancellationToken cancellationToken = new())
     {
-        var dbContext = eventData.Context;
+        SetAuditFields(eventData.Context);
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+
+    public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
+    {
+        SetAuditFields(eventData.Context);
+        return base.SavingChanges(eventData, result);
+    }
+
+    private void SetAuditFields(DbContext? dbContext)
+    {
         if (dbContext is null)
         {
-            return base.SavingChangesAsync(eventData, result, cancellationToken);
+            return;
         }
         
-        var userPrincipalService = _serviceProvider.GetRequiredService<IUserPrincipalService>();
+        var userPrincipalService = _serviceProvider?.GetService<IUserPrincipalService>();
 
         var userId = userPrincipalService?.UserId ?? 0;
         
@@ -46,6 +57,5 @@ public class DateInterceptor : SaveChangesInterceptor
                 entry.Property("UpdatedBy").CurrentValue = userId;
             }
         }
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 }

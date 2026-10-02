@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.Data.SqlClient;
+using Product.Domain.Enum;
 
 namespace Product.Domain.Dto;
 

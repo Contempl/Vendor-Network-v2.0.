@@ -18,7 +18,7 @@ namespace Product.IntegrationTests;
 public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _dbContainer =
-        new PostgreSqlBuilder("postgres:15")
+        new PostgreSqlBuilder("postgres:16")
             .WithDatabase("testdb")
             .WithUsername("postgres")
             .WithPassword("postgres")
@@ -88,7 +88,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
     }
 
     public new async Task DisposeAsync()

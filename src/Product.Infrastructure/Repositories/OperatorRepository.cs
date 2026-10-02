@@ -36,8 +36,9 @@ public class OperatorRepository : IOperatorRepository
 	}
 	public Task<List<Operator>> GetOperatorsByNameAsync(string operatorName, CancellationToken cancellationToken = default)
 	{
+		var pattern = "%" + operatorName.Replace("!", "!!").Replace("%", "!%").Replace("_", "!_") + "%";
 		var operators = _operators
-			.Where(op => op.BusinessName.Contains(operatorName))
+			.Where(op => EF.Functions.ILike(op.BusinessName, pattern, "!"))
 			.Include(op => op.Industries)
 			.ToListAsync(cancellationToken);
 

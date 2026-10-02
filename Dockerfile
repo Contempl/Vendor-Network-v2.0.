@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0.12 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.12 AS base
 WORKDIR /app
 ENV ASPNETCORE_HTTP_PORTS=80
 EXPOSE 80
@@ -24,8 +24,14 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Product.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM build AS publish_seeder
+WORKDIR /src/Product.Seeder
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Product.Seeder.csproj" -c $BUILD_CONFIGURATION -o /app/seeder_publish /p:UseAppHost=false
+
+FROM base AS seeder
+WORKDIR /app
+COPY --from=publish_seeder /app/seeder_publish .
+ENTRYPOINT ["dotnet", "Product.Seeder.dll"]
 
 FROM base AS final
 WORKDIR /app

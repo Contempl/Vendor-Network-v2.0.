@@ -173,7 +173,7 @@ public class OperatorIntegrationTests : IntegrationTestBase, IAsyncLifetime
 
         var requestDto = new VendorSearchDto
         {
-            VendorName = "test" // case sensitive
+            VendorName = "Missing Vendor"
         };
 
         // Act

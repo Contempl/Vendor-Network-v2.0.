@@ -1,47 +1,77 @@
-version: '3.8'
+x-database-environment: &database-environment
+  ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-vendor_network};Username=${POSTGRES_USER:-vendor};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
 
 services:
   db:
     image: postgres:16
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-vendor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-vendor_network}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   redis:
     image: redis:7
     ports:
-      - "6379:6379"
+      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    build:
+      context: .
+      target: seeder
+    environment: *database-environment
+    command: ["--migrate-only"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
 
   api:
     build:
       context: .
-      dockerfile: Dockerfile
-    restart: always
+      target: final
+    restart: unless-stopped
     depends_on:
-      - db
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     ports:
-      - "8080:80"
+      - "127.0.0.1:${API_HOST_PORT:-8080}:80"
     environment:
-      DB_HOST: ${DB_HOST}
-      DB_USER: ${DB_USER} 
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-    
-    
+      <<: *database-environment
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      RedisSettings__Url: redis:6379
+      RedisSettings__InstanceName: VendorNetwork_
+      JwtOptions__Secret: ${JWT_SECRET:?Set JWT_SECRET in .env}
+
   seeder:
+    profiles: ["seed"]
     build:
       context: .
-      dockerfile: Dockerfile
+      target: seeder
+    environment:
+      <<: *database-environment
+      SeedAdmin__Email: ${SEED_ADMIN_EMAIL:-}
+      SeedAdmin__Password: ${SEED_ADMIN_PASSWORD:-}
     depends_on:
-      - db
+      migrate:
+        condition: service_completed_successfully
     restart: "no"
-    command: ["dotnet", "Product.Seeder.dll"]
 
 volumes:
   pgdata:
