@@ -25,7 +25,7 @@ public static class DependencyInjection
         
         services.AddDbContext<AppDbContext>(options =>
         {
-            options.UseNpgsql(connectionString);
+            options.UseSqlServer(connectionString);
         });
        
        services.InitRepositories();

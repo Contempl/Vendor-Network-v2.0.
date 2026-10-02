@@ -1,77 +1,47 @@
-x-database-environment: &database-environment
-  ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-vendor_network};Username=${POSTGRES_USER:-vendor};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+version: '3.8'
 
 services:
   db:
     image: postgres:16
-    restart: unless-stopped
+    restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-vendor}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: ${POSTGRES_DB:-vendor_network}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
+    
   redis:
     image: redis:7
     ports:
-      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
-  migrate:
-    build:
-      context: .
-      target: seeder
-    environment: *database-environment
-    command: ["--migrate-only"]
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: "no"
+      - "6379:6379"
 
   api:
     build:
       context: .
-      target: final
-    restart: unless-stopped
+      dockerfile: Dockerfile
+    restart: always
     depends_on:
-      migrate:
-        condition: service_completed_successfully
-      redis:
-        condition: service_healthy
+      - db
     ports:
-      - "127.0.0.1:${API_HOST_PORT:-8080}:80"
+      - "8080:80"
     environment:
-      <<: *database-environment
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-      RedisSettings__Url: redis:6379
-      RedisSettings__InstanceName: VendorNetwork_
-      JwtOptions__Secret: ${JWT_SECRET:?Set JWT_SECRET in .env}
-
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER} 
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    
+    
   seeder:
-    profiles: ["seed"]
     build:
       context: .
-      target: seeder
-    environment:
-      <<: *database-environment
-      SeedAdmin__Email: ${SEED_ADMIN_EMAIL:-}
-      SeedAdmin__Password: ${SEED_ADMIN_PASSWORD:-}
+      dockerfile: Dockerfile
     depends_on:
-      migrate:
-        condition: service_completed_successfully
+      - db
     restart: "no"
+    command: ["dotnet", "Product.Seeder.dll"]
 
 volumes:
   pgdata:

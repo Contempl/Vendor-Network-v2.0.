@@ -41,6 +41,3 @@ jobs:
         
       - name: Build Docker image
         run: docker build -t src/product-api:latest .
-
-      - name: Build migration and seeder image
-        run: docker build --target seeder -t src/product-seeder:latest .

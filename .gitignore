@@ -7,6 +7,3 @@ riderModule.iml
 .vs
 *.DotSettings*
 node_modules
-.env
-.env.local
-TestResults/
