@@ -11,4 +11,5 @@ public record UserClaimDto
     public UserType UserType { get; set; }
 
     public int? BusinessId { get; set; }
+    public string? BusinessType { get; set; }
 }

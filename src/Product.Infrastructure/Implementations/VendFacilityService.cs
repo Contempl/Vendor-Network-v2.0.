@@ -98,7 +98,8 @@ public class VendFacilityService : IVendFacilityService
 	{
 		try
 		{
-			var vendorFacility = await _vendorFacilityRepository.GetByIdAsync(vendorId, facilityId, cancellationToken);
+			var currentVendorId = _userPrincipalService.BusinessId!.Value;
+			var vendorFacility = await _vendorFacilityRepository.GetByIdAsync(currentVendorId, facilityId, cancellationToken);
 
 			await _vendorFacilityRepository.DeleteAsync(vendorFacility, cancellationToken);
 

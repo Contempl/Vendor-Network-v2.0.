@@ -6,20 +6,21 @@ import {
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useState } from "react";
 import { inviteUserToOperator } from "@/entities/operator/operators.api";
+import ProtectedRoute from "@/entities/auth/ProtectedRoute";
 
-export default function InvitePage() {
+function InvitePage() {
   const [email, setEmail] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleInvite = async () => {
     setLoading(true);
     setError(null);
-    setSuccess(false);
+    setInviteUrl("");
     try {
-      await inviteUserToOperator(email);
-      setSuccess(true);
+      const invitation = await inviteUserToOperator(email);
+      setInviteUrl(`${window.location.origin}/register/${invitation.inviteId}`);
       setEmail("");
     } catch {
       setError("Не удалось отправить приглашение. Проверьте email и попробуйте снова.");
@@ -45,9 +46,10 @@ export default function InvitePage() {
           <Typography fontWeight={700} color="white">Новый пользователь</Typography>
         </Box>
 
-        {success && (
-          <Alert severity="success" sx={{ mb: 3, bgcolor: "rgba(46,125,50,0.15)", color: "#81c784" }} onClose={() => setSuccess(false)}>
-            Приглашение отправлено!
+        {inviteUrl && (
+          <Alert severity="success" sx={{ mb: 3, bgcolor: "rgba(46,125,50,0.15)", color: "#81c784" }} onClose={() => setInviteUrl("")}>
+            Share this registration link: <a href={inviteUrl}>{inviteUrl}</a>{" "}
+            <Button size="small" onClick={() => void navigator.clipboard.writeText(inviteUrl)}>Copy</Button>
           </Alert>
         )}
         {error && (
@@ -84,4 +86,8 @@ export default function InvitePage() {
       </Paper>
     </Box>
   );
+}
+
+export default function ProtectedInvitePage() {
+  return <ProtectedRoute allowedRole="Admin" businessType="Operator"><InvitePage /></ProtectedRoute>;
 }

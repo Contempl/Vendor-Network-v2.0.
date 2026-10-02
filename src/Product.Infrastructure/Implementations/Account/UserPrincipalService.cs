@@ -9,12 +9,14 @@ public class UserPrincipalService : IUserPrincipalService
     public int? UserId { get; set; }
     public UserType? UserType { get; set; }
     public int? BusinessId { get; set; }
+    public string? BusinessType { get; set; }
     
 
     public UserPrincipalService(ClaimsPrincipal claimsPrincipal)
     {
         UserId = GetIntClaim(claimsPrincipal.Claims, "userId");
         BusinessId = GetIntClaim(claimsPrincipal.Claims, "businessId");
+        BusinessType = GetClaim(claimsPrincipal.Claims, "businessType");
         UserType = GetEnumClaim<UserType>(claimsPrincipal.Claims, ClaimTypes.Role);
     }
     private string? GetClaim(IEnumerable<Claim> claims, string claimName) => claims.SingleOrDefault(c => c.Type == claimName)?.Value;

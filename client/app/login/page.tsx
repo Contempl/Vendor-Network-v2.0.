@@ -22,7 +22,7 @@ export default function LoginPage() {
             if (!role) throw new Error("Login returned a token without a supported role");
             localStorage.setItem("tkn-tko", response.accessToken);
             localStorage.setItem("refreshToken", response.refreshToken);
-            router.replace(getHomeForRole(role));
+            router.replace(getHomeForRole(role, response.accessToken));
         } catch {
             setError("Неверный email или пароль");
         }

@@ -36,6 +36,9 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
             int.TryParse(businessIdValue, out var bizId))
             ((FakeUserPrincipalService)_userPrincipalService).BusinessId = bizId;
 
+        if (Request.Headers.TryGetValue("X-Test-BusinessType", out var businessTypeValue))
+            ((FakeUserPrincipalService)_userPrincipalService).BusinessType = businessTypeValue.ToString();
+
         UserType userType = UserType.VendorUser; 
         if (Request.Headers.TryGetValue("X-Test-Role", out var roleVal) &&
             Enum.TryParse<UserType>(roleVal, out var parsedRole))
@@ -48,6 +51,8 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
         {
             new Claim(ClaimTypes.NameIdentifier, _userPrincipalService.UserId.ToString()!),
             new Claim(ClaimTypes.Role, userType.ToString()),
+            new Claim("businessId", _userPrincipalService.BusinessId?.ToString() ?? string.Empty),
+            new Claim("businessType", _userPrincipalService.BusinessType ?? string.Empty),
         };
         
         var identity = new ClaimsIdentity(claims, "Test", ClaimTypes.Name, ClaimTypes.Role);

@@ -24,6 +24,7 @@ export default function AdminDashboard() {
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [businessInviteUrl, setBusinessInviteUrl] = useState("");
 
   // Invite Business
   const [businessForm, setBusinessForm] = useState<BusinessInvitationData>({
@@ -50,8 +51,9 @@ export default function AdminDashboard() {
   const handleInviteBusiness = async () => {
     setLoading(true); setError(null);
     try {
-      await inviteBusiness(businessForm);
-      setSuccess("Business is invited.");
+      const result = await inviteBusiness(businessForm);
+      setBusinessInviteUrl(`${window.location.origin}/register/${result.inviteId}`);
+      setSuccess("Business created. Share the registration link with its Admin.");
     } catch {
       setError("Не удалось пригласить бизнес.");
     } finally { setLoading(false); }
@@ -101,6 +103,11 @@ export default function AdminDashboard() {
         </Alert>
       )}
 
+      {businessInviteUrl && <Alert severity="info" sx={{ mb: 3 }}>
+        Business Admin registration: <a href={businessInviteUrl}>{businessInviteUrl}</a>{" "}
+        <Button size="small" onClick={() => void navigator.clipboard.writeText(businessInviteUrl)}>Copy</Button>
+      </Alert>}
+
       <Tabs value={tab} onChange={(_e, v) => setTab(v)} sx={{
         mb: 4,
         "& .MuiTab-root": { color: "rgba(255,255,255,0.4)", fontWeight: 600 },
@@ -115,6 +122,9 @@ export default function AdminDashboard() {
       {/* Tab 0 — Invite Business */}
       {tab === 0 && (
         <Paper sx={{ bgcolor: "#161616", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 3, p: 4, maxWidth: 500 }}>
+          <Typography color="rgba(255,255,255,0.7)" mb={2}>
+            Create a business and invite its first Admin. That Admin can manage only this business.
+          </Typography>
           <Typography fontWeight={700} color="white" mb={3}>Пригласить бизнес</Typography>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <FormControlLabel

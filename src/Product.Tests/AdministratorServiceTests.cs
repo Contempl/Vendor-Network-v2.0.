@@ -272,6 +272,7 @@ public class AdministratorServiceTests
         // Assert
         Assert.True(result.Value is UserDtoToFrontEnd);
         Assert.Equal(_testVendorUser.Email, result.AsT0.Email);
+        Assert.Equal(invite.Id, result.AsT0.InviteId);
         _userRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<VendorUser>(), CancellationToken.None), Times.Once);
         _inviteRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Invite>(), CancellationToken.None), Times.Once);
         _emailServiceMock.Verify(e => e.SendInvitationEmailAsync(It.IsAny<MailMsg>()), Times.Once);

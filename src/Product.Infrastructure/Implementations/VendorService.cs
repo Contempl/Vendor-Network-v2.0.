@@ -132,12 +132,12 @@ public class VendorService : IVendorService
             await _vendorUserRepository.CreateAsync(newVendorUser, cancellationToken);
 
             var invite = _inviteService.CreateInvite(newVendorUser, vendorUser);
-            var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
             await _inviteRepository.CreateAsync(invite, cancellationToken);
+            var inviteUrl = _emailService.CreateInviteUrl(invite.Id);
 
             var emailBody = _emailService.GenerateEmailTemplate(email, newVendorUser, inviteUrl);
 
-            var mailMessage = _emailService.CreateMessage(emailBody, vendorUser.Email);
+            var mailMessage = _emailService.CreateMessage(emailBody, vendorUser.Email) with { InviteId = invite.Id };
 
             await _emailService.SendInvitationEmailAsync(mailMessage);
 

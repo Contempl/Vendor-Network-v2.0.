@@ -36,12 +36,14 @@ public static class UserMappingExtensions
                 dto.Email = operatorUser.Email;
                 dto.UserType = operatorUser.UserType;
                 dto.BusinessId = operatorUser.OperatorId!.Value;
+                dto.BusinessType = "Operator";
                 break;
             case VendorUser vendorUser:
                 dto.Id = vendorUser.Id;
                 dto.Email = vendorUser.Email;
                 dto.UserType = vendorUser.UserType;
                 dto.BusinessId = vendorUser.VendorId!.Value;
+                dto.BusinessType = "Vendor";
                 break;
             default :
                 dto.Id = user.Id;

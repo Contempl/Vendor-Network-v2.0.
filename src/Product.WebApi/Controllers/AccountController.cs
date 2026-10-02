@@ -92,13 +92,14 @@ public class AccountController : ControllerBase
 
 	[HttpDelete("/{userId}")]
 	[EnsureUserExists]
-	[Authorize(policy: "Admin")]
-	public async Task<ActionResult<OneOf<int, Error>>> RemoveUser(int userId, CancellationToken cancellationToken)
+	[Authorize(policy: "SuperAdmin")]
+	public async Task<ActionResult<OneOf<int, ValidationError, Error>>> RemoveUser(int userId, CancellationToken cancellationToken)
 	{
 		var response = await _userService.RemoveUserAsync(userId, cancellationToken);
 		
 		return response.Match<ActionResult>(
 			id => Ok(id),
+			validationError => BadRequest(validationError),
 			error => StatusCode(500, error));
 	}
 	

@@ -9,7 +9,11 @@ namespace Product.IntegrationTests.Tests;
 
 public class VendorIntegrationTests : IntegrationTestBase, IAsyncLifetime
 {
-    public VendorIntegrationTests(CustomWebApplicationFactory factory) : base(factory) { }
+    public VendorIntegrationTests(CustomWebApplicationFactory factory) : base(factory)
+    {
+        _client.DefaultRequestHeaders.Add("X-Test-Role", UserType.Admin.ToString());
+        _client.DefaultRequestHeaders.Add("X-Test-BusinessType", "Vendor");
+    }
 
     [Fact]
     public async Task SearchOperators_ReturnsEmptyList_WhenOperatorsDoNotExist()
@@ -134,6 +138,29 @@ public class VendorIntegrationTests : IntegrationTestBase, IAsyncLifetime
     }
 
     [Fact]
+    public async Task CreateFacility_AddsFacilityWithServicesForCurrentVendor()
+    {
+        await SeedVendorAsync(new Vendor
+        {
+            Id = 10, BusinessName = "Test Vendor", Address = "Main Street", Email = "vendor@example.com"
+        });
+
+        var response = await _client.PostAsJsonAsync("/facility", new VendorFacilityDto
+        {
+            Name = "Main facility", Location = "Main Street", RadiusOfWork = 10,
+            Services = new List<string> { "Delivery" }
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var facilitiesResponse = await _client.GetAsync("/Vendor/facilities");
+        Assert.Equal(HttpStatusCode.OK, facilitiesResponse.StatusCode);
+        var facilities = await facilitiesResponse.Content.ReadFromJsonAsync<List<VendorGetFacilitiesDto>>();
+        var facility = Assert.Single(facilities!);
+        Assert.Equal("Main facility", facility.Name);
+        Assert.Equal("Delivery", Assert.Single(facility.Services!));
+    }
+
+    [Fact]
     public async Task InviteVendor_ReturnsMailMessage_WhenInviteIsSentSuccessfully()
     {
         // Arrange
@@ -168,6 +195,7 @@ public class VendorIntegrationTests : IntegrationTestBase, IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, request.StatusCode);
         Assert.Equal(existingVendorUserMail, obtainedEmailMessage!.Sender);
         Assert.Contains(emailDto.Email, obtainedEmailMessage!.Body);
+        Assert.True(obtainedEmailMessage.InviteId > 0);
     }
 
     [Fact]

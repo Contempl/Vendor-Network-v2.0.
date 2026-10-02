@@ -6,6 +6,7 @@ using Product.Application.Mapping;
 using Product.Application.ServiceInterfaces;
 using Product.Domain.Dto;
 using Product.Domain.Result;
+using Product.Domain.Entity;
 
 
 namespace Product.Infrastructure.Implementations;
@@ -45,12 +46,14 @@ public class UserService : IUserService
 		}
 	}
 
-	public async Task<OneOf<int, Error>> RemoveUserAsync(int userId, CancellationToken cancellationToken = default)
+	public async Task<OneOf<int, ValidationError, Error>> RemoveUserAsync(int userId, CancellationToken cancellationToken = default)
 	{
 		try
 		{
 			var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-		
+			if (user is Administrator)
+				return new ValidationError();
+
 			await _userRepository.DeleteAsync(user, cancellationToken);
 
 			return userId;

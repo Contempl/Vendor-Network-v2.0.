@@ -13,15 +13,18 @@ import { useEffect, useState } from "react";
 import { useOperatorStore } from "@/entities/operator/operator-store";
 import { getOperator, updateOperator } from "@/entities/operator/operators.api";
 import { UpdateOperatorDto } from "@/entities/operator/operator.types";
+import { getRoleFromToken } from "@/entities/auth/auth-utils";
 
 export default function OperatorPage() {
   const { operator, setOperator } = useOperatorStore();
   const [isEditing, setIsEditing] = useState(false);
+  const [isBusinessAdmin] = useState(() =>
+    typeof window !== "undefined" && getRoleFromToken(localStorage.getItem("tkn-tko") ?? "") === "Admin");
   const [form, setForm] = useState<UpdateOperatorDto | null>(null);
 
   useEffect(() => {
     getOperator().then(setOperator);
-  }, []);
+  }, [setOperator]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -70,7 +73,7 @@ export default function OperatorPage() {
             <Chip label="Operator" size="small" sx={{ bgcolor: "rgba(233,69,96,0.15)", color: "#e94560", fontWeight: 700, mt: 0.5 }} />
           </Box>
         </Box>
-        {isEditing ? (
+        {isBusinessAdmin && (isEditing ? (
           <Button
             variant="contained"
             startIcon={<SaveIcon />}
@@ -88,7 +91,7 @@ export default function OperatorPage() {
           >
             Редактировать
           </Button>
-        )}
+        ))}
       </Box>
 
       <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", mb: 4 }} />

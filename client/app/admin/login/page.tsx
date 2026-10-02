@@ -18,7 +18,7 @@ export default function LoginPage() {
     const handleSubmit = async () => {
         try {
             const response = await loginAdmin(email, password);
-            if (getRoleFromToken(response.accessToken) !== "Admin") throw new Error("Administrator role required");
+            if (getRoleFromToken(response.accessToken) !== "SuperAdmin") throw new Error("SuperAdmin role required");
             localStorage.setItem("tkn-tko", response.accessToken);
             localStorage.setItem("refreshToken", response.refreshToken);
             router.replace("/admin/dashboard");
