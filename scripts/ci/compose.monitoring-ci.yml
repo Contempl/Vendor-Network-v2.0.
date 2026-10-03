@@ -1,0 +1,8 @@
+# Use the exact images built by the preceding CI job.
+services:
+  api:
+    image: src/product-api:latest
+  migrate:
+    image: src/product-seeder:latest
+  seeder:
+    image: src/product-seeder:latest

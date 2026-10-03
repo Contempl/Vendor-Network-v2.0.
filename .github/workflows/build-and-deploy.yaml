@@ -13,7 +13,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
@@ -44,3 +44,52 @@ jobs:
 
       - name: Build migration and seeder image
         run: docker build --target seeder -t src/product-seeder:latest .
+
+      - name: Save images for monitoring smoke test
+        run: |
+          mkdir -p .local/ci-images
+          docker save src/product-api:latest src/product-seeder:latest | gzip > .local/ci-images/images.tar.gz
+
+      - name: Upload smoke test images
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-images
+          path: .local/ci-images/images.tar.gz
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+  monitoring:
+    name: Monitoring smoke test
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download built images
+        uses: actions/download-artifact@v4
+        with:
+          name: monitoring-images
+          path: .local/ci-images
+
+      - name: Load built images
+        run: docker load --input .local/ci-images/images.tar.gz
+
+      - name: Validate configuration and test telemetry delivery
+        run: python3 -u scripts/ci/monitoring-smoke.py
+
+      - name: Upload monitoring diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-diagnostics
+          path: |
+            .local/monitoring-ci/status.txt
+            .local/monitoring-ci/compose.log
+            .local/monitoring-ci/result.json
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
