@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Product.Domain.Entity;
 using Product.Infrastructure.Configurations;
 using Product.Infrastructure.Interceptors;
@@ -20,7 +19,6 @@ public class AppDbContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.AddInterceptors(new DateInterceptor(_serviceProvider));
-        optionsBuilder.LogTo(Console.WriteLine, LogLevel.Information);
     }
 
 

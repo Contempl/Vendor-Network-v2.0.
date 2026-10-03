@@ -1,0 +1,11 @@
+apiVersion: 1
+providers:
+  - name: Vendor Network
+    folder: Vendor Network
+    type: file
+    updateIntervalSeconds: 30
+    disableDeletion: true
+    allowUiUpdates: false
+    editable: false
+    options:
+      path: /var/lib/grafana/dashboards

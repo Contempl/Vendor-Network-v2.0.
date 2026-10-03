@@ -1,8 +1,16 @@
+x-logging: &rotating-logs
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+    compress: "true"
+
 x-database-environment: &database-environment
   ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-vendor_network};Username=${POSTGRES_USER:-vendor};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
 
 services:
   db:
+    logging: *rotating-logs
     image: postgres:16
     restart: unless-stopped
     environment:
@@ -20,6 +28,7 @@ services:
       retries: 20
 
   redis:
+    logging: *rotating-logs
     image: redis:7
     ports:
       - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
@@ -30,6 +39,7 @@ services:
       retries: 20
 
   migrate:
+    logging: *rotating-logs
     build:
       context: .
       target: seeder
@@ -41,6 +51,7 @@ services:
     restart: "no"
 
   api:
+    logging: *rotating-logs
     build:
       context: .
       target: final
@@ -60,6 +71,7 @@ services:
       JwtOptions__Secret: ${JWT_SECRET:?Set JWT_SECRET in .env}
 
   seeder:
+    logging: *rotating-logs
     profiles: ["seed"]
     build:
       context: .

@@ -45,9 +45,14 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.
             services.RemoveAll<IAuthenticationHandlerProvider>();
             services.RemoveAll<IAuthenticationService>();
 
+            services.Configure<OpenTelemetry.Exporter.OtlpExporterOptions>(options =>
+            {
+                options.Endpoint = new Uri("http://127.0.0.1:1");
+                options.TimeoutMilliseconds = 250;
+            });
             services.AddDistributedMemoryCache();
             
-            services.AddDbContext<AppDbContext>(options => { options.UseNpgsql(_dbContainer.GetConnectionString()); });
+            services.AddDbContext<AppDbContext>(options => { options.UseNpgsql(_dbContainer.GetConnectionString(), postgres => postgres.ConfigureDataSource(source => source.Name = "VendorNetwork.IntegrationTests")); });
             
             services.AddAuthentication(options =>
                 {
@@ -93,6 +98,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Product.WebApi.
 
     public new async Task DisposeAsync()
     {
+        await base.DisposeAsync();
         await _dbContainer.StopAsync();
         await _dbContainer.DisposeAsync();
     }

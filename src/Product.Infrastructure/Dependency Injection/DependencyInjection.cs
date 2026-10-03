@@ -25,7 +25,7 @@ public static class DependencyInjection
         
         services.AddDbContext<AppDbContext>(options =>
         {
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(connectionString, postgres => postgres.ConfigureDataSource(source => source.Name = "VendorNetwork"));
         });
        
        services.InitRepositories();

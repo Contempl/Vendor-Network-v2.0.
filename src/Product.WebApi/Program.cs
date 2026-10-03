@@ -3,8 +3,10 @@ using Product.Domain.Settings;
 using Product.Infrastructure.Dependency_Injection;
 using Product.Infrastructure.Extensions;
 using Product.WebApi.Configuration;
+using Product.WebApi.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddObservability();
 
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddDataAccessLayer(builder.Configuration);
@@ -20,7 +22,9 @@ builder.Services.ConfigureSwagger();
 
 var app = builder.Build();
 
+app.UseMiddleware<Product.WebApi.Middleware.RequestLoggingMiddleware>();
 app.ConfigureApp();
+app.MapServiceHealthChecks();
 
 app.Run();
 
