@@ -38,7 +38,7 @@ export default function IndustriesPage() {
 
   useEffect(() => {
     getOperatorIndustries().then(setIndustries);
-  }, []);
+  }, [setIndustries]);
 
   const handleCreate = async () => {
     const created = await createOperatorIndustry(form);

@@ -62,9 +62,11 @@ export default function AdminDashboard() {
   const handleInviteUser = async () => {
     setLoading(true); setError(null);
     try {
-      inviteIsVendor
-        ? await inviteVendorUser(userInviteForm)
-        : await inviteOperatorUser(userInviteForm);
+      if (inviteIsVendor) {
+        await inviteVendorUser(userInviteForm);
+      } else {
+        await inviteOperatorUser(userInviteForm);
+      }
       setSuccess("User was invited.");
     } catch {
       setError("Не удалось пригласить пользователя.");
@@ -74,9 +76,11 @@ export default function AdminDashboard() {
   const handleRemove = async () => {
     setLoading(true); setError(null);
     try {
-      removeIsVendor
-        ? await removeVendor(Number(removeId))
-        : await removeOperator(Number(removeId));
+      if (removeIsVendor) {
+        await removeVendor(Number(removeId));
+      } else {
+        await removeOperator(Number(removeId));
+      }
       setSuccess("Deleted!");
     } catch {
       setError("Не удалось удалить бизнес.");

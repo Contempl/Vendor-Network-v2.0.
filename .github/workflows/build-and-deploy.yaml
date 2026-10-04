@@ -1,49 +1,130 @@
-name: Continuous Integration and Deployment
+name: Continuous Integration
 
 on:
   pull_request:
-    branches: 
+    branches:
       - development
-  
-  
-  
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    
+  workflow-lint:
+    name: Workflow validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-        
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Validate GitHub Actions workflows
+        run: >-
+          docker run --rm
+          --volume "$GITHUB_WORKSPACE:/repo:ro"
+          --workdir /repo
+          rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+          -color
+
+  # Keep the existing check name for repositories already requiring "build".
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      DOCKER_BUILD_RECORD_UPLOAD: "false"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           global-json-file: global.json
-          
+
+      - name: Cache NuGet packages
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('global.json', 'src/**/*.csproj', '**/Directory.*.props', '**/Directory.*.targets', '**/NuGet.Config', '.config/dotnet-tools.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Restore dependencies
         run: dotnet restore src/Project.sln
 
       - name: Restore EF Core tools
         run: dotnet tool restore
-        
+
       - name: Build solution
         run: dotnet build src/Project.sln --configuration Release --no-restore
 
       - name: Check migration snapshot
         working-directory: src/Product.WebApi
-        run: dotnet ef migrations has-pending-model-changes --project ../Product.Infrastructure/Product.Infrastructure.csproj --startup-project Product.WebApi.csproj --configuration Release --no-build
-          
-      - name: Run tests
-        run: dotnet test src/Project.sln --no-build --configuration Release --verbosity normal
-      
+        run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project ../Product.Infrastructure/Product.Infrastructure.csproj
+          --startup-project Product.WebApi.csproj
+          --configuration Release --no-build
+
+      - name: Run unit tests
+        run: >-
+          dotnet test src/Product.Tests/Product.Tests.csproj
+          --no-build --no-restore --configuration Release --verbosity normal
+          --logger trx --results-directory .local/test-results/unit
+
+      - name: Run integration tests
+        run: >-
+          dotnet test src/Product.IntegrationTests/Product.IntegrationTests.csproj
+          --no-build --no-restore --configuration Release --verbosity normal
+          --logger trx --results-directory .local/test-results/integration
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: backend-test-results
+          path: .local/test-results/**/*.trx
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
       - name: Build Docker image
-        run: docker build -t src/product-api:latest .
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          load: true
+          push: false
+          tags: src/product-api:latest
+          cache-from: type=gha,scope=product-api
+          cache-to: type=gha,scope=product-api,mode=max,ignore-error=true
 
       - name: Build migration and seeder image
-        run: docker build --target seeder -t src/product-seeder:latest .
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          target: seeder
+          load: true
+          push: false
+          tags: src/product-seeder:latest
+          cache-from: type=gha,scope=product-seeder
+          cache-to: type=gha,scope=product-seeder,mode=max,ignore-error=true
 
       - name: Save images for monitoring smoke test
         run: |
@@ -51,7 +132,7 @@ jobs:
           docker save src/product-api:latest src/product-seeder:latest | gzip > .local/ci-images/images.tar.gz
 
       - name: Upload smoke test images
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: monitoring-images
           path: .local/ci-images/images.tar.gz
@@ -60,17 +141,68 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: client
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_API_URL: http://localhost:5227
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: client/.nvmrc
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          mkdir -p .local/ci-checks
+          npm ci --no-audit --no-fund 2>&1 | tee .local/ci-checks/npm-ci.log
+
+      - name: Lint frontend
+        run: npm run lint 2>&1 | tee .local/ci-checks/lint.log
+
+      - name: Check TypeScript types
+        run: npm run typecheck 2>&1 | tee .local/ci-checks/typecheck.log
+
+      - name: Build frontend for production
+        run: npm run build 2>&1 | tee .local/ci-checks/build.log
+
+      - name: Upload frontend diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: frontend-diagnostics
+          path: |
+            client/.local/ci-checks/*.log
+            client/.next/diagnostics/*.json
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
+
   monitoring:
     name: Monitoring smoke test
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Download built images
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: monitoring-images
           path: .local/ci-images
@@ -83,7 +215,7 @@ jobs:
 
       - name: Upload monitoring diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: monitoring-diagnostics
           path: |

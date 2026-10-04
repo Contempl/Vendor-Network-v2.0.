@@ -1,5 +1,20 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## CI checks
+
+Use the Node version in `.nvmrc`, then run these commands from `client`:
+
+```bash
+npm ci --no-audit --no-fund
+npm run lint
+npm run typecheck
+npm run build
+```
+
+ESLint rejects warnings. Type checking generates Next.js route types before running
+TypeScript. See [CI documentation](../docs/ci.md) for workflow jobs, artifacts, and
+required checks before merge.
+
 ## Getting Started
 
 First, run the development server:
