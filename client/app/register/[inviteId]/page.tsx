@@ -30,7 +30,7 @@ export default function RegisterPage({ params }: { params: Promise<{ inviteId: s
       }
     };
     checkInvite();
-  }, []);
+  }, [inviteId, router]);
 
   const handleRegister = async () => {
     setLoading(true);
